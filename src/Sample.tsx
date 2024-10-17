@@ -6,13 +6,14 @@ import { pdfjs, Document, Page } from "react-pdf";
 import MyPdf from "./assets/sample.pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { useMobileOrientation } from "react-device-detect";
+import { PDFDocument } from "pdf-lib";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
 ).toString();
 
-const DEVICE_PIXEL_RATIO = 1;
+const DEVICE_PIXEL_RATIO = 2;
 
 export default function Sample() {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -32,7 +33,6 @@ export default function Sample() {
   const { width, height, ref } = useResizeDetector();
   const [isHorizontal, setIsHorizontal] = useState(false);
   const { orientation } = useMobileOrientation();
-  console.log(orientation);
 
   const getAdjustedCoordinates = (x: number, y: number) => {
     return {
@@ -79,20 +79,18 @@ export default function Sample() {
     const x = clientX - rect.left;
     const y = clientY - rect.top;
 
-    const { adjustedX, adjustedY } = getAdjustedCoordinates(x, y);
-
     if (context) {
       context.beginPath();
       context.moveTo(lastX, lastY);
-      context.lineTo(adjustedX, adjustedY);
-      context.strokeStyle = "red"; // 원하는 색상으로 변경 가능
-      context.lineWidth = 2; // 원하는 두께로 변경 가능
+      context.lineTo(x, y);
+      context.strokeStyle = "rgba(0,0,0,0.3)"; // 원하는 색상으로 변경 가능
+      context.lineWidth = 20; // 원하는 두께로 변경 가능
       context.stroke();
       context.closePath();
     }
 
-    setLastX(adjustedX);
-    setLastY(adjustedY);
+    setLastX(x);
+    setLastY(y);
     setPaths((prev) => {
       return {
         ...prev,
@@ -110,14 +108,11 @@ export default function Sample() {
       if (context) {
         if (paths[pageNumber]) {
           paths[pageNumber].forEach(({ x, y, lastX, lastY }) => {
-            const { adjustedX, adjustedY } = getAdjustedCoordinates(x, y);
-            const { adjustedX: adjustedLastX, adjustedY: adjustedLastY } =
-              getAdjustedCoordinates(lastX, lastY);
             context.beginPath();
-            context.moveTo(adjustedLastX, adjustedLastY);
-            context.lineTo(adjustedX, adjustedY);
-            context.strokeStyle = "red"; // 원하는 색상으로 변경 가능
-            context.lineWidth = 2; // 원하는 두께로 변경 가능
+            context.moveTo(lastX, lastY);
+            context.lineTo(x, y);
+            context.strokeStyle = "rgba(0,0,0,0.3)"; // 원하는 색상으로 변경 가능
+            context.lineWidth = 20; // 원하는 두께로 변경 가능
             context.stroke();
             context.closePath();
           });
@@ -133,6 +128,77 @@ export default function Sample() {
 
     return () => clearTimeout(timer);
   }, [pageNumber, isHorizontal]);
+
+  const downloadModifiedPDF = async () => {
+    // 기존 PDF 로드
+    const existingPdfBytes = await fetch(MyPdf).then((res) =>
+      res.arrayBuffer()
+    );
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    const scale = 3; // 원하는 해상도 스케일
+    for (let i = 0; i < pdfDoc.getPageCount(); i++) {
+      const page = pdfDoc.getPage(i);
+      const tempCanvas = document.createElement("canvas");
+      const context = tempCanvas.getContext("2d")!;
+      const { width: pageWidth, height: pageHeight } = page.getSize();
+
+      // 캔버스 크기 설정
+      tempCanvas.width = pageWidth * scale;
+      tempCanvas.height = pageHeight * scale;
+
+      // PDF 페이지를 새 캔버스에 그리기
+      await new Promise((resolve) => {
+        const renderTask = pdfjs.getDocument(MyPdf).promise.then((pdf) => {
+          return pdf.getPage(i + 1).then((pdfPage) => {
+            const viewport = pdfPage.getViewport({ scale });
+            const renderContext = {
+              canvasContext: context,
+              viewport: viewport,
+            };
+            return pdfPage.render(renderContext).promise;
+          });
+        });
+        renderTask.then(resolve);
+      });
+
+      if (paths[i + 1]) {
+        paths[i + 1].forEach(({ x, y, lastX, lastY }) => {
+          context.beginPath();
+          context.moveTo(lastX * scale, lastY * scale);
+          context.lineTo(x * scale, y * scale);
+          context.strokeStyle = "rgba(0,0,0,0.3)"; // 원하는 색상으로 변경 가능
+          context.lineWidth = 20; // 원하는 두께로 변경 가능
+          context.stroke();
+          context.closePath();
+        });
+
+        const imgData = tempCanvas.toDataURL("image/png");
+        const imgBytes = await fetch(imgData).then((res) => res.arrayBuffer());
+        const pngImage = await pdfDoc.embedPng(imgBytes);
+
+        // 이미지 위치 설정
+        page.drawImage(pngImage, {
+          x: 0,
+          y: 0,
+          width: pageWidth,
+          height: pageHeight,
+        });
+        // context?.clearRect(0, 0, pageWidth, pageHeight);
+      }
+    }
+
+    // 수정된 PDF 다운로드
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "modified.pdf");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <>
@@ -160,7 +226,7 @@ export default function Sample() {
             pageNumber={pageNumber}
             canvasRef={canvas}
             width={width}
-            // height={height - 100}
+            height={height}
             devicePixelRatio={DEVICE_PIXEL_RATIO}
           />
         </Document>
@@ -189,6 +255,14 @@ export default function Sample() {
           }}
         >
           다음페이지
+        </button>
+        <button
+          className="text-[40px]"
+          onClick={() => {
+            downloadModifiedPDF();
+          }}
+        >
+          다운로드
         </button>
       </div>
     </>
