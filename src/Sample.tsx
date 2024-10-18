@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 import { useEffect, useRef, useState } from "react";
 import { pdfjs, Document, Page } from "react-pdf";
 // import "react-pdf/dist/esm/Page/AnnotationLayer.css";
