@@ -14,6 +14,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 const DEVICE_PIXEL_RATIO = 2;
+const DOWNLOAD_SCALE = 2; // 원하는 해상도 스케일
 
 export default function Sample() {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -34,13 +35,6 @@ export default function Sample() {
   const [isHorizontal, setIsHorizontal] = useState(false);
   const { orientation } = useMobileOrientation();
 
-  const getAdjustedCoordinates = (x: number, y: number) => {
-    return {
-      adjustedX: (x / width) * canvas.current.width,
-      adjustedY: (y / height) * canvas.current.height,
-    };
-  };
-
   const startDrawing = (e: React.SyntheticEvent) => {
     e.persist();
     if (!canDraw) {
@@ -50,14 +44,12 @@ export default function Sample() {
     const rect = canvas.current?.getBoundingClientRect();
     if (rect) {
       const clientX =
-        (e.nativeEvent instanceof MouseEvent
-          ? e.clientX
-          : e.touches[0].clientX) * DEVICE_PIXEL_RATIO;
+        e.nativeEvent instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
       const clientY =
         (e.nativeEvent instanceof MouseEvent
           ? e.clientY
           : e.touches[0].clientY) * DEVICE_PIXEL_RATIO;
-      setLastX(clientX - rect.left);
+      setLastX((clientX - rect.left) * DEVICE_PIXEL_RATIO);
       setLastY(clientY - rect.top);
     }
   };
@@ -70,13 +62,12 @@ export default function Sample() {
 
     const rect = canvas.current.getBoundingClientRect();
     const clientX =
-      (e.nativeEvent instanceof MouseEvent ? e.clientX : e.touches[0].clientX) *
-      DEVICE_PIXEL_RATIO;
+      e.nativeEvent instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
     const clientY =
       (e.nativeEvent instanceof MouseEvent ? e.clientY : e.touches[0].clientY) *
       DEVICE_PIXEL_RATIO;
 
-    const x = clientX - rect.left;
+    const x = (clientX - rect.left) * DEVICE_PIXEL_RATIO;
     const y = clientY - rect.top;
 
     if (context) {
@@ -98,6 +89,7 @@ export default function Sample() {
       };
     });
   };
+
   const stopDrawing = () => {
     setIsDrawing(false);
   };
@@ -135,37 +127,35 @@ export default function Sample() {
       res.arrayBuffer()
     );
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
-    const scale = 3; // 원하는 해상도 스케일
     for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-      const page = pdfDoc.getPage(i);
-      const tempCanvas = document.createElement("canvas");
-      const context = tempCanvas.getContext("2d")!;
-      const { width: pageWidth, height: pageHeight } = page.getSize();
-
-      // 캔버스 크기 설정
-      tempCanvas.width = pageWidth * scale;
-      tempCanvas.height = pageHeight * scale;
-
-      // PDF 페이지를 새 캔버스에 그리기
-      await new Promise((resolve) => {
-        const renderTask = pdfjs.getDocument(MyPdf).promise.then((pdf) => {
-          return pdf.getPage(i + 1).then((pdfPage) => {
-            const viewport = pdfPage.getViewport({ scale });
-            const renderContext = {
-              canvasContext: context,
-              viewport: viewport,
-            };
-            return pdfPage.render(renderContext).promise;
-          });
-        });
-        renderTask.then(resolve);
-      });
-
       if (paths[i + 1]) {
+        const page = pdfDoc.getPage(i);
+        const { width: pageWidth, height: pageHeight } = page.getSize();
+        const tempCanvas = document.createElement("canvas");
+        const context = tempCanvas.getContext("2d")!;
+
+        // 캔버스 크기 설정
+        tempCanvas.width = pageWidth * DOWNLOAD_SCALE;
+        tempCanvas.height = pageHeight * DOWNLOAD_SCALE;
+        // PDF 페이지를 새 캔버스에 그리기
+        await new Promise((resolve) => {
+          const renderTask = pdfjs.getDocument(MyPdf).promise.then((pdf) => {
+            return pdf.getPage(i + 1).then((pdfPage) => {
+              const viewport = pdfPage.getViewport({ scale: DOWNLOAD_SCALE });
+              const renderContext = {
+                canvasContext: context,
+                viewport: viewport,
+              };
+              return pdfPage.render(renderContext).promise;
+            });
+          });
+          renderTask.then(resolve);
+        });
+
         paths[i + 1].forEach(({ x, y, lastX, lastY }) => {
           context.beginPath();
-          context.moveTo(lastX * scale, lastY * scale);
-          context.lineTo(x * scale, y * scale);
+          context.moveTo(lastX, lastY);
+          context.lineTo(x, y);
           context.strokeStyle = "rgba(0,0,0,0.3)"; // 원하는 색상으로 변경 가능
           context.lineWidth = 20; // 원하는 두께로 변경 가능
           context.stroke();
@@ -175,18 +165,18 @@ export default function Sample() {
         const imgData = tempCanvas.toDataURL("image/png");
         const imgBytes = await fetch(imgData).then((res) => res.arrayBuffer());
         const pngImage = await pdfDoc.embedPng(imgBytes);
-
+        pdfDoc.removePage(i);
+        const blankPage = pdfDoc.insertPage(i);
         // 이미지 위치 설정
-        page.drawImage(pngImage, {
+        blankPage.drawImage(pngImage, {
           x: 0,
           y: 0,
           width: pageWidth,
           height: pageHeight,
         });
-        // context?.clearRect(0, 0, pageWidth, pageHeight);
       }
     }
-
+    // return;
     // 수정된 PDF 다운로드
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -199,18 +189,10 @@ export default function Sample() {
     link.click();
     document.body.removeChild(link);
   };
-
+  console.log(width, canvas.current?.width);
   return (
     <>
-      <div
-        ref={ref}
-        className="bg-gray-500  flex justify-center items-center"
-        draggable={false}
-        // style={{
-        //   overflow: isDrawing ? "hidden" : "",
-        //   position: isDrawing ? "fixed" : "relative",
-        // }}
-      >
+      <div ref={ref} className="h-full">
         <Document file={MyPdf}>
           <Page
             onMouseDown={startDrawing}
@@ -225,7 +207,7 @@ export default function Sample() {
             renderTextLayer={false}
             pageNumber={pageNumber}
             canvasRef={canvas}
-            width={width}
+            // width={width}
             height={height}
             devicePixelRatio={DEVICE_PIXEL_RATIO}
           />
