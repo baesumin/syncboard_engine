@@ -23,7 +23,8 @@ type DrawType = React.PointerEvent<HTMLCanvasElement> &
 
 export default function Sample() {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const [canDraw, setCanDraw] = useState(true);
+  const [canDraw, setCanDraw] = useState(false);
+  const [isEraser, setIsEraser] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
   const [isHeightBig, setIsHeightBig] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -67,6 +68,7 @@ export default function Sample() {
     setIsDrawing(true);
 
     const context = canvas.current.getContext("2d")!;
+    // context.globalCompositeOperation = "destination-out";
 
     const rect = canvas.current.getBoundingClientRect();
     const clientX = GetClientPosition(e, DEVICE_PIXEL_RATIO, "x");
@@ -74,13 +76,13 @@ export default function Sample() {
     const x = clientX - rect.left;
     const y = clientY - rect.top;
 
-    DrawSmoothLine(context, x, y, x, y, color, LINE_WIDTH);
+    DrawSmoothLine(context, x, y, x, y, color, LINE_WIDTH, isEraser);
 
     pathsRef.current.push({
       x,
       y,
-      lastX: lastXRef.current,
-      lastY: lastYRef.current,
+      lastX: x,
+      lastY: y,
     });
     lastXRef.current = x;
     lastYRef.current = y;
@@ -105,7 +107,8 @@ export default function Sample() {
       x,
       y,
       color,
-      LINE_WIDTH
+      LINE_WIDTH,
+      isEraser
     );
 
     pathsRef.current.push({
@@ -125,13 +128,7 @@ export default function Sample() {
       if (paths[pageNumber]) {
         // 점을 그룹으로 나누기
         let currentGroup: PathsType[] = [];
-        NativeLog(`points.length: ${points.length}`);
         for (let i = 1; i < points.length; i++) {
-          NativeLog(
-            `${points[i].lastX} ${points[i - 1].x} / ${points[i].lastY}  ${
-              points[i - 1].y
-            }`
-          );
           if (
             i === 0 ||
             points[i].lastX !== points[i - 1].x ||
@@ -141,7 +138,6 @@ export default function Sample() {
             // 새로운 그룹 시작
             if (currentGroup.length > 1) {
               // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
-              NativeLog(currentGroup);
               for (let j = 1; j < currentGroup.length; j++) {
                 DrawSmoothLine(
                   context,
@@ -175,18 +171,15 @@ export default function Sample() {
           }
         }
       }
-      // if (points) {
-      //   points.forEach(({ x, y, lastX, lastY }) => {
-      //     DrawSmoothLine(context, lastX, lastY, x, y, color, LINE_WIDTH);
-      //   });
-      // }
       setIsRendered(false);
     }
   }, [color, height, pageNumber, paths, width]);
 
-  const stopDrawing = () => {
+  const stopDrawing = async () => {
     setIsDrawing(false);
-    if (pathsRef.current.length > 0) {
+    if (isEraser && canvas.current) {
+    }
+    if (pathsRef.current.length > 0 && !isEraser) {
       const newValue = pathsRef.current;
       setPaths((prev) => {
         return {
@@ -319,8 +312,11 @@ export default function Sample() {
         setPageNumber((prev) => prev + 1);
       } else if (type === "color") {
         setColor(value);
+        setIsEraser(false);
       } else if (type === "refresh") {
         redrawPaths();
+      } else if (type === "eraser") {
+        setIsEraser(true);
       }
     },
     [pageNumber, redrawPaths]
