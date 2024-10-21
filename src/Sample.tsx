@@ -1,128 +1,248 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
-
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { pdfjs, Document, Page } from "react-pdf";
-// import "react-pdf/dist/esm/Page/AnnotationLayer.css";
-// import "react-pdf/dist/esm/Page/TextLayer.css";
-
-import MyPdf from "./assets/sample.pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { useMobileOrientation } from "react-device-detect";
 import { PDFDocument } from "pdf-lib";
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+import MyPdf from "./assets/sample.pdf";
+import { OnPageLoadSuccess } from "react-pdf/src/shared/types.js";
+import {
+  DrawSmoothLine,
+  GetClientPosition,
+  NativeLog,
+  PathsType,
+  PostMessage,
+} from "./utils";
 
-const DEVICE_PIXEL_RATIO = 2;
-const DOWNLOAD_SCALE = 2; // 원하는 해상도 스케일
+const DEVICE_PIXEL_RATIO = 1;
+const DOWNLOAD_SCALE = 2;
+const LINE_WIDTH = 10;
+
+type DrawType = React.PointerEvent<HTMLCanvasElement> &
+  React.TouchEvent<HTMLCanvasElement>;
 
 export default function Sample() {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const [canDraw, setCanDraw] = useState(false);
+  const [canDraw, setCanDraw] = useState(true);
+  const [isRendered, setIsRendered] = useState(false);
+  const [isHeightBig, setIsHeightBig] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
-  const [lastX, setLastX] = useState(0);
-  const [lastY, setLastY] = useState(0);
-  const [paths, setPaths] = useState<{
-    [pageNumber: number]: {
-      x: number;
-      y: number;
-      lastX: number;
-      lastY: number;
-    }[];
-  }>([]);
-  const { width, height, ref } = useResizeDetector();
-  const [isHorizontal, setIsHorizontal] = useState(false);
-  const { orientation } = useMobileOrientation();
+  const lastXRef = useRef(0);
+  const lastYRef = useRef(0);
+  const pathsRef = useRef<PathsType[]>([]);
 
-  const startDrawing = (e: React.SyntheticEvent) => {
+  const [paths, setPaths] = useState<{
+    [pageNumber: number]: PathsType[];
+  }>([]);
+
+  const { width, height, ref } = useResizeDetector();
+  const [ratio, setRatio] = useState(0);
+  const [color, setColor] = useState("orange");
+  const [baseWidth, setBaseWidth] = useState({
+    orientation: "",
+    width: 0,
+  });
+  const [currentWidth, setCurrentWidth] = useState({
+    orientation: "",
+    width: 966,
+  });
+  const { orientation } = useMobileOrientation();
+  const pageWidth = useMemo(
+    () => (orientation === "portrait" && !isHeightBig ? width : undefined),
+    [isHeightBig, orientation, width]
+  );
+  const ratio2 = currentWidth.width / baseWidth.width;
+  const adjustCoordinates = (x: number) => {
+    return {
+      adjustedX: x * ratio2,
+    };
+  };
+
+  const startDrawing = (e: DrawType) => {
     e.persist();
-    if (!canDraw) {
+    if (!canDraw || !width || !height || !canvas.current) {
       return;
     }
     setIsDrawing(true);
-    const rect = canvas.current?.getBoundingClientRect();
-    if (rect) {
-      const clientX =
-        e.nativeEvent instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
-      const clientY =
-        (e.nativeEvent instanceof MouseEvent
-          ? e.clientY
-          : e.touches[0].clientY) * DEVICE_PIXEL_RATIO;
-      setLastX((clientX - rect.left) * DEVICE_PIXEL_RATIO);
-      setLastY(clientY - rect.top);
-    }
-  };
 
-  const draw = (e: React.SyntheticEvent) => {
-    e.persist();
-    if (!isDrawing || !canvas.current) return;
-
-    const context = canvas.current.getContext("2d");
+    const context = canvas.current.getContext("2d")!;
 
     const rect = canvas.current.getBoundingClientRect();
-    const clientX =
-      e.nativeEvent instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
-    const clientY =
-      (e.nativeEvent instanceof MouseEvent ? e.clientY : e.touches[0].clientY) *
-      DEVICE_PIXEL_RATIO;
-
-    const x = (clientX - rect.left) * DEVICE_PIXEL_RATIO;
+    const clientX = GetClientPosition(e, DEVICE_PIXEL_RATIO, "x");
+    const clientY = GetClientPosition(e, DEVICE_PIXEL_RATIO, "y");
+    const x = clientX - rect.left;
     const y = clientY - rect.top;
 
-    if (context) {
-      context.beginPath();
-      context.moveTo(lastX, lastY);
-      context.lineTo(x, y);
-      context.strokeStyle = "rgba(0,0,0,0.3)"; // 원하는 색상으로 변경 가능
-      context.lineWidth = 20; // 원하는 두께로 변경 가능
-      context.stroke();
-      context.closePath();
-    }
+    DrawSmoothLine(context, x, y, x, y, color, LINE_WIDTH);
 
-    setLastX(x);
-    setLastY(y);
-    setPaths((prev) => {
-      return {
-        ...prev,
-        [pageNumber]: [...(prev[pageNumber] || []), { x, y, lastX, lastY }],
-      };
+    pathsRef.current.push({
+      x,
+      y,
+      lastX: lastXRef.current,
+      lastY: lastYRef.current,
     });
+    lastXRef.current = x;
+    lastYRef.current = y;
   };
+
+  const draw = (e: DrawType) => {
+    e.persist();
+    if (!isDrawing || !canvas.current || !width || !height) return;
+
+    const context = canvas.current.getContext("2d")!;
+
+    const rect = canvas.current.getBoundingClientRect();
+    const clientX = GetClientPosition(e, DEVICE_PIXEL_RATIO, "x");
+    const clientY = GetClientPosition(e, DEVICE_PIXEL_RATIO, "y");
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    DrawSmoothLine(
+      context,
+      lastXRef.current,
+      lastYRef.current,
+      x,
+      y,
+      color,
+      LINE_WIDTH
+    );
+
+    pathsRef.current.push({
+      x,
+      y,
+      lastX: lastXRef.current,
+      lastY: lastYRef.current,
+    });
+    lastXRef.current = x;
+    lastYRef.current = y;
+  };
+
+  const redrawPaths = useCallback(() => {
+    if (canvas.current && width && height) {
+      const context = canvas.current.getContext("2d")!;
+      const points = paths[pageNumber];
+      if (paths[pageNumber]) {
+        // 점을 그룹으로 나누기
+        let currentGroup: PathsType[] = [];
+        NativeLog(`points.length: ${points.length}`);
+        for (let i = 1; i < points.length; i++) {
+          NativeLog(
+            `${points[i].lastX} ${points[i - 1].x} / ${points[i].lastY}  ${
+              points[i - 1].y
+            }`
+          );
+          if (
+            i === 0 ||
+            points[i].lastX !== points[i - 1].x ||
+            points[i].lastY !== points[i - 1].y
+          ) {
+            // 선이 띄워진 경우
+            // 새로운 그룹 시작
+            if (currentGroup.length > 1) {
+              // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
+              NativeLog(currentGroup);
+              for (let j = 1; j < currentGroup.length; j++) {
+                DrawSmoothLine(
+                  context,
+                  currentGroup[j - 1].x,
+                  currentGroup[j - 1].y,
+                  currentGroup[j].x,
+                  currentGroup[j].y,
+                  color,
+                  LINE_WIDTH
+                );
+              }
+            }
+            currentGroup = [points[i]]; // 새로운 그룹 초기화
+          } else {
+            // 선이 이어진 경우
+            currentGroup.push(points[i]); // 현재 그룹에 점 추가
+          }
+        }
+        // 마지막 그룹 처리
+        if (currentGroup.length > 1) {
+          for (let j = 1; j < currentGroup.length; j++) {
+            DrawSmoothLine(
+              context,
+              currentGroup[j - 1].x,
+              currentGroup[j - 1].y,
+              currentGroup[j].x,
+              currentGroup[j].y,
+              color,
+              LINE_WIDTH
+            );
+          }
+        }
+      }
+      // if (points) {
+      //   points.forEach(({ x, y, lastX, lastY }) => {
+      //     DrawSmoothLine(context, lastX, lastY, x, y, color, LINE_WIDTH);
+      //   });
+      // }
+      setIsRendered(false);
+    }
+  }, [color, height, pageNumber, paths, width]);
 
   const stopDrawing = () => {
     setIsDrawing(false);
-  };
-
-  const redrawPaths = () => {
-    if (canvas.current) {
-      const context = canvas.current.getContext("2d");
-      if (context) {
-        if (paths[pageNumber]) {
-          paths[pageNumber].forEach(({ x, y, lastX, lastY }) => {
-            context.beginPath();
-            context.moveTo(lastX, lastY);
-            context.lineTo(x, y);
-            context.strokeStyle = "rgba(0,0,0,0.3)"; // 원하는 색상으로 변경 가능
-            context.lineWidth = 20; // 원하는 두께로 변경 가능
-            context.stroke();
-            context.closePath();
-          });
-        }
-      }
+    if (pathsRef.current.length > 0) {
+      const newValue = pathsRef.current;
+      setPaths((prev) => {
+        return {
+          ...prev,
+          [pageNumber]: [...(prev[pageNumber] || []), ...newValue],
+        };
+      });
+      // pathsRef 초기화
+      pathsRef.current = [];
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      redrawPaths();
-    }, 50);
+  const onRenderSuccess = () => {
+    setIsRendered(true);
+  };
 
-    return () => clearTimeout(timer);
-  }, [pageNumber, isHorizontal]);
+  const onLoadSuccess: OnPageLoadSuccess = (page) => {
+    if (!width || !height) {
+      return;
+    }
+    if (baseWidth.width === 0) {
+      setBaseWidth({
+        orientation,
+        width: Math.round(page.width),
+      });
+    }
+    if (
+      baseWidth.width !== 0 &&
+      baseWidth.orientation !== orientation &&
+      currentWidth.width === 0
+    ) {
+      setCurrentWidth({
+        orientation,
+        width: Math.round(page.width),
+      });
+    }
+
+    if (ratio === 0) {
+      setRatio(width / height);
+    }
+    if (height && page.height > height) {
+      setIsHeightBig(true);
+    }
+    // PostMessage(
+    //   "change",
+    //   `${Math.round(page.originalWidth)} ${Math.round(
+    //     page.originalHeight
+    //   )} ${width} ${height}`
+    // );
+  };
+
+  useEffect(() => {
+    if (isRendered) {
+      redrawPaths();
+    }
+  }, [isRendered, redrawPaths]);
 
   const downloadModifiedPDF = async () => {
     // 기존 PDF 로드
@@ -156,13 +276,7 @@ export default function Sample() {
         });
 
         paths[i + 1].forEach(({ x, y, lastX, lastY }) => {
-          context.beginPath();
-          context.moveTo(lastX, lastY);
-          context.lineTo(x, y);
-          context.strokeStyle = "rgba(0,0,0,0.3)"; // 원하는 색상으로 변경 가능
-          context.lineWidth = 20; // 원하는 두께로 변경 가능
-          context.stroke();
-          context.closePath();
+          DrawSmoothLine(context, lastX, lastY, x, y, color, LINE_WIDTH);
         });
 
         const imgData = tempCanvas.toDataURL("image/png");
@@ -179,7 +293,6 @@ export default function Sample() {
         });
       }
     }
-    // return;
     // 수정된 PDF 다운로드
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -192,10 +305,39 @@ export default function Sample() {
     link.click();
     document.body.removeChild(link);
   };
-  console.log(width, canvas.current?.width);
+
+  const webViewLitener = useCallback(
+    (e: MessageEvent) => {
+      const { type, value } = JSON.parse(e.data);
+      if (type === "drawing") {
+        setCanDraw(value);
+      } else if (type === "left") {
+        if (pageNumber !== 1) {
+          setPageNumber((prev) => prev - 1);
+        }
+      } else if (type === "right") {
+        setPageNumber((prev) => prev + 1);
+      } else if (type === "color") {
+        setColor(value);
+      } else if (type === "refresh") {
+        redrawPaths();
+      }
+    },
+    [pageNumber, redrawPaths]
+  );
+
+  useEffect(() => {
+    document.addEventListener("message", webViewLitener as EventListener);
+    return () =>
+      document.removeEventListener("message", webViewLitener as EventListener);
+  }, [webViewLitener]);
+
   return (
     <>
-      <div ref={ref} className="h-full">
+      <div
+        ref={ref}
+        className="w-dvw h-full bg-gray-400 flex justify-center items-center"
+      >
         <Document file={MyPdf}>
           <Page
             onMouseDown={startDrawing}
@@ -210,45 +352,14 @@ export default function Sample() {
             renderTextLayer={false}
             pageNumber={pageNumber}
             canvasRef={canvas}
-            // width={width}
+            width={pageWidth}
             height={height}
             devicePixelRatio={DEVICE_PIXEL_RATIO}
+            onLoadSuccess={onLoadSuccess}
+            onRenderSuccess={onRenderSuccess}
           />
         </Document>
-      </div>
-      <div className="absolute bottom-20 flex justify-between w-full h-[200px]">
-        <button
-          className="text-[40px]"
-          onClick={() => {
-            if (pageNumber !== 1) {
-              setPageNumber((prev) => prev - 1);
-            }
-          }}
-        >
-          이전페이지
-        </button>
-        <button
-          className="text-[40px] text-pink-400"
-          onClick={() => setCanDraw((prev) => !prev)}
-        >
-          {canDraw ? "안그리기" : "그리기"}
-        </button>
-        <button
-          className="text-[40px]"
-          onClick={() => {
-            setPageNumber((prev) => prev + 1);
-          }}
-        >
-          다음페이지
-        </button>
-        <button
-          className="text-[40px]"
-          onClick={() => {
-            downloadModifiedPDF();
-          }}
-        >
-          다운로드
-        </button>
+        <span className="absolute text-[30px]">{`width: ${width} height: ${height}`}</span>
       </div>
     </>
   );
