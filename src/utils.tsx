@@ -1,29 +1,35 @@
 export type DrawType = React.PointerEvent<HTMLCanvasElement> &
   React.TouchEvent<HTMLCanvasElement>;
 
-export type PathsType = { x: number; y: number; lastX: number; lastY: number };
+export type PathsType = {
+  x: number;
+  y: number;
+  lastX: number;
+  lastY: number;
+  lineWidth: number;
+};
 
 export const NativeLog = (
-  text: unknown,
+  value: unknown,
   webViewType = "ReactNativeWebView"
 ) => {
   window[webViewType]?.postMessage(
     JSON.stringify({
       type: "log",
-      value: JSON.stringify(text),
+      value: JSON.stringify(value),
     })
   );
 };
 
 export const PostMessage = (
   type: string,
-  value: string,
+  value: unknown,
   webViewType = "ReactNativeWebView"
 ) => {
   return window[webViewType]?.postMessage(
     JSON.stringify({
       type,
-      value,
+      value: JSON.stringify(value),
     })
   );
 };

@@ -7,11 +7,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 function App() {
-  return (
-    <div className="flex w-full h-screen">
-      <Sample />
-    </div>
-  );
+  return <Sample />;
 }
 
 export default App;
