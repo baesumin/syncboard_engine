@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { pdfjs, Document, Page } from "react-pdf";
+import { Document, Page } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { isBrowser, useMobileOrientation } from "react-device-detect";
-import { PDFDocument } from "pdf-lib";
+import { LineCapStyle, PDFDocument, rgb } from "pdf-lib";
 
 // import MyPdf from "./assets/sample.pdf";
 import { OnPageLoadSuccess } from "react-pdf/src/shared/types.js";
@@ -16,7 +16,6 @@ import {
 } from "./utils";
 
 const DEVICE_PIXEL_RATIO = 2;
-const DOWNLOAD_SCALE = 2;
 const LINE_WIDTH = 10;
 
 export default function Sample() {
@@ -24,7 +23,6 @@ export default function Sample() {
   const [canDraw, setCanDraw] = useState(false);
   const [isEraser, setIsEraser] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
-  const [isHeightBig, setIsHeightBig] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState({
@@ -63,7 +61,6 @@ export default function Sample() {
     const clientY = GetClientPosition(e, DEVICE_PIXEL_RATIO, "y");
     const x = clientX - DEVICE_PIXEL_RATIO * rect.left;
     const y = clientY - DEVICE_PIXEL_RATIO * rect.top;
-    NativeLog(`${clientY} ${rect.top}`);
 
     DrawSmoothLine(context, x, y, x, y, color, LINE_WIDTH, isEraser);
 
@@ -195,11 +192,6 @@ export default function Sample() {
       width: page.width,
       height: page.height,
     });
-
-    // NativeLog(`${page.height} ${height}`);
-    // if (height && page.height > height) {
-    //   setIsHeightBig(true);
-    // }
   };
 
   useEffect(() => {
@@ -213,71 +205,47 @@ export default function Sample() {
     const existingPdfBytes = await fetch(file).then((res) => res.arrayBuffer());
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-      if (paths[i + 1]) {
+      const currentPaths = paths[i + 1]; // 현재 페이지의 경로 가져오기
+      if (currentPaths) {
         const page = pdfDoc.getPage(i);
         const { width: pageWidth, height: pageHeight } = page.getSize();
-        const tempCanvas = document.createElement("canvas");
-        const context = tempCanvas.getContext("2d")!;
+        NativeLog(`${pageWidth} ${pageHeight}`);
 
-        // 캔버스 크기 설정
-        tempCanvas.width = pageWidth * DOWNLOAD_SCALE * DEVICE_PIXEL_RATIO;
-        tempCanvas.height = pageHeight * DOWNLOAD_SCALE * DEVICE_PIXEL_RATIO;
-        // PDF 페이지를 새 캔버스에 그리기
-        await new Promise((resolve) => {
-          const renderTask = pdfjs.getDocument(file).promise.then((pdf) => {
-            return pdf.getPage(i + 1).then((pdfPage) => {
-              const viewport = pdfPage.getViewport({
-                scale: DOWNLOAD_SCALE * DEVICE_PIXEL_RATIO,
-              });
-              const renderContext = {
-                canvasContext: context,
-                viewport: viewport,
-              };
-              return pdfPage.render(renderContext).promise;
-            });
+        // 경로 그리기
+        currentPaths.forEach(({ x, y, lastX, lastY, lineWidth }) => {
+          page.drawLine({
+            start: {
+              x: (lastX * pageWidth) / DEVICE_PIXEL_RATIO,
+              y: pageHeight - (lastY * pageHeight) / DEVICE_PIXEL_RATIO,
+            }, // y 좌표 반전
+            end: {
+              x: (x * pageWidth) / DEVICE_PIXEL_RATIO,
+              y: pageHeight - (y * pageHeight) / DEVICE_PIXEL_RATIO,
+            }, // y 좌표 반전
+            color: rgb(0, 0, 0), // 선 색상
+            thickness: (lineWidth * pageWidth) / DEVICE_PIXEL_RATIO, // 선 두께
+            lineCap: LineCapStyle.Round,
           });
-          renderTask.then(resolve);
-        });
-
-        paths[i + 1].forEach(({ x, y, lastX, lastY, lineWidth }) => {
-          DrawSmoothLine(
-            context,
-            lastX * pageWidth * DOWNLOAD_SCALE,
-            lastY * pageHeight * DOWNLOAD_SCALE,
-            x * pageWidth * DOWNLOAD_SCALE,
-            y * pageHeight * DOWNLOAD_SCALE,
-            color,
-            lineWidth * pageWidth * DOWNLOAD_SCALE
-          );
-        });
-
-        const imgData = tempCanvas.toDataURL("image/png");
-        const imgBytes = await fetch(imgData).then((res) => res.arrayBuffer());
-        const pngImage = await pdfDoc.embedPng(imgBytes);
-        pdfDoc.removePage(i);
-        const blankPage = pdfDoc.insertPage(i, [pageWidth, pageHeight]);
-        // 이미지 위치 설정
-        blankPage.drawImage(pngImage, {
-          x: 0,
-          y: 0,
-          width: pageWidth,
-          height: pageHeight,
         });
       }
     }
-    // 수정된 PDF 다운로드
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    const reader = new FileReader();
-    reader.readAsDataURL(blob);
-    reader.onloadend = () => {
-      const base64data = reader.result;
-      PostMessage("save", base64data);
-    };
-    reader.onerror = () => {
-      PostMessage("error", "저장에러발생");
-    };
-  }, [color, file, paths]);
+    NativeLog(`blob size: ${blob.size}`);
+    if (isBrowser) {
+      // PDF 다운로드
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "modified.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+      PostMessage("save", base64DataUri);
+    }
+  }, [file, paths]);
 
   const webViewLitener = useCallback(
     (e: MessageEvent) => {
@@ -301,6 +269,7 @@ export default function Sample() {
         downloadModifiedPDF();
       } else if (type === "pdf") {
         if (value) {
+          NativeLog((value as string).substring(0, 100));
           const base64 = (value as string).split(",")[1].slice(0, -1);
           setFile(`data:application/pdf;base64,${base64}`);
         }
@@ -345,6 +314,12 @@ export default function Sample() {
               onTouchEnd={stopDrawing}
               renderAnnotationLayer={false}
               renderTextLayer={false}
+              onRenderAnnotationLayerSuccess={() => {
+                NativeLog("onRenderAnnotationLayerSuccess");
+              }}
+              onRenderAnnotationLayerError={() => {
+                NativeLog("onRenderAnnotationLayerError");
+              }}
               pageNumber={pageNumber}
               canvasRef={canvas}
               width={pageWidth}
