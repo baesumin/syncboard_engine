@@ -9,7 +9,7 @@ export type PathsType = {
   lineWidth: number;
 };
 
-export const NativeLog = (
+export const nativeLog = (
   value: unknown,
   webViewType = "ReactNativeWebView"
 ) => {
@@ -21,7 +21,7 @@ export const NativeLog = (
   );
 };
 
-export const PostMessage = (
+export const postMessage = (
   type: string,
   value: unknown,
   webViewType = "ReactNativeWebView"
@@ -34,7 +34,7 @@ export const PostMessage = (
   );
 };
 
-export const GetClientPosition = (
+export const getClientPosition = (
   e: DrawType,
   devicePixelRatio: number,
   type: "x" | "y"
@@ -46,7 +46,23 @@ export const GetClientPosition = (
   );
 };
 
-export const DrawSmoothLine = (
+export const getDrawingPosition = (
+  canvas: React.RefObject<HTMLCanvasElement>,
+  e: DrawType,
+  devicePixelRatio: number
+) => {
+  if (!canvas.current) {
+    return { x: 0, y: 0 };
+  }
+  const rect = canvas.current.getBoundingClientRect();
+  const clientX = getClientPosition(e, devicePixelRatio, "x");
+  const clientY = getClientPosition(e, devicePixelRatio, "y");
+  const x = clientX - devicePixelRatio * rect.left;
+  const y = clientY - devicePixelRatio * rect.top;
+  return { x, y };
+};
+
+export const drawSmoothLine = (
   context: CanvasRenderingContext2D,
   lastX: number,
   lastY: number,

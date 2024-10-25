@@ -1,52 +1,45 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, Page } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { isBrowser, useMobileOrientation } from "react-device-detect";
 import { LineCapStyle, PDFDocument, rgb } from "pdf-lib";
-
-// import MyPdf from "./assets/sample.pdf";
 import { OnPageLoadSuccess } from "react-pdf/src/shared/types.js";
 import {
-  DrawSmoothLine,
+  drawSmoothLine,
   DrawType,
-  GetClientPosition,
-  NativeLog,
+  getDrawingPosition,
+  nativeLog,
   PathsType,
-  PostMessage,
+  postMessage,
 } from "./utils";
 
 const DEVICE_PIXEL_RATIO = 2;
 const LINE_WIDTH = 10;
 
 export default function Sample() {
+  const { orientation } = useMobileOrientation();
+  const { width, height, ref } = useResizeDetector();
+
   const canvas = useRef<HTMLCanvasElement>(null);
+  const lastXRef = useRef(0);
+  const lastYRef = useRef(0);
+  const pathsRef = useRef<PathsType[]>([]);
+
   const [canDraw, setCanDraw] = useState(false);
   const [isEraser, setIsEraser] = useState(false);
   const [isRendered, setIsRendered] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
+  const [file, setFile] = useState("");
+  const [isFileLoad, setIsFileLoad] = useState(false);
+  const [color, setColor] = useState("orange");
   const [pageSize, setPageSize] = useState({
     width: 0,
     height: 0,
   });
-
-  const lastXRef = useRef(0);
-  const lastYRef = useRef(0);
-  const pathsRef = useRef<PathsType[]>([]);
-  const [file, setFile] = useState("");
-  const [isFileLoad, setIsFileLoad] = useState(false);
-
   const [paths, setPaths] = useState<{
     [pageNumber: number]: PathsType[];
   }>([]);
-
-  const { width, height, ref } = useResizeDetector();
-  const [color, setColor] = useState("orange");
-  const { orientation } = useMobileOrientation();
-  const pageWidth = useMemo(
-    () => (orientation === "portrait" ? width : undefined),
-    [orientation, width]
-  );
 
   const startDrawing = (e: DrawType) => {
     e.persist();
@@ -56,13 +49,9 @@ export default function Sample() {
     setIsDrawing(true);
 
     const context = canvas.current.getContext("2d")!;
-    const rect = canvas.current.getBoundingClientRect();
-    const clientX = GetClientPosition(e, DEVICE_PIXEL_RATIO, "x");
-    const clientY = GetClientPosition(e, DEVICE_PIXEL_RATIO, "y");
-    const x = clientX - DEVICE_PIXEL_RATIO * rect.left;
-    const y = clientY - DEVICE_PIXEL_RATIO * rect.top;
+    const { x, y } = getDrawingPosition(canvas, e, DEVICE_PIXEL_RATIO);
 
-    DrawSmoothLine(context, x, y, x, y, color, LINE_WIDTH, isEraser);
+    drawSmoothLine(context, x, y, x, y, color, LINE_WIDTH, isEraser);
 
     pathsRef.current.push({
       x: x / pageSize.width,
@@ -80,14 +69,9 @@ export default function Sample() {
     if (!isDrawing || !canvas.current || !width || !height) return;
 
     const context = canvas.current.getContext("2d")!;
+    const { x, y } = getDrawingPosition(canvas, e, DEVICE_PIXEL_RATIO);
 
-    const rect = canvas.current.getBoundingClientRect();
-    const clientX = GetClientPosition(e, DEVICE_PIXEL_RATIO, "x");
-    const clientY = GetClientPosition(e, DEVICE_PIXEL_RATIO, "y");
-    const x = clientX - DEVICE_PIXEL_RATIO * rect.left;
-    const y = clientY - DEVICE_PIXEL_RATIO * rect.top;
-
-    DrawSmoothLine(
+    drawSmoothLine(
       context,
       lastXRef.current,
       lastYRef.current,
@@ -127,7 +111,7 @@ export default function Sample() {
             if (currentGroup.length > 1) {
               // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
               for (let j = 1; j < currentGroup.length; j++) {
-                DrawSmoothLine(
+                drawSmoothLine(
                   context,
                   currentGroup[j - 1].x * pageSize.width,
                   currentGroup[j - 1].y * pageSize.height,
@@ -147,7 +131,7 @@ export default function Sample() {
         // 마지막 그룹 처리
         if (currentGroup.length > 1) {
           for (let j = 1; j < currentGroup.length; j++) {
-            DrawSmoothLine(
+            drawSmoothLine(
               context,
               currentGroup[j - 1].x * pageSize.width,
               currentGroup[j - 1].y * pageSize.height,
@@ -185,20 +169,11 @@ export default function Sample() {
   };
 
   const onLoadSuccess: OnPageLoadSuccess = (page) => {
-    if (!width || !height) {
-      return;
-    }
     setPageSize({
       width: page.width,
       height: page.height,
     });
   };
-
-  useEffect(() => {
-    if (isRendered) {
-      redrawPaths();
-    }
-  }, [isRendered, redrawPaths]);
 
   const downloadModifiedPDF = useCallback(async () => {
     // 기존 PDF 로드
@@ -209,7 +184,6 @@ export default function Sample() {
       if (currentPaths) {
         const page = pdfDoc.getPage(i);
         const { width: pageWidth, height: pageHeight } = page.getSize();
-        NativeLog(`${pageWidth} ${pageHeight}`);
 
         // 경로 그리기
         currentPaths.forEach(({ x, y, lastX, lastY, lineWidth }) => {
@@ -231,9 +205,8 @@ export default function Sample() {
     }
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    NativeLog(`blob size: ${blob.size}`);
+    nativeLog(`blob size: ${blob.size}`);
     if (isBrowser) {
-      // PDF 다운로드
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -243,7 +216,7 @@ export default function Sample() {
       document.body.removeChild(a);
     } else {
       const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
-      PostMessage("save", base64DataUri);
+      postMessage("save", base64DataUri);
     }
   }, [file, paths]);
 
@@ -269,7 +242,6 @@ export default function Sample() {
         downloadModifiedPDF();
       } else if (type === "pdf") {
         if (value) {
-          NativeLog((value as string).substring(0, 100));
           const base64 = (value as string).split(",")[1].slice(0, -1);
           setFile(`data:application/pdf;base64,${base64}`);
         }
@@ -278,6 +250,12 @@ export default function Sample() {
     },
     [downloadModifiedPDF, pageNumber, redrawPaths]
   );
+
+  useEffect(() => {
+    if (isRendered) {
+      redrawPaths();
+    }
+  }, [isRendered, redrawPaths]);
 
   useEffect(() => {
     document.addEventListener("message", webViewLitener as EventListener);
@@ -296,41 +274,33 @@ export default function Sample() {
   }, [file, isFileLoad]);
 
   return (
-    <>
-      <div
-        ref={ref}
-        className="w-dvw h-dvh bg-gray-400 flex justify-center items-center"
-      >
-        {file && (
-          <Document file={file}>
-            <Page
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseLeave={stopDrawing}
-              onTouchStart={startDrawing}
-              onTouchMove={draw}
-              onTouchCancel={stopDrawing}
-              onTouchEnd={stopDrawing}
-              renderAnnotationLayer={false}
-              renderTextLayer={false}
-              onRenderAnnotationLayerSuccess={() => {
-                NativeLog("onRenderAnnotationLayerSuccess");
-              }}
-              onRenderAnnotationLayerError={() => {
-                NativeLog("onRenderAnnotationLayerError");
-              }}
-              pageNumber={pageNumber}
-              canvasRef={canvas}
-              width={pageWidth}
-              height={height}
-              devicePixelRatio={DEVICE_PIXEL_RATIO}
-              onLoadSuccess={onLoadSuccess}
-              onRenderSuccess={onRenderSuccess}
-            />
-          </Document>
-        )}
-      </div>
-    </>
+    <div
+      ref={ref}
+      className="w-dvw h-dvh bg-gray-400 flex justify-center items-center"
+    >
+      {file && (
+        <Document file={file}>
+          <Page
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchCancel={stopDrawing}
+            onTouchEnd={stopDrawing}
+            renderAnnotationLayer={false}
+            renderTextLayer={false}
+            pageNumber={pageNumber}
+            canvasRef={canvas}
+            width={orientation === "portrait" ? width : undefined}
+            height={height}
+            devicePixelRatio={DEVICE_PIXEL_RATIO}
+            onLoadSuccess={onLoadSuccess}
+            onRenderSuccess={onRenderSuccess}
+          />
+        </Document>
+      )}
+    </div>
   );
 }
