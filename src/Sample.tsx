@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Document, Page } from "react-pdf";
+import { Document, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { isBrowser, useMobileOrientation } from "react-device-detect";
 import { LineCapStyle, PDFDocument } from "pdf-lib";
@@ -43,6 +43,8 @@ export default function Sample() {
     [pageNumber: number]: PathsType[];
   }>([]);
   const [drawOrder, setDrawOrder] = useState(0);
+  const [isListOpen, setIsListOpen] = useState(false);
+  const [totalPage, setTotalPage] = useState(0);
 
   const startDrawing = (e: DrawType) => {
     e.persist();
@@ -335,6 +337,8 @@ export default function Sample() {
           setFile(`data:application/pdf;base64,${base64}`);
         }
         setIsFileLoad(true);
+      } else if (type === "list") {
+        setIsListOpen(true);
       }
     },
     [downloadModifiedPDF, pageNumber]
@@ -345,13 +349,6 @@ export default function Sample() {
       redrawPaths(pageSize.width, pageSize.height);
     }
   }, [pageSize, redrawPaths]);
-
-  // useEffect(() => {
-  //   if (!isDrawing) {
-  //     nativeLog("hi");
-  //     redrawPaths();
-  //   }
-  // }, [paths, isDrawing, redrawPaths]);
 
   useEffect(() => {
     document.addEventListener("message", webViewLitener as EventListener);
@@ -365,7 +362,7 @@ export default function Sample() {
       return;
     }
     if (isFileLoad && !file) {
-      setFile("/src/assets/sample.pdf");
+      setFile("/src/assets/sample2.pdf");
     }
   }, [file, isFileLoad]);
 
@@ -376,38 +373,80 @@ export default function Sample() {
     >
       {file && (
         <>
-          <Document file={file}>
-            <Page
-              renderAnnotationLayer={false}
-              renderTextLayer={false}
+          <Document
+            file={file}
+            onLoadSuccess={(pdf) => {
+              setTotalPage(pdf.numPages);
+            }}
+          >
+            <Thumbnail
               pageNumber={pageNumber}
               width={orientation === "portrait" ? width : undefined}
               height={height}
               devicePixelRatio={DEVICE_PIXEL_RATIO}
               onRenderSuccess={onRenderSuccess}
             />
+
+            <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
+              <canvas
+                ref={canvas}
+                key={pageNumber}
+                width={pageSize.width * DEVICE_PIXEL_RATIO}
+                height={pageSize.height * DEVICE_PIXEL_RATIO}
+                style={{
+                  width: `${pageSize.width}px`,
+                  height: `${pageSize.height}px`,
+                  pointerEvents: canDraw ? "auto" : "none",
+                }}
+                // onMouseDown={startDrawing}
+                // onMouseMove={draw}
+                // onMouseUp={stopDrawing}
+                // onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchCancel={stopDrawing}
+                onTouchEnd={stopDrawing}
+              />
+            </div>
+            {isListOpen && (
+              <div className="absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/50 px-5 py-5">
+                <div className="h-16 flex justify-end items-center">
+                  <button
+                    onClick={() => setIsListOpen(false)}
+                    className="bg-white w-10 h-10"
+                  >
+                    닫기
+                  </button>
+                </div>
+                <div className="flex gap-4 flex-wrap">
+                  {[...new Array(totalPage)].map((item, index) => {
+                    return (
+                      <div
+                        onClick={() => {
+                          setPageNumber(index + 1);
+                          setIsListOpen(false);
+                        }}
+                        className="w-[180px]"
+                      >
+                        <div className=" bg-white flex">
+                          <Thumbnail
+                            pageNumber={index + 1}
+                            width={180}
+                            devicePixelRatio={2}
+                          />
+                        </div>
+                        <div className="h-[31px] flex justify-center">
+                          <span className="text-white">
+                            {index + 1}/{totalPage}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </Document>
-          <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
-            <canvas
-              ref={canvas}
-              key={pageNumber}
-              width={pageSize.width * DEVICE_PIXEL_RATIO}
-              height={pageSize.height * DEVICE_PIXEL_RATIO}
-              style={{
-                width: `${pageSize.width}px`,
-                height: `${pageSize.height}px`,
-                pointerEvents: canDraw ? "auto" : "none",
-              }}
-              // onMouseDown={startDrawing}
-              // onMouseMove={draw}
-              // onMouseUp={stopDrawing}
-              // onMouseLeave={stopDrawing}
-              onTouchStart={startDrawing}
-              onTouchMove={draw}
-              onTouchCancel={stopDrawing}
-              onTouchEnd={stopDrawing}
-            />
-          </div>
         </>
       )}
     </div>
