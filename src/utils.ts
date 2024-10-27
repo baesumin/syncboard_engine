@@ -35,7 +35,7 @@ export const nativeLog = (
 
 export const postMessage = (
   type: string,
-  value: unknown,
+  value?: unknown,
   webViewType = "ReactNativeWebView"
 ) => {
   return window[webViewType]?.postMessage(
@@ -61,16 +61,19 @@ export const getClientPosition = (
 export const getDrawingPosition = (
   canvas: React.RefObject<HTMLCanvasElement>,
   e: DrawType,
-  devicePixelRatio: number
+  devicePixelRatio: number,
+  scale: number
 ) => {
   if (!canvas.current) {
     return { x: 0, y: 0 };
   }
-  const rect = canvas.current.getBoundingClientRect();
+
+  const rect = canvas.current.getBoundingClientRect(); // 캔버스의 위치와 크기를 가져옴
   const clientX = getClientPosition(e, devicePixelRatio, "x");
   const clientY = getClientPosition(e, devicePixelRatio, "y");
-  const x = clientX - devicePixelRatio * rect.left;
-  const y = clientY - devicePixelRatio * rect.top;
+  const x = (clientX - devicePixelRatio * rect.left) / scale;
+  const y = (clientY - devicePixelRatio * rect.top) / scale;
+
   return { x, y };
 };
 

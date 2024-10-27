@@ -15,6 +15,10 @@ import {
   PathsType,
   postMessage,
 } from "./utils";
+import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+import FullScreen from "./assets/ico-fullscreen.svg?react";
+import ThumbnailList from "./assets/ico-thumb-documnet.svg?react";
+import ArrowLeft from "./assets/ico-arrow-left.svg?react";
 
 const DEVICE_PIXEL_RATIO = 2;
 const LINE_WIDTH = 10;
@@ -26,6 +30,7 @@ export default function Sample() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const lastXRef = useRef(0);
   const lastYRef = useRef(0);
+  const scale = useRef(1);
   const pathsRef = useRef<PathsType[]>([]);
 
   const [canDraw, setCanDraw] = useState(false);
@@ -54,7 +59,13 @@ export default function Sample() {
     setIsDrawing(true);
 
     const context = canvas.current.getContext("2d")!;
-    const { x, y } = getDrawingPosition(canvas, e, DEVICE_PIXEL_RATIO);
+
+    const { x, y } = getDrawingPosition(
+      canvas,
+      e,
+      DEVICE_PIXEL_RATIO,
+      scale.current
+    );
 
     if (isEraser) {
       drawDashedLine(context, x, y, x, y);
@@ -80,7 +91,13 @@ export default function Sample() {
     if (!isDrawing || !canvas.current || !width || !height) return;
 
     const context = canvas.current.getContext("2d")!;
-    const { x, y } = getDrawingPosition(canvas, e, DEVICE_PIXEL_RATIO);
+
+    const { x, y } = getDrawingPosition(
+      canvas,
+      e,
+      DEVICE_PIXEL_RATIO,
+      scale.current
+    );
 
     if (isEraser) {
       drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
@@ -318,12 +335,6 @@ export default function Sample() {
       const { type, value } = JSON.parse(e.data);
       if (type === "drawing") {
         setCanDraw(value);
-      } else if (type === "left") {
-        if (pageNumber !== 1) {
-          setPageNumber((prev) => prev - 1);
-        }
-      } else if (type === "right") {
-        setPageNumber((prev) => prev + 1);
       } else if (type === "color") {
         setColor(value);
         setIsEraser(false);
@@ -337,11 +348,9 @@ export default function Sample() {
           setFile(`data:application/pdf;base64,${base64}`);
         }
         setIsFileLoad(true);
-      } else if (type === "list") {
-        setIsListOpen(true);
       }
     },
-    [downloadModifiedPDF, pageNumber]
+    [downloadModifiedPDF]
   );
 
   useEffect(() => {
@@ -362,52 +371,76 @@ export default function Sample() {
       return;
     }
     if (isFileLoad && !file) {
-      setFile("/src/assets/sample2.pdf");
+      setFile("/src/assets/sample.pdf");
     }
   }, [file, isFileLoad]);
 
+  const onTransFormed = (_: unknown, state: { scale: number }) => {
+    scale.current = state.scale;
+  };
+
   return (
-    <div
-      ref={ref}
-      className="w-dvw h-dvh bg-gray-400 flex justify-center items-center"
-    >
-      {file && (
-        <>
+    <>
+      <div className="w-dvw h-dvh bg-gray-400 flex justify-center items-center">
+        {file && (
           <Document
             file={file}
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
           >
-            <Thumbnail
-              pageNumber={pageNumber}
-              width={orientation === "portrait" ? width : undefined}
-              height={height}
-              devicePixelRatio={DEVICE_PIXEL_RATIO}
-              onRenderSuccess={onRenderSuccess}
-            />
+            <TransformWrapper
+              disabled={canDraw}
+              initialScale={1}
+              maxScale={3}
+              minScale={1}
+              disablePadding
+              onTransformed={onTransFormed}
+              onZoomStop={(_default, event) => {
+                nativeLog(event);
+              }}
+            >
+              <TransformComponent>
+                <div
+                  ref={ref}
+                  className="w-dvw h-dvh flex justify-center items-center"
+                >
+                  {file && (
+                    <>
+                      <Thumbnail
+                        pageNumber={pageNumber}
+                        width={orientation === "portrait" ? width : undefined}
+                        height={height}
+                        devicePixelRatio={DEVICE_PIXEL_RATIO * scale.current}
+                        onRenderSuccess={onRenderSuccess}
+                      />
 
-            <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
-              <canvas
-                ref={canvas}
-                key={pageNumber}
-                width={pageSize.width * DEVICE_PIXEL_RATIO}
-                height={pageSize.height * DEVICE_PIXEL_RATIO}
-                style={{
-                  width: `${pageSize.width}px`,
-                  height: `${pageSize.height}px`,
-                  pointerEvents: canDraw ? "auto" : "none",
-                }}
-                // onMouseDown={startDrawing}
-                // onMouseMove={draw}
-                // onMouseUp={stopDrawing}
-                // onMouseLeave={stopDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchCancel={stopDrawing}
-                onTouchEnd={stopDrawing}
-              />
-            </div>
+                      <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
+                        <canvas
+                          ref={canvas}
+                          key={pageNumber}
+                          width={pageSize.width * DEVICE_PIXEL_RATIO}
+                          height={pageSize.height * DEVICE_PIXEL_RATIO}
+                          style={{
+                            width: `${pageSize.width}px`,
+                            height: `${pageSize.height}px`,
+                            pointerEvents: canDraw ? "auto" : "none",
+                          }}
+                          // onMouseDown={startDrawing}
+                          // onMouseMove={draw}
+                          // onMouseUp={stopDrawing}
+                          // onMouseLeave={stopDrawing}
+                          onTouchStart={startDrawing}
+                          onTouchMove={draw}
+                          onTouchCancel={stopDrawing}
+                          onTouchEnd={stopDrawing}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </TransformComponent>
+            </TransformWrapper>
             {isListOpen && (
               <div className="absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/50 px-5 py-5">
                 <div className="h-16 flex justify-end items-center">
@@ -419,7 +452,7 @@ export default function Sample() {
                   </button>
                 </div>
                 <div className="flex gap-4 flex-wrap">
-                  {[...new Array(totalPage)].map((item, index) => {
+                  {[...new Array(totalPage)].map((_, index) => {
                     return (
                       <div
                         onClick={() => {
@@ -447,8 +480,53 @@ export default function Sample() {
               </div>
             )}
           </Document>
+        )}
+      </div>
+      {!isListOpen && (
+        <>
+          <div className="fixed left-0 right-0 top-0 bottom-0 flex justify-between items-center pointer-events-none">
+            <button
+              onClick={() => {
+                if (pageNumber !== 1) {
+                  setPageNumber((prev) => prev - 1);
+                }
+              }}
+              className="pointer-events-auto w-[80px] h-[160px] rounded-tr-[100px] rounded-br-[100px] bg-[#56657E] opacity-50 flex justify-center items-center text-white"
+            >
+              <ArrowLeft />
+            </button>
+            <button
+              onClick={() => {
+                if (pageNumber !== totalPage) {
+                  setPageNumber((prev) => prev + 1);
+                }
+              }}
+              className="pointer-events-auto w-[80px] h-[160px] rounded-tl-[100px] rounded-bl-[100px] bg-[#56657E]/50 flex justify-center items-center text-white"
+            >
+              <div className="rotate-180">
+                <ArrowLeft />
+              </div>
+            </button>
+          </div>
+          <div className="fixed left-0 right-0 top-0 flex justify-between px-[30px] pt-[30px] pointer-events-none">
+            <button
+              onClick={() => setIsListOpen(true)}
+              className="pointer-events-auto w-[113px] h-[52px] rounded-xl bg-[#202325]/70 flex items-center pl-1 gap-3"
+            >
+              <div className="size-[44px] bg-white rounded-lg flex justify-center items-center">
+                <ThumbnailList />
+              </div>
+              <span className="text-white text-lg">{`${pageNumber}/${totalPage}`}</span>
+            </button>
+            <button
+              onClick={() => postMessage("fullScreen")}
+              className="pointer-events-auto size-[52px] rounded-xl bg-white shadow-black shadow-sm flex justify-center items-center"
+            >
+              <FullScreen />
+            </button>
+          </div>
         </>
       )}
-    </div>
+    </>
   );
 }
