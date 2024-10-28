@@ -455,6 +455,7 @@ export default function Sample() {
                           width={180}
                           devicePixelRatio={2}
                           onItemClick={({ pageNumber }) => {
+                            scaleRef.current?.resetTransform(0);
                             setPageNumber(pageNumber);
                             setIsListOpen(false);
                           }}
