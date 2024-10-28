@@ -54,6 +54,7 @@ export default function Sample() {
   const [drawOrder, setDrawOrder] = useState(0);
   const [isListOpen, setIsListOpen] = useState(false);
   const [totalPage, setTotalPage] = useState(0);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   const startDrawing = (e: DrawType) => {
     e.persist();
@@ -380,7 +381,7 @@ export default function Sample() {
   const onTransFormed = (_: unknown, state: { scale: number }) => {
     scale.current = state.scale;
   };
-  nativeLog(file.length);
+
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex justify-center items-center">
@@ -404,9 +405,8 @@ export default function Sample() {
                   ref={ref}
                   className="w-dvw h-dvh flex justify-center items-center"
                   style={{
-                    // width: "calc(100dvw)",
-                    paddingLeft: 100,
-                    paddingRight: 100,
+                    paddingLeft: isFullScreen ? 0 : 100,
+                    paddingRight: isFullScreen ? 0 : 100,
                   }}
                 >
                   {file && (
@@ -441,11 +441,11 @@ export default function Sample() {
               </TransformComponent>
             </TransformWrapper>
             {isListOpen && (
-              <div className="absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-5 py-5">
-                <div className="h-16 flex justify-end items-center">
+              <div className="absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[30px] pt-[30px]">
+                <div className="h-[52px] flex justify-end items-center">
                   <button
                     onClick={() => setIsListOpen(false)}
-                    className="bg-white size-[48px] flex justify-center items-center rounded-lg"
+                    className="bg-white size-[52px] flex justify-center items-center rounded-xl"
                   >
                     <Close />
                   </button>
@@ -486,9 +486,9 @@ export default function Sample() {
                   setPageNumber((prev) => prev - 1);
                 }
               }}
-              className="pointer-events-auto w-[80px] h-[160px] rounded-tr-[100px] rounded-br-[100px] bg-[#56657E] opacity-50 flex justify-center items-center text-white"
+              className="pointer-events-auto w-[80px] h-[160px] rounded-tr-[100px] rounded-br-[100px] bg-[#56657E]/50 flex justify-center items-center text-white"
             >
-              <ArrowLeft />
+              <ArrowLeft color={pageNumber === 1 ? "#BCC2CB" : "white"} />
             </button>
             <button
               onClick={() => {
@@ -499,7 +499,9 @@ export default function Sample() {
               className="pointer-events-auto w-[80px] h-[160px] rounded-tl-[100px] rounded-bl-[100px] bg-[#56657E]/50 flex justify-center items-center text-white"
             >
               <div className="rotate-180">
-                <ArrowLeft />
+                <ArrowLeft
+                  color={pageNumber === totalPage ? "#BCC2CB" : "white"}
+                />
               </div>
             </button>
           </div>
@@ -514,7 +516,10 @@ export default function Sample() {
               <span className="text-white text-lg">{`${pageNumber}/${totalPage}`}</span>
             </button>
             <button
-              onClick={() => postMessage("fullScreen")}
+              onClick={() => {
+                postMessage("fullScreen");
+                setIsFullScreen((prev) => !prev);
+              }}
               className="pointer-events-auto size-[52px] rounded-xl bg-white shadow-black shadow-sm flex justify-center items-center"
             >
               <FullScreen />
