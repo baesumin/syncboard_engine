@@ -5,7 +5,7 @@ import { isBrowser, useMobileOrientation } from "react-device-detect";
 import { LineCapStyle, PDFDocument } from "pdf-lib";
 import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
-  colors,
+  colorMap,
   colorToRGB,
   drawDashedLine,
   drawSmoothLine,
@@ -15,13 +15,22 @@ import {
   PathsType,
   postMessage,
 } from "./utils";
-import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+import {
+  ReactZoomPanPinchContentRef,
+  TransformComponent,
+  TransformWrapper,
+} from "react-zoom-pan-pinch";
 import FullScreen from "./assets/ico-fullscreen.svg?react";
 import ThumbnailList from "./assets/ico-thumb-documnet.svg?react";
 import ArrowLeft from "./assets/ico-arrow-left.svg?react";
 import Close from "./assets/ico-close.svg?react";
 import Drawing from "./assets/ico-drawing.svg?react";
+import Pen from "./assets/ico-pen.svg?react";
+import Hightlighter from "./assets/ico-hightlighter.svg?react";
+import Eraser from "./assets/ico-eraser.svg?react";
+import Checked from "./assets/ico-checked.svg?react";
 import SamplePdf from "./assets/sample.pdf";
+import clsx from "clsx";
 // import Sample2Pdf from "./assets/sample2.pdf";
 
 const DEVICE_PIXEL_RATIO = 2;
@@ -36,14 +45,14 @@ export default function Sample() {
   const lastYRef = useRef(0);
   const scale = useRef(1);
   const pathsRef = useRef<PathsType[]>([]);
+  const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
 
   const [canDraw, setCanDraw] = useState(false);
-  const [isEraser, setIsEraser] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [file, setFile] = useState("");
   const [isFileLoad, setIsFileLoad] = useState(false);
-  const [color, setColor] = useState<keyof typeof colors>("orange");
+  const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
   const [pageSize, setPageSize] = useState({
     width: 0,
     height: 0,
@@ -55,6 +64,9 @@ export default function Sample() {
   const [isListOpen, setIsListOpen] = useState(false);
   const [totalPage, setTotalPage] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [drawType, setDrawType] = useState<"pen" | "highlight" | "eraser">(
+    "pen"
+  );
 
   const startDrawing = (e: DrawType) => {
     e.persist();
@@ -72,7 +84,7 @@ export default function Sample() {
       scale.current
     );
 
-    if (isEraser) {
+    if (drawType === "eraser") {
       drawDashedLine(context, x, y, x, y);
     } else {
       drawSmoothLine(context, x, y, x, y, color, LINE_WIDTH);
@@ -104,7 +116,7 @@ export default function Sample() {
       scale.current
     );
 
-    if (isEraser) {
+    if (drawType === "eraser") {
       drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
     } else {
       drawSmoothLine(
@@ -187,10 +199,10 @@ export default function Sample() {
     [height, pageNumber, paths, width]
   );
 
-  const stopDrawing = useCallback(async () => {
+  const stopDrawing = async () => {
     setIsDrawing(false);
 
-    if (isEraser) {
+    if (drawType === "eraser") {
       // 손을 뗄 때 기존 선과 겹치는 부분 삭제
       if (pathsRef.current.length > 0) {
         const currentPaths = paths[pageNumber] || [];
@@ -269,7 +281,7 @@ export default function Sample() {
       }
     }
 
-    if (pathsRef.current.length > 0 && !isEraser) {
+    if (pathsRef.current.length > 0 && drawType !== "eraser") {
       const newValue = pathsRef.current;
       setDrawOrder((prev) => prev + 1);
       setPaths((prev) => {
@@ -281,7 +293,7 @@ export default function Sample() {
       // pathsRef 초기화
       pathsRef.current = [];
     }
-  }, [isEraser, pageNumber, pageSize, paths]);
+  };
 
   const onRenderSuccess: OnRenderSuccess = (page) => {
     setPageSize({
@@ -321,29 +333,14 @@ export default function Sample() {
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     nativeLog(`blob size: ${blob.size}`);
-    if (isBrowser) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "modified.pdf";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } else {
-      const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
-      postMessage("save", base64DataUri);
-    }
+    const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+    postMessage("save", base64DataUri);
   }, [file, paths]);
 
   const webViewLitener = useCallback(
     (e: MessageEvent) => {
       const { type, value } = JSON.parse(e.data);
-      if (type === "color") {
-        setColor(value);
-        setIsEraser(false);
-      } else if (type === "eraser") {
-        setIsEraser(true);
-      } else if (type === "save") {
+      if (type === "save") {
         downloadModifiedPDF();
       } else if (type === "pdf") {
         if (value) {
@@ -378,13 +375,9 @@ export default function Sample() {
     }
   }, [file, isFileLoad]);
 
-  const onTransFormed = (_: unknown, state: { scale: number }) => {
-    scale.current = state.scale;
-  };
-
   return (
     <>
-      <div className="w-dvw h-dvh bg-gray-400 flex justify-center items-center">
+      <div className="w-dvw h-dvh bg-gray-400 flex-center">
         {file && (
           <Document
             file={file}
@@ -393,17 +386,20 @@ export default function Sample() {
             }}
           >
             <TransformWrapper
+              ref={scaleRef}
               disabled={canDraw}
               initialScale={1}
               maxScale={3}
               minScale={1}
               disablePadding
-              onTransformed={onTransFormed}
+              onPinchingStop={(ref) => {
+                scale.current = ref.state.scale;
+              }}
             >
               <TransformComponent>
                 <div
                   ref={ref}
-                  className="w-dvw h-dvh flex justify-center items-center"
+                  className="w-dvw h-dvh flex-center"
                   style={{
                     paddingLeft: isFullScreen ? 0 : 100,
                     paddingRight: isFullScreen ? 0 : 100,
@@ -415,10 +411,10 @@ export default function Sample() {
                         pageNumber={pageNumber}
                         width={orientation === "portrait" ? width : undefined}
                         height={height}
-                        devicePixelRatio={DEVICE_PIXEL_RATIO * scale.current}
+                        devicePixelRatio={DEVICE_PIXEL_RATIO}
                         onRenderSuccess={onRenderSuccess}
                       />
-                      <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
+                      <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
                         <canvas
                           ref={canvas}
                           key={pageNumber}
@@ -445,7 +441,7 @@ export default function Sample() {
                 <div className="h-[52px] flex justify-end items-center">
                   <button
                     onClick={() => setIsListOpen(false)}
-                    className="bg-white size-[52px] flex justify-center items-center rounded-xl"
+                    className="bg-white size-[52px] flex-center rounded-xl"
                   >
                     <Close />
                   </button>
@@ -483,20 +479,22 @@ export default function Sample() {
             <button
               onClick={() => {
                 if (pageNumber !== 1) {
+                  scaleRef.current?.resetTransform(0);
                   setPageNumber((prev) => prev - 1);
                 }
               }}
-              className="pointer-events-auto w-[80px] h-[160px] rounded-tr-[100px] rounded-br-[100px] bg-[#56657E]/50 flex justify-center items-center text-white"
+              className="pointer-events-auto w-[80px] h-[160px] rounded-tr-[100px] rounded-br-[100px] bg-[#56657E]/50 flex-center text-white"
             >
               <ArrowLeft color={pageNumber === 1 ? "#BCC2CB" : "white"} />
             </button>
             <button
               onClick={() => {
                 if (pageNumber !== totalPage) {
+                  scaleRef.current?.resetTransform(0);
                   setPageNumber((prev) => prev + 1);
                 }
               }}
-              className="pointer-events-auto w-[80px] h-[160px] rounded-tl-[100px] rounded-bl-[100px] bg-[#56657E]/50 flex justify-center items-center text-white"
+              className="pointer-events-auto w-[80px] h-[160px] rounded-tl-[100px] rounded-bl-[100px] bg-[#56657E]/50 flex-center text-white"
             >
               <div className="rotate-180">
                 <ArrowLeft
@@ -505,12 +503,12 @@ export default function Sample() {
               </div>
             </button>
           </div>
-          <div className="fixed left-0 right-0 top-0 flex justify-between px-[30px] pt-[30px] pointer-events-none">
+          <div className="absolute left-0 right-0 top-0 flex justify-between px-[30px] pt-[30px] pointer-events-none">
             <button
               onClick={() => setIsListOpen(true)}
               className="pointer-events-auto w-[113px] h-[52px] rounded-xl bg-[#202325]/70 flex items-center pl-1 gap-3"
             >
-              <div className="size-[44px] bg-white rounded-lg flex justify-center items-center">
+              <div className="size-[44px] bg-white rounded-lg flex-center">
                 <ThumbnailList />
               </div>
               <span className="text-white text-lg">{`${pageNumber}/${totalPage}`}</span>
@@ -520,28 +518,87 @@ export default function Sample() {
                 postMessage("fullScreen");
                 setIsFullScreen((prev) => !prev);
               }}
-              className="pointer-events-auto size-[52px] rounded-xl bg-white shadow-black shadow-sm flex justify-center items-center"
+              className="pointer-events-auto size-[52px] rounded-xl bg-white shadow-black shadow-sm flex-center"
             >
               <FullScreen />
             </button>
           </div>
-          <div className="fixed left-0 right-0 bottom-[40px] flex justify-center px-[30px] pt-[30px] pointer-events-none">
+          <div className="absolute left-0 right-0 bottom-[40px] flex justify-center px-[30px] pt-[30px] pointer-events-none">
             {!canDraw && (
               <button
                 onClick={() => setCanDraw((prev) => !prev)}
-                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex justify-center items-center"
+                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center"
               >
                 <Drawing />
                 그리기
               </button>
             )}
             {canDraw && (
-              <button
-                onClick={() => setCanDraw((prev) => !prev)}
-                className="pointer-events-auto w-[594px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex justify-center items-center"
-              >
-                <Close />
-              </button>
+              <div className="h-[60px] bg-white rounded-xl flex items-center px-[8px]">
+                <div className="w-[140px] flex justify-between">
+                  <button
+                    onClick={() => setDrawType("pen")}
+                    className={clsx(
+                      "pointer-events-auto size-[44px] rounded-lg flex-center",
+                      drawType === "pen" ? "bg-[#5865FA]" : "#ffffff"
+                    )}
+                  >
+                    <Pen color={drawType === "pen" ? "#ffffff" : "#353B45"} />
+                  </button>
+                  <button
+                    onClick={() => setDrawType("highlight")}
+                    className={clsx(
+                      "pointer-events-auto size-[44px] rounded-lg flex-center",
+                      drawType === "highlight" ? "bg-[#5865FA]" : "#ffffff"
+                    )}
+                  >
+                    <Hightlighter
+                      color={drawType === "highlight" ? "#ffffff" : "#353B45"}
+                    />
+                  </button>
+                  <button
+                    onClick={() => setDrawType("eraser")}
+                    className={clsx(
+                      "pointer-events-auto size-[44px] rounded-lg flex-center",
+                      drawType === "eraser" ? "bg-[#5865FA]" : "#ffffff"
+                    )}
+                  >
+                    <Eraser
+                      color={drawType === "eraser" ? "#ffffff" : "#353B45"}
+                    />
+                  </button>
+                </div>
+                <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                <div className="flex flex-row w-[220px] justify-between">
+                  {colorMap.map((item) => {
+                    return (
+                      <div
+                        key={item}
+                        className="pointer-events-auto size-[44px] flex-center"
+                        onClick={() => {
+                          setColor(item);
+                        }}
+                      >
+                        <div
+                          className="rounded-full size-[24px] flex-center"
+                          style={{ backgroundColor: item }}
+                        >
+                          {drawType !== "eraser" && item === color && (
+                            <Checked color={"white"} />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                <button
+                  onClick={() => setCanDraw((prev) => !prev)}
+                  className="pointer-events-auto size-[44px] flex-center"
+                >
+                  <Close />
+                </button>
+              </div>
             )}
           </div>
         </>

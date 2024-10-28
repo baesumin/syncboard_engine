@@ -1,13 +1,21 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { rgb } from "pdf-lib";
 
+export const colorMap = [
+  "#202325",
+  "#007AFF",
+  "#54B41D",
+  "#FFBB00",
+  "#F34A47",
+] as const;
+
 export const colors = {
-  black: rgb(0, 0, 0),
-  blue: rgb(0, 0, 1),
-  green: rgb(0, 1, 0),
-  yellow: rgb(1, 1, 0),
-  orange: rgb(1, 0.65, 0),
-};
+  "#202325": rgb(0, 0, 0),
+  "#007AFF": rgb(0, 0, 1),
+  "#00ff00": rgb(0, 1, 0),
+  "#FFBB00": rgb(1, 1, 0),
+  "#F34A47": rgb(0.95, 0.29, 0.28),
+} as const;
 
 export type DrawType = React.PointerEvent<HTMLCanvasElement> &
   React.TouchEvent<HTMLCanvasElement>;
@@ -18,7 +26,7 @@ export type PathsType = {
   lastX: number;
   lastY: number;
   lineWidth: number;
-  color: keyof typeof colors;
+  color: (typeof colorMap)[number];
   drawOrder: number;
 };
 
@@ -141,7 +149,7 @@ export const drawSmoothLine = (
   lastY: number,
   x: number,
   y: number,
-  color: keyof typeof colors,
+  color: (typeof colorMap)[number],
   lineWidth: number
 ) => {
   const radius = lineWidth / 2; // 원의 반지름을 선 두께의 절반으로 설정
@@ -167,6 +175,6 @@ export const drawSmoothLine = (
   context.closePath();
 };
 
-export const colorToRGB = (color: keyof typeof colors) => {
-  return colors[color];
+export const colorToRGB = (color: (typeof colorMap)[number]) => {
+  return colors[color as keyof typeof colors];
 };
