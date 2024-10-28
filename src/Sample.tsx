@@ -536,7 +536,7 @@ export default function Sample() {
               </button>
             )}
             {canDraw && (
-              <div className="h-[60px] bg-white rounded-xl flex items-center px-[8px]">
+              <div className="h-[60px] bg-white rounded-xl flex items-center px-[8px] shadow-black shadow-sm">
                 <div className="w-[140px] flex justify-between">
                   <button
                     onClick={() => setDrawType("pen")}
