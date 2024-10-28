@@ -20,8 +20,9 @@ import FullScreen from "./assets/ico-fullscreen.svg?react";
 import ThumbnailList from "./assets/ico-thumb-documnet.svg?react";
 import ArrowLeft from "./assets/ico-arrow-left.svg?react";
 import Close from "./assets/ico-close.svg?react";
+import Drawing from "./assets/ico-drawing.svg?react";
 import SamplePdf from "./assets/sample.pdf";
-import Sample2Pdf from "./assets/sample.pdf";
+import Sample2Pdf from "./assets/sample2.pdf";
 
 const DEVICE_PIXEL_RATIO = 2;
 const LINE_WIDTH = 10;
@@ -336,9 +337,7 @@ export default function Sample() {
   const webViewLitener = useCallback(
     (e: MessageEvent) => {
       const { type, value } = JSON.parse(e.data);
-      if (type === "drawing") {
-        setCanDraw(value);
-      } else if (type === "color") {
+      if (type === "color") {
         setColor(value);
         setIsEraser(false);
       } else if (type === "eraser") {
@@ -374,14 +373,14 @@ export default function Sample() {
       return;
     }
     if (isFileLoad && !file) {
-      setFile(SamplePdf);
+      setFile(Sample2Pdf);
     }
   }, [file, isFileLoad]);
 
   const onTransFormed = (_: unknown, state: { scale: number }) => {
     scale.current = state.scale;
   };
-
+  nativeLog(file.length);
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex justify-center items-center">
@@ -404,6 +403,11 @@ export default function Sample() {
                 <div
                   ref={ref}
                   className="w-dvw h-dvh flex justify-center items-center"
+                  style={{
+                    // width: "calc(100dvw)",
+                    paddingLeft: 100,
+                    paddingRight: 100,
+                  }}
                 >
                   {file && (
                     <>
@@ -515,6 +519,25 @@ export default function Sample() {
             >
               <FullScreen />
             </button>
+          </div>
+          <div className="fixed left-0 right-0 bottom-[40px] flex justify-center px-[30px] pt-[30px] pointer-events-none">
+            {!canDraw && (
+              <button
+                onClick={() => setCanDraw((prev) => !prev)}
+                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex justify-center items-center"
+              >
+                <Drawing />
+                그리기
+              </button>
+            )}
+            {canDraw && (
+              <button
+                onClick={() => setCanDraw((prev) => !prev)}
+                className="pointer-events-auto w-[594px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex justify-center items-center"
+              >
+                <Close />
+              </button>
+            )}
           </div>
         </>
       )}
