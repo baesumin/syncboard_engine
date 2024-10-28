@@ -21,6 +21,7 @@ import {
   TransformWrapper,
 } from "react-zoom-pan-pinch";
 import FullScreen from "./assets/ico-fullscreen.svg?react";
+import SmallScreen from "./assets/ico-maximize.svg?react";
 import ThumbnailList from "./assets/ico-thumb-documnet.svg?react";
 import ArrowLeft from "./assets/ico-arrow-left.svg?react";
 import Close from "./assets/ico-close.svg?react";
@@ -521,14 +522,14 @@ export default function Sample() {
               }}
               className="pointer-events-auto size-[52px] rounded-xl bg-white shadow-black shadow-sm flex-center"
             >
-              <FullScreen />
+              {isFullScreen ? <SmallScreen /> : <FullScreen />}
             </button>
           </div>
           <div className="absolute left-0 right-0 bottom-[40px] flex justify-center px-[30px] pt-[30px] pointer-events-none">
             {!canDraw && (
               <button
                 onClick={() => setCanDraw((prev) => !prev)}
-                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center"
+                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
               >
                 <Drawing />
                 그리기
