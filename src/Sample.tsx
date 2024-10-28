@@ -19,6 +19,7 @@ import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import FullScreen from "./assets/ico-fullscreen.svg?react";
 import ThumbnailList from "./assets/ico-thumb-documnet.svg?react";
 import ArrowLeft from "./assets/ico-arrow-left.svg?react";
+import Close from "./assets/ico-close.svg?react";
 
 const DEVICE_PIXEL_RATIO = 2;
 const LINE_WIDTH = 10;
@@ -367,7 +368,7 @@ export default function Sample() {
 
   useEffect(() => {
     if (isBrowser) {
-      setFile("/src/assets/sample.pdf");
+      setFile("/src/assets/sample2.pdf");
       return;
     }
     if (isFileLoad && !file) {
@@ -396,9 +397,6 @@ export default function Sample() {
               minScale={1}
               disablePadding
               onTransformed={onTransFormed}
-              onZoomStop={(_default, event) => {
-                nativeLog(event);
-              }}
             >
               <TransformComponent>
                 <div
@@ -414,60 +412,50 @@ export default function Sample() {
                         devicePixelRatio={DEVICE_PIXEL_RATIO * scale.current}
                         onRenderSuccess={onRenderSuccess}
                       />
-
-                      <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
-                        <canvas
-                          ref={canvas}
-                          key={pageNumber}
-                          width={pageSize.width * DEVICE_PIXEL_RATIO}
-                          height={pageSize.height * DEVICE_PIXEL_RATIO}
-                          style={{
-                            width: `${pageSize.width}px`,
-                            height: `${pageSize.height}px`,
-                            pointerEvents: canDraw ? "auto" : "none",
-                          }}
-                          // onMouseDown={startDrawing}
-                          // onMouseMove={draw}
-                          // onMouseUp={stopDrawing}
-                          // onMouseLeave={stopDrawing}
-                          onTouchStart={startDrawing}
-                          onTouchMove={draw}
-                          onTouchCancel={stopDrawing}
-                          onTouchEnd={stopDrawing}
-                        />
-                      </div>
+                      <canvas
+                        className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center"
+                        ref={canvas}
+                        key={pageNumber}
+                        width={pageSize.width * DEVICE_PIXEL_RATIO}
+                        height={pageSize.height * DEVICE_PIXEL_RATIO}
+                        style={{
+                          width: `${pageSize.width}px`,
+                          height: `${pageSize.height}px`,
+                          pointerEvents: canDraw ? "auto" : "none",
+                        }}
+                        onTouchStart={startDrawing}
+                        onTouchMove={draw}
+                        onTouchCancel={stopDrawing}
+                        onTouchEnd={stopDrawing}
+                      />
                     </>
                   )}
                 </div>
               </TransformComponent>
             </TransformWrapper>
             {isListOpen && (
-              <div className="absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/50 px-5 py-5">
+              <div className="absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-5 py-5">
                 <div className="h-16 flex justify-end items-center">
                   <button
                     onClick={() => setIsListOpen(false)}
-                    className="bg-white w-10 h-10"
+                    className="bg-white size-[48px] flex justify-center items-center rounded-lg"
                   >
-                    닫기
+                    <Close />
                   </button>
                 </div>
                 <div className="flex gap-4 flex-wrap">
                   {[...new Array(totalPage)].map((_, index) => {
                     return (
-                      <div
-                        onClick={() => {
-                          setPageNumber(index + 1);
-                          setIsListOpen(false);
-                        }}
-                        className="w-[180px]"
-                      >
-                        <div className=" bg-white flex">
-                          <Thumbnail
-                            pageNumber={index + 1}
-                            width={180}
-                            devicePixelRatio={2}
-                          />
-                        </div>
+                      <div key={index} className="w-[180px]">
+                        <Thumbnail
+                          pageNumber={index + 1}
+                          width={180}
+                          devicePixelRatio={2}
+                          onItemClick={({ pageNumber }) => {
+                            setPageNumber(pageNumber);
+                            setIsListOpen(false);
+                          }}
+                        />
                         <div className="h-[31px] flex justify-center">
                           <span className="text-white">
                             {index + 1}/{totalPage}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { rgb } from "pdf-lib";
 
 export const colors = {
@@ -25,6 +26,7 @@ export const nativeLog = (
   value: unknown,
   webViewType = "ReactNativeWebView"
 ) => {
+  //@ts-ignore
   window[webViewType]?.postMessage(
     JSON.stringify({
       type: "log",
@@ -38,6 +40,7 @@ export const postMessage = (
   value?: unknown,
   webViewType = "ReactNativeWebView"
 ) => {
+  //@ts-ignore
   return window[webViewType]?.postMessage(
     JSON.stringify({
       type,
