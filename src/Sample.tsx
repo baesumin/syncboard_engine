@@ -20,6 +20,8 @@ import FullScreen from "./assets/ico-fullscreen.svg?react";
 import ThumbnailList from "./assets/ico-thumb-documnet.svg?react";
 import ArrowLeft from "./assets/ico-arrow-left.svg?react";
 import Close from "./assets/ico-close.svg?react";
+import SamplePdf from "./assets/sample.pdf";
+import Sample2Pdf from "./assets/sample.pdf";
 
 const DEVICE_PIXEL_RATIO = 2;
 const LINE_WIDTH = 10;
@@ -368,11 +370,11 @@ export default function Sample() {
 
   useEffect(() => {
     if (isBrowser) {
-      setFile("/src/assets/sample2.pdf");
+      setFile(Sample2Pdf);
       return;
     }
     if (isFileLoad && !file) {
-      setFile("/src/assets/sample.pdf");
+      setFile(SamplePdf);
     }
   }, [file, isFileLoad]);
 
@@ -412,22 +414,23 @@ export default function Sample() {
                         devicePixelRatio={DEVICE_PIXEL_RATIO * scale.current}
                         onRenderSuccess={onRenderSuccess}
                       />
-                      <canvas
-                        className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center"
-                        ref={canvas}
-                        key={pageNumber}
-                        width={pageSize.width * DEVICE_PIXEL_RATIO}
-                        height={pageSize.height * DEVICE_PIXEL_RATIO}
-                        style={{
-                          width: `${pageSize.width}px`,
-                          height: `${pageSize.height}px`,
-                          pointerEvents: canDraw ? "auto" : "none",
-                        }}
-                        onTouchStart={startDrawing}
-                        onTouchMove={draw}
-                        onTouchCancel={stopDrawing}
-                        onTouchEnd={stopDrawing}
-                      />
+                      <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
+                        <canvas
+                          ref={canvas}
+                          key={pageNumber}
+                          width={pageSize.width * DEVICE_PIXEL_RATIO}
+                          height={pageSize.height * DEVICE_PIXEL_RATIO}
+                          style={{
+                            width: `${pageSize.width}px`,
+                            height: `${pageSize.height}px`,
+                            pointerEvents: canDraw ? "auto" : "none",
+                          }}
+                          onTouchStart={startDrawing}
+                          onTouchMove={draw}
+                          onTouchCancel={stopDrawing}
+                          onTouchEnd={stopDrawing}
+                        />
+                      </div>
                     </>
                   )}
                 </div>
