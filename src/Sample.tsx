@@ -22,7 +22,7 @@ import ArrowLeft from "./assets/ico-arrow-left.svg?react";
 import Close from "./assets/ico-close.svg?react";
 import Drawing from "./assets/ico-drawing.svg?react";
 import SamplePdf from "./assets/sample.pdf";
-import Sample2Pdf from "./assets/sample2.pdf";
+// import Sample2Pdf from "./assets/sample2.pdf";
 
 const DEVICE_PIXEL_RATIO = 2;
 const LINE_WIDTH = 10;
@@ -369,11 +369,11 @@ export default function Sample() {
 
   useEffect(() => {
     if (isBrowser) {
-      setFile(Sample2Pdf);
+      setFile(SamplePdf);
       return;
     }
     if (isFileLoad && !file) {
-      setFile(Sample2Pdf);
+      setFile(SamplePdf);
     }
   }, [file, isFileLoad]);
 
