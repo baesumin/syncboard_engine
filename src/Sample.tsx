@@ -371,9 +371,17 @@ export default function Sample() {
   }, [pageSize, redrawPaths]);
 
   useEffect(() => {
-    window.addEventListener("webviewApi", webViewLitener as EventListener);
+    //@ts-ignore
+    window.webviewApi.addEventListener(
+      "message",
+      webViewLitener as EventListener
+    );
     return () => {
-      window.removeEventListener("webviewApi", webViewLitener as EventListener);
+      //@ts-ignore
+      window.webviewApi.removeEventListener(
+        "message",
+        webViewLitener as EventListener
+      );
     };
   }, [webViewLitener]);
 
@@ -385,9 +393,7 @@ export default function Sample() {
     //@ts-ignore
     window.webviewApi = (data: string) => {
       // const d = data;
-      alert("hi");
-      console.log("hi");
-      console.log(data);
+      console.log(JSON.parse(data));
       // setFile(data);
     };
     // if (isFileLoad && !file) {
