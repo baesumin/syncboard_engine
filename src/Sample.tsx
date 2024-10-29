@@ -382,11 +382,9 @@ export default function Sample() {
     }
     //@ts-ignore
     window.webviewApi = (param: string) => {
-      const {
-        data: { base64 },
-      } = JSON.parse(param);
-      console.log(JSON.parse(param));
-      setFile(base64);
+      const data = JSON.parse(param);
+      console.log(data);
+      // setFile(data);
     };
     // if (isFileLoad && !file) {
     //   setFile(base64Sample);
