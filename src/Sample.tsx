@@ -345,7 +345,7 @@ export default function Sample() {
 
   const webViewLitener = useCallback(
     (e: MessageEvent) => {
-      alert(e);
+      console.log(e);
       const { type, value } = JSON.parse(e.data);
 
       if (type === "save") {
@@ -368,18 +368,23 @@ export default function Sample() {
   }, [pageSize, redrawPaths]);
 
   useEffect(() => {
-    document.addEventListener("param", webViewLitener as EventListener);
-    window.addEventListener("param", webViewLitener as EventListener);
+    document.addEventListener("message", webViewLitener as EventListener);
+    window.addEventListener("message", webViewLitener as EventListener);
 
     return () => {
-      document.removeEventListener("param", webViewLitener as EventListener);
-      window.removeEventListener("param", webViewLitener as EventListener);
+      document.removeEventListener("message", webViewLitener as EventListener);
+      window.removeEventListener("message", webViewLitener as EventListener);
     };
   }, [webViewLitener]);
 
-  // useEffect(() => {
-  //   window.AndroidInterface?.nativeApi('{"code":}');
-  // }, []);
+  useEffect(() => {
+    window.webviewApi = (data) => {
+      alert("hi");
+    };
+    window.callWebViewApi = (data) => {
+      alert("hi2");
+    };
+  }, []);
 
   useEffect(() => {
     if (isBrowser) {
