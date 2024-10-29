@@ -343,21 +343,23 @@ export default function Sample() {
     postMessage("save", base64DataUri);
   }, [file, paths]);
 
-  const webViewLitener = useCallback((e: MessageEvent) => {
-    const d = JSON.parse(e.data);
-    alert(d);
-    const { type, value } = JSON.parse(e.data);
+  const webViewLitener = useCallback(
+    (e: MessageEvent) => {
+      alert(e);
+      const { type, value } = JSON.parse(e.data);
 
-    if (type === "save") {
-      downloadModifiedPDF();
-    } else if (type === "pdf") {
-      if (value) {
-        const base64 = (value as string).split(",")[1].slice(0, -1);
-        setFile(`data:application/pdf;base64,${base64}`);
+      if (type === "save") {
+        downloadModifiedPDF();
+      } else if (type === "pdf") {
+        if (value) {
+          const base64 = (value as string).split(",")[1].slice(0, -1);
+          setFile(`data:application/pdf;base64,${base64}`);
+        }
+        setIsFileLoad(true);
       }
-      setIsFileLoad(true);
-    }
-  }, []);
+    },
+    [downloadModifiedPDF]
+  );
 
   useEffect(() => {
     if (pageSize.width > 0) {
@@ -366,11 +368,13 @@ export default function Sample() {
   }, [pageSize, redrawPaths]);
 
   useEffect(() => {
-    document.addEventListener("message", webViewLitener as EventListener);
-    window.addEventListener("message", webViewLitener as EventListener);
+    document.addEventListener("param", webViewLitener as EventListener);
+    window.addEventListener("param", webViewLitener as EventListener);
 
-    return () =>
-      document.removeEventListener("message", webViewLitener as EventListener);
+    return () => {
+      document.removeEventListener("param", webViewLitener as EventListener);
+      window.removeEventListener("param", webViewLitener as EventListener);
+    };
   }, [webViewLitener]);
 
   // useEffect(() => {
