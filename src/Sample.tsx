@@ -343,25 +343,22 @@ export default function Sample() {
     postMessage("save", base64DataUri);
   }, [file, paths]);
 
-  const webViewLitener = useCallback(
-    (e: MessageEvent) => {
-      const d = JSON.parse(e.data);
-      alert(d);
-      return;
-      // const { type, value } = JSON.parse(e.data);
+  const webViewLitener = useCallback((e: MessageEvent) => {
+    const d = JSON.parse(e.data);
+    alert(d);
+    return;
+    // const { type, value } = JSON.parse(e.data);
 
-      if (type === "save") {
-        downloadModifiedPDF();
-      } else if (type === "pdf") {
-        if (value) {
-          const base64 = (value as string).split(",")[1].slice(0, -1);
-          setFile(`data:application/pdf;base64,${base64}`);
-        }
-        setIsFileLoad(true);
-      }
-    },
-    [downloadModifiedPDF]
-  );
+    // if (type === "save") {
+    //   downloadModifiedPDF();
+    // } else if (type === "pdf") {
+    //   if (value) {
+    //     const base64 = (value as string).split(",")[1].slice(0, -1);
+    //     setFile(`data:application/pdf;base64,${base64}`);
+    //   }
+    //   setIsFileLoad(true);
+    // }
+  }, []);
 
   useEffect(() => {
     if (pageSize.width > 0) {
