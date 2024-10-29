@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
-import { isBrowser, useMobileOrientation } from "react-device-detect";
+import { useMobileOrientation } from "react-device-detect";
 import { LineCapStyle, PDFDocument } from "pdf-lib";
 import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
@@ -346,6 +346,7 @@ export default function Sample() {
 
   const webViewLitener = useCallback(
     (e: MessageEvent) => {
+      alert("hi2");
       console.log("webviewListener");
       console.log(e);
       const { type, value } = JSON.parse(e.data);
@@ -370,25 +371,23 @@ export default function Sample() {
   }, [pageSize, redrawPaths]);
 
   useEffect(() => {
-    document.addEventListener("webviewApi", webViewLitener as EventListener);
+    window.addEventListener("webviewApi", webViewLitener as EventListener);
     return () => {
-      document.removeEventListener(
-        "webviewApi",
-        webViewLitener as EventListener
-      );
+      window.removeEventListener("webviewApi", webViewLitener as EventListener);
     };
   }, [webViewLitener]);
 
   useEffect(() => {
-    if (isBrowser) {
-      setFile(base64Sample);
-      return;
-    }
+    // if (isBrowser) {
+    //   setFile(base64Sample);
+    //   return;
+    // }
     //@ts-ignore
     window.webviewApi = (data: string) => {
-      const d = data;
+      // const d = data;
+      alert("hi");
       console.log("hi");
-      console.log(d);
+      console.log(data);
       // setFile(data);
     };
     // if (isFileLoad && !file) {
