@@ -381,9 +381,9 @@ export default function Sample() {
       return;
     }
     //@ts-ignore
-    window.webviewApi = (param: string) => {
-      const data = JSON.parse(param);
-      console.log(data);
+    window.webviewApi = (data: string) => {
+      const d = JSON.parse(data);
+      console.log(d);
       // setFile(data);
     };
     // if (isFileLoad && !file) {
