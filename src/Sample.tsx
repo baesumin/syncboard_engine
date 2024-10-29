@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
@@ -378,10 +379,12 @@ export default function Sample() {
   }, [webViewLitener]);
 
   useEffect(() => {
-    window.webviewApi = (data) => {
+    //@ts-ignore
+    window.webviewApi = () => {
       alert("hi");
     };
-    window.callWebViewApi = (data) => {
+    //@ts-ignore
+    window.callWebViewApi = () => {
       alert("hi2");
     };
   }, []);
