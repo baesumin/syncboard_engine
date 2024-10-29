@@ -385,13 +385,12 @@ export default function Sample() {
     //   return;
     // }
     //@ts-ignore
-    window.webviewApi = (data: string) => {
+    window.webviewApi = (param: string) => {
       // const d = data;
       alert("hi");
-      const {
-        data: { base64 },
-      } = JSON.parse(data);
-      setFile(base64);
+      const data = JSON.parse(param);
+      console.log(data);
+      setFile(data?.data?.base64);
     };
     // if (isFileLoad && !file) {
     //   setFile(base64Sample);
