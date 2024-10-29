@@ -346,18 +346,17 @@ export default function Sample() {
   const webViewLitener = useCallback((e: MessageEvent) => {
     const d = JSON.parse(e.data);
     alert(d);
-    return;
-    // const { type, value } = JSON.parse(e.data);
+    const { type, value } = JSON.parse(e.data);
 
-    // if (type === "save") {
-    //   downloadModifiedPDF();
-    // } else if (type === "pdf") {
-    //   if (value) {
-    //     const base64 = (value as string).split(",")[1].slice(0, -1);
-    //     setFile(`data:application/pdf;base64,${base64}`);
-    //   }
-    //   setIsFileLoad(true);
-    // }
+    if (type === "save") {
+      downloadModifiedPDF();
+    } else if (type === "pdf") {
+      if (value) {
+        const base64 = (value as string).split(",")[1].slice(0, -1);
+        setFile(`data:application/pdf;base64,${base64}`);
+      }
+      setIsFileLoad(true);
+    }
   }, []);
 
   useEffect(() => {
