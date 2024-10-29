@@ -381,10 +381,11 @@ export default function Sample() {
       return;
     }
     //@ts-ignore
-    window.webviewApi = (data: { docId: string; base64: string }) => {
-      alert("hi");
-      console.log(data);
-      setFile(data.base64);
+    window.webviewApi = (data: string) => {
+      const {
+        data: { base64 },
+      } = JSON.parse(data);
+      setFile(base64);
     };
     // if (isFileLoad && !file) {
     //   setFile(base64Sample);
