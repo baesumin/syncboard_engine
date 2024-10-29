@@ -382,6 +382,7 @@ export default function Sample() {
     }
     //@ts-ignore
     window.webviewApi = (data: { docId: string; base64: string }) => {
+      console.log(data);
       setFile(data.base64);
     };
     // if (isFileLoad && !file) {
