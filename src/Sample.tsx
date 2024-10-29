@@ -381,10 +381,11 @@ export default function Sample() {
       return;
     }
     //@ts-ignore
-    window.webviewApi = (data: string) => {
+    window.webviewApi = (param: string) => {
       const {
         data: { base64 },
-      } = JSON.parse(data);
+      } = JSON.parse(param);
+      console.log(JSON.parse(param));
       setFile(base64);
     };
     // if (isFileLoad && !file) {
