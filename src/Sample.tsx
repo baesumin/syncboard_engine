@@ -376,6 +376,10 @@ export default function Sample() {
     }
   }, [file, isFileLoad]);
 
+  useEffect(() => {
+    alert(base64Sample.substring(0, 100));
+  }, []);
+
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
