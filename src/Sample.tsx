@@ -368,9 +368,9 @@ export default function Sample() {
 
   useEffect(() => {
     document.addEventListener("message", webViewLitener as EventListener);
-    document.addEventListener("webviewApi", (e) => {
-      alert(e);
-    });
+    // document.addEventListener("webviewApi", (e) => {
+    //   alert(e);
+    // });
 
     return () =>
       document.removeEventListener("message", webViewLitener as EventListener);
