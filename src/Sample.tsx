@@ -58,7 +58,7 @@ export default function Sample() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [file, setFile] = useState("");
-  const [isFileLoad, setIsFileLoad] = useState(false);
+  // const [isFileLoad, setIsFileLoad] = useState(false);
   const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
   const [pageSize, setPageSize] = useState({
     width: 0,
@@ -356,7 +356,7 @@ export default function Sample() {
           const base64 = (value as string).split(",")[1].slice(0, -1);
           setFile(`data:application/pdf;base64,${base64}`);
         }
-        setIsFileLoad(true);
+        // setIsFileLoad(true);
       }
     },
     [downloadModifiedPDF]
