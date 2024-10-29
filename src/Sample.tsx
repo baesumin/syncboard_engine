@@ -387,6 +387,7 @@ export default function Sample() {
     //@ts-ignore
     window.webviewApi = (data: string) => {
       // const d = data;
+      alert("hi");
       console.log(JSON.parse(data));
       // setFile(data);
     };
