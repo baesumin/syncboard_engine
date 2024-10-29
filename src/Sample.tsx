@@ -372,16 +372,10 @@ export default function Sample() {
 
   useEffect(() => {
     //@ts-ignore
-    window.webviewApi.addEventListener(
-      "message",
-      webViewLitener as EventListener
-    );
+    window.addEventListener("message", webViewLitener as EventListener);
     return () => {
       //@ts-ignore
-      window.webviewApi.removeEventListener(
-        "message",
-        webViewLitener as EventListener
-      );
+      window.removeEventListener("message", webViewLitener as EventListener);
     };
   }, [webViewLitener]);
 
