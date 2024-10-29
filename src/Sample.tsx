@@ -346,6 +346,7 @@ export default function Sample() {
 
   const webViewLitener = useCallback(
     (e: MessageEvent) => {
+      console.log("webviewListener");
       console.log(e);
       const { type, value } = JSON.parse(e.data);
 
@@ -369,9 +370,12 @@ export default function Sample() {
   }, [pageSize, redrawPaths]);
 
   useEffect(() => {
-    document.addEventListener("message", webViewLitener as EventListener);
+    document.addEventListener("webviewApi", webViewLitener as EventListener);
     return () => {
-      document.removeEventListener("message", webViewLitener as EventListener);
+      document.removeEventListener(
+        "webviewApi",
+        webViewLitener as EventListener
+      );
     };
   }, [webViewLitener]);
 
@@ -382,7 +386,8 @@ export default function Sample() {
     }
     //@ts-ignore
     window.webviewApi = (data: string) => {
-      const d = JSON.parse(data);
+      const d = data;
+      console.log("hi");
       console.log(d);
       // setFile(data);
     };
