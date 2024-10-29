@@ -370,9 +370,7 @@ export default function Sample() {
 
   useEffect(() => {
     document.addEventListener("message", webViewLitener as EventListener);
-    // document.addEventListener("webviewApi", (e) => {
-    //   alert(e);
-    // });
+    window.addEventListener("message", webViewLitener as EventListener);
 
     return () =>
       document.removeEventListener("message", webViewLitener as EventListener);
