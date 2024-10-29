@@ -302,7 +302,6 @@ export default function Sample() {
   };
 
   const onRenderSuccess: OnRenderSuccess = (page) => {
-    console.log("hi");
     setPageSize({
       width: page.width,
       height: page.height,
@@ -346,6 +345,7 @@ export default function Sample() {
 
   const webViewLitener = useCallback(
     (e: MessageEvent) => {
+      console.log(e);
       const { type, value } = JSON.parse(e.data);
       if (type === "save") {
         downloadModifiedPDF();
@@ -368,6 +368,10 @@ export default function Sample() {
 
   useEffect(() => {
     document.addEventListener("message", webViewLitener as EventListener);
+    document.addEventListener("webviewApi", (e) => {
+      alert(e);
+    });
+
     return () =>
       document.removeEventListener("message", webViewLitener as EventListener);
   }, [webViewLitener]);
@@ -389,7 +393,6 @@ export default function Sample() {
           <Document
             file={`data:application/pdf;base64,${base64Sample}`}
             onLoadSuccess={(pdf) => {
-              console.log(pdf);
               setTotalPage(pdf.numPages);
             }}
           >
@@ -421,9 +424,6 @@ export default function Sample() {
                         height={height}
                         devicePixelRatio={DEVICE_PIXEL_RATIO}
                         onRenderSuccess={onRenderSuccess}
-                        onLoadError={(e) => {
-                          console.log(e);
-                        }}
                       />
                       <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
                         <canvas
