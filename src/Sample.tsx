@@ -376,6 +376,12 @@ export default function Sample() {
     }
   }, [file, isFileLoad]);
 
+  useEffect(() => {
+    if (file) {
+      alert(file);
+    }
+  }, [file]);
+
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
