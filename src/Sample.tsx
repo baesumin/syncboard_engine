@@ -345,8 +345,10 @@ export default function Sample() {
 
   const webViewLitener = useCallback(
     (e: MessageEvent) => {
-      console.log(e);
       const { type, value } = JSON.parse(e.data);
+      if (type !== "pdf") {
+        alert(`${type} ${value}`);
+      }
       if (type === "save") {
         downloadModifiedPDF();
       } else if (type === "pdf") {
