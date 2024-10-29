@@ -370,41 +370,31 @@ export default function Sample() {
 
   useEffect(() => {
     document.addEventListener("message", webViewLitener as EventListener);
-    window.addEventListener("message", webViewLitener as EventListener);
-
     return () => {
       document.removeEventListener("message", webViewLitener as EventListener);
-      window.removeEventListener("message", webViewLitener as EventListener);
     };
   }, [webViewLitener]);
-
-  useEffect(() => {
-    //@ts-ignore
-    window.webviewApi = () => {
-      alert("hi");
-    };
-    //@ts-ignore
-    window.callWebViewApi = () => {
-      alert("hi2");
-    };
-  }, []);
 
   useEffect(() => {
     if (isBrowser) {
       setFile(base64Sample);
       return;
     }
-    if (isFileLoad && !file) {
-      setFile(base64Sample);
-    }
-  }, [file, isFileLoad]);
+    //@ts-ignore
+    window.webviewApi = (data: { docId: string; base64: string }) => {
+      setFile(data.base64);
+    };
+    // if (isFileLoad && !file) {
+    //   setFile(base64Sample);
+    // }
+  }, []);
 
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {true && (
+        {file && (
           <Document
-            file={`data:application/pdf;base64,${base64Sample}`}
+            file={`data:application/pdf;base64,${file}`}
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
@@ -429,34 +419,32 @@ export default function Sample() {
                     paddingRight: isFullScreen ? 0 : 100,
                   }}
                 >
-                  {true && (
-                    <>
-                      <Thumbnail
-                        pageNumber={pageNumber}
-                        width={orientation === "portrait" ? width : undefined}
-                        height={height}
-                        devicePixelRatio={DEVICE_PIXEL_RATIO}
-                        onRenderSuccess={onRenderSuccess}
+                  <>
+                    <Thumbnail
+                      pageNumber={pageNumber}
+                      width={orientation === "portrait" ? width : undefined}
+                      height={height}
+                      devicePixelRatio={DEVICE_PIXEL_RATIO}
+                      onRenderSuccess={onRenderSuccess}
+                    />
+                    <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
+                      <canvas
+                        ref={canvas}
+                        key={pageNumber}
+                        width={pageSize.width * DEVICE_PIXEL_RATIO}
+                        height={pageSize.height * DEVICE_PIXEL_RATIO}
+                        style={{
+                          width: `${pageSize.width}px`,
+                          height: `${pageSize.height}px`,
+                          pointerEvents: canDraw ? "auto" : "none",
+                        }}
+                        onTouchStart={startDrawing}
+                        onTouchMove={draw}
+                        onTouchCancel={stopDrawing}
+                        onTouchEnd={stopDrawing}
                       />
-                      <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
-                        <canvas
-                          ref={canvas}
-                          key={pageNumber}
-                          width={pageSize.width * DEVICE_PIXEL_RATIO}
-                          height={pageSize.height * DEVICE_PIXEL_RATIO}
-                          style={{
-                            width: `${pageSize.width}px`,
-                            height: `${pageSize.height}px`,
-                            pointerEvents: canDraw ? "auto" : "none",
-                          }}
-                          onTouchStart={startDrawing}
-                          onTouchMove={draw}
-                          onTouchCancel={stopDrawing}
-                          onTouchEnd={stopDrawing}
-                        />
-                      </div>
-                    </>
-                  )}
+                    </div>
+                  </>
                 </div>
               </TransformComponent>
             </TransformWrapper>
