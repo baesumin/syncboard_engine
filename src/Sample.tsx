@@ -385,6 +385,7 @@ export default function Sample() {
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
+        <span>{file}</span>
         {file && (
           <Document
             file={file}
