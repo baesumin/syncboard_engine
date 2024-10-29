@@ -390,6 +390,8 @@ export default function Sample() {
       alert("hi");
       const data = JSON.parse(param);
       console.log(data);
+      console.log(data?.data);
+      console.log(data?.data?.base64);
       setFile(data?.data?.base64);
     };
     // if (isFileLoad && !file) {
