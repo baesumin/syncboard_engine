@@ -345,10 +345,11 @@ export default function Sample() {
 
   const webViewLitener = useCallback(
     (e: MessageEvent) => {
-      const { type, value } = JSON.parse(e.data);
-      if (type !== "pdf") {
-        alert(`${type} ${value}`);
-      }
+      const d = JSON.parse(e.data);
+      alert(d);
+      return;
+      // const { type, value } = JSON.parse(e.data);
+
       if (type === "save") {
         downloadModifiedPDF();
       } else if (type === "pdf") {
@@ -375,6 +376,10 @@ export default function Sample() {
     return () =>
       document.removeEventListener("message", webViewLitener as EventListener);
   }, [webViewLitener]);
+
+  // useEffect(() => {
+  //   window.AndroidInterface?.nativeApi('{"code":}');
+  // }, []);
 
   useEffect(() => {
     if (isBrowser) {
