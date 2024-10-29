@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Document, Thumbnail } from "react-pdf";
+import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { isBrowser, useMobileOrientation } from "react-device-detect";
 import { LineCapStyle, PDFDocument } from "pdf-lib";
@@ -30,12 +30,17 @@ import Pen from "./assets/ico-pen.svg?react";
 import Hightlighter from "./assets/ico-hightlighter.svg?react";
 import Eraser from "./assets/ico-eraser.svg?react";
 import Checked from "./assets/ico-checked.svg?react";
-import SamplePdf from "./assets/sample.pdf";
+// import SamplePdf from "./assets/sample.pdf";
 import clsx from "clsx";
 // import Sample2Pdf from "./assets/sample2.pdf";
 
 const DEVICE_PIXEL_RATIO = 2;
 const LINE_WIDTH = 10;
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString();
 
 export default function Sample() {
   const { orientation } = useMobileOrientation();
@@ -297,6 +302,7 @@ export default function Sample() {
   };
 
   const onRenderSuccess: OnRenderSuccess = (page) => {
+    console.log("hi");
     setPageSize({
       width: page.width,
       height: page.height,
@@ -368,30 +374,23 @@ export default function Sample() {
 
   useEffect(() => {
     if (isBrowser) {
-      setFile(SamplePdf);
+      setFile(base64Sample);
       return;
     }
     if (isFileLoad && !file) {
-      setFile(SamplePdf);
+      setFile(base64Sample);
     }
   }, [file, isFileLoad]);
-
-  useEffect(() => {
-    alert(base64Sample.substring(0, 100));
-  }, []);
 
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {file && (
+        {true && (
           <Document
             file={`data:application/pdf;base64,${base64Sample}`}
             onLoadSuccess={(pdf) => {
+              console.log(pdf);
               setTotalPage(pdf.numPages);
-            }}
-            onLoadError={(error) => {
-              console.log(error);
-              alert("error");
             }}
           >
             <TransformWrapper
@@ -414,7 +413,7 @@ export default function Sample() {
                     paddingRight: isFullScreen ? 0 : 100,
                   }}
                 >
-                  {file && (
+                  {true && (
                     <>
                       <Thumbnail
                         pageNumber={pageNumber}
@@ -422,6 +421,9 @@ export default function Sample() {
                         height={height}
                         devicePixelRatio={DEVICE_PIXEL_RATIO}
                         onRenderSuccess={onRenderSuccess}
+                        onLoadError={(e) => {
+                          console.log(e);
+                        }}
                       />
                       <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
                         <canvas
