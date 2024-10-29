@@ -389,6 +389,10 @@ export default function Sample() {
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
+            onLoadError={(error) => {
+              console.log(error);
+              alert("error");
+            }}
           >
             <TransformWrapper
               ref={scaleRef}
