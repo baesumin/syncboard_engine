@@ -382,6 +382,10 @@ export default function Sample() {
     }
   }, [file]);
 
+  useEffect(() => {
+    alert("hi");
+  }, []);
+
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
