@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
@@ -388,6 +389,7 @@ export default function Sample() {
     //   setFile(base64Sample);
     //   return;
     // }
+    //@ts-ignore
     window.webviewApi = (data: string) => {
       // const d = data;
       alert("hi");
