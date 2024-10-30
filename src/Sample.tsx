@@ -2,10 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
-import {
-  // isBrowser,
-  useMobileOrientation,
-} from "react-device-detect";
+import { isBrowser, useMobileOrientation } from "react-device-detect";
 // import { LineCapStyle, PDFDocument } from "pdf-lib";
 import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
@@ -79,7 +76,7 @@ export default function Sample() {
     "pen"
   );
   const [strokeStep, setStrokeStep] = useState(12);
-  const [devicePixelRatio, setDevicePixelRatio] = useState(2);
+  const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
   const [isRendering, setIsRendering] = useState(false);
 
@@ -371,15 +368,15 @@ export default function Sample() {
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {true && (
-          // {(isBrowser || file) && (
+        {/* {true && ( */}
+        {(isBrowser || file) && (
           <Document
-            // file={
-            //   isBrowser
-            //     ? "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
-            //     : `data:application/pdf;base64,${file}`
-            // }
-            file="https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
+            file={
+              isBrowser
+                ? "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
+                : `data:application/pdf;base64,${file}`
+            }
+            // file="https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
