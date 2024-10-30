@@ -430,6 +430,8 @@ export default function Sample() {
                   style={{
                     paddingLeft: isFullScreen ? 0 : 100,
                     paddingRight: isFullScreen ? 0 : 100,
+                    paddingTop: isFullScreen ? 0 : 100,
+                    paddingBottom: isFullScreen ? 0 : 100,
                   }}
                 >
                   <>
