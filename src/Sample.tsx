@@ -81,7 +81,7 @@ export default function Sample() {
   const [drawType, setDrawType] = useState<"pen" | "highlight" | "eraser">(
     "pen"
   );
-  const [strokeStep, setStrokeStep] = useState(10);
+  const [strokeStep, setStrokeStep] = useState(12);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
 
   const startDrawing = (e: DrawType) => {
