@@ -411,6 +411,7 @@ export default function Sample() {
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
+            loading={<></>}
           >
             <TransformWrapper
               ref={scaleRef}
@@ -441,6 +442,7 @@ export default function Sample() {
                       height={height}
                       devicePixelRatio={DEVICE_PIXEL_RATIO}
                       onRenderSuccess={onRenderSuccess}
+                      loading={<></>}
                     />
                     <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
                       <canvas
@@ -500,6 +502,7 @@ export default function Sample() {
                               setPageNumber(pageNumber);
                               setIsListOpen(false);
                             }}
+                            loading={<></>}
                           />
                         </div>
                         <div className="h-[31px] flex justify-center items-center">
