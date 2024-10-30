@@ -37,11 +37,7 @@ import Stroke2Step from "./assets/ico-stroke-2step.svg?react";
 import Stroke3Step from "./assets/ico-stroke-3step.svg?react";
 import Stroke4Step from "./assets/ico-stroke-4step.svg?react";
 import Stroke5Step from "./assets/ico-stroke-5step.svg?react";
-// import SamplePdf from "./assets/sample.pdf";
 import clsx from "clsx";
-import { base64Sample } from "./base64Sample";
-// import { base64Sample } from "./base64Sample";
-// import Sample2Pdf from "./assets/sample2.pdf";
 
 const DEVICE_PIXEL_RATIO = 2;
 
@@ -65,7 +61,6 @@ export default function Sample() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [file, setFile] = useState("");
-  // const [isFileLoad, setIsFileLoad] = useState(false);
   const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
   const [pageSize, setPageSize] = useState({
     width: 0,
@@ -366,7 +361,6 @@ export default function Sample() {
           const base64 = (value as string).split(",")[1].slice(0, -1);
           setFile(`data:application/pdf;base64,${base64}`);
         }
-        // setIsFileLoad(true);
       }
     },
     [downloadModifiedPDF]
@@ -386,27 +380,23 @@ export default function Sample() {
   }, [webViewLitener]);
 
   useEffect(() => {
-    if (isBrowser) {
-      setFile(base64Sample);
-      return;
-    }
     //@ts-ignore
     window.webviewApi = (data: string) => {
       const param = JSON.parse(data);
       setFile(param?.data?.base64);
     };
-
-    // if (isFileLoad && !file) {
-    //   setFile(Sample2Pdf);
-    // }
   }, []);
 
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {file && (
+        {(isBrowser || file) && (
           <Document
-            file={`data:application/pdf;base64,${file}`}
+            file={
+              isBrowser
+                ? "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
+                : `data:application/pdf;base64,${file}`
+            }
             // file={Sample2Pdf}
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
