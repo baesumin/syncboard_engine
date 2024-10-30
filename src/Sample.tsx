@@ -417,7 +417,7 @@ export default function Sample() {
               disabled={canDraw}
               initialScale={1}
               maxScale={3}
-              minScale={1}
+              minScale={0.5}
               disablePadding
               onPinchingStop={(ref) => {
                 scale.current = ref.state.scale;
@@ -430,8 +430,8 @@ export default function Sample() {
                   style={{
                     paddingLeft: isFullScreen ? 0 : 100,
                     paddingRight: isFullScreen ? 0 : 100,
-                    paddingTop: isFullScreen ? 0 : 100,
-                    paddingBottom: isFullScreen ? 0 : 100,
+                    paddingTop: isFullScreen ? 0 : 40,
+                    paddingBottom: isFullScreen ? 0 : 40,
                   }}
                 >
                   <>
