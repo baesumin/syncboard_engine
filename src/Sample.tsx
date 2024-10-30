@@ -392,11 +392,17 @@ export default function Sample() {
     //@ts-ignore
     window.webviewApi = (data: string) => {
       // const d = data;
-      alert("hi");
+      alert("hi3");
       const param = JSON.parse(data);
       console.log(data);
       setFile(param?.data?.base64);
     };
+
+    window.addEventListener("webviewApi", (e) => {
+      alert("hi4");
+      console.log(e);
+    });
+
     // if (isFileLoad && !file) {
     //   setFile(base64Sample);
     // }

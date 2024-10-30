@@ -1,9 +1,6 @@
 declare global {
   interface Window {
-    webviewApi: {
-      sendMessage: (message: string) => void;
-      onMessage: (callback: (message: string) => void) => void;
-    };
+    webviewApi: (data: string) => void; // webviewApi를 함수로 정의
   }
 }
 
