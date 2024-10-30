@@ -415,6 +415,7 @@ export default function Sample() {
                         width={orientation === "portrait" ? width : undefined}
                         height={height}
                         devicePixelRatio={devicePixelRatio}
+                        loading={<></>}
                         noData={<></>}
                       />
                     )}
@@ -426,6 +427,7 @@ export default function Sample() {
                       height={height}
                       devicePixelRatio={devicePixelRatio}
                       onRenderSuccess={onRenderSuccess}
+                      loading={<></>}
                       noData={<></>}
                     />
                     <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
