@@ -417,7 +417,7 @@ export default function Sample() {
               disabled={canDraw}
               initialScale={1}
               maxScale={3}
-              minScale={0.5}
+              minScale={1}
               disablePadding
               onPinchingStop={(ref) => {
                 scale.current = ref.state.scale;
