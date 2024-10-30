@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
-import { useMobileOrientation } from "react-device-detect";
+import { isBrowser, useMobileOrientation } from "react-device-detect";
 import { LineCapStyle, PDFDocument } from "pdf-lib";
 import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
@@ -39,6 +39,7 @@ import Stroke4Step from "./assets/ico-stroke-4step.svg?react";
 import Stroke5Step from "./assets/ico-stroke-5step.svg?react";
 // import SamplePdf from "./assets/sample.pdf";
 import clsx from "clsx";
+import { base64Sample } from "./base64Sample";
 // import { base64Sample } from "./base64Sample";
 // import Sample2Pdf from "./assets/sample2.pdf";
 
@@ -385,10 +386,10 @@ export default function Sample() {
   }, [webViewLitener]);
 
   useEffect(() => {
-    // if (isBrowser) {
-    //   setFile(base64Sample);
-    //   return;
-    // }
+    if (isBrowser) {
+      setFile(base64Sample);
+      return;
+    }
     //@ts-ignore
     window.webviewApi = (data: string) => {
       const param = JSON.parse(data);
@@ -461,11 +462,11 @@ export default function Sample() {
               </TransformComponent>
             </TransformWrapper>
             {isListOpen && (
-              <div className="absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[20px]">
-                <div className="h-[52px] flex justify-end items-center">
+              <div className="absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px]">
+                <div className="flex justify-end items-center">
                   <button
                     onClick={() => setIsListOpen(false)}
-                    className="bg-white size-[48px] flex-center rounded-xl"
+                    className="bg-white size-[44px] flex-center rounded-xl"
                   >
                     <Close />
                   </button>
@@ -549,7 +550,7 @@ export default function Sample() {
               </div>
             </button>
           </div>
-          <div className="absolute left-0 right-0 top-0 flex justify-between px-[20px] pt-[24px] pointer-events-none">
+          <div className="absolute left-0 right-0 top-0 flex justify-between px-[20px] pt-[20px] pointer-events-none">
             <div className="flex w-full justify-between items-center">
               <button
                 onClick={() => setIsListOpen(true)}
