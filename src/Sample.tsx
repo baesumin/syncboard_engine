@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
@@ -355,6 +354,7 @@ export default function Sample() {
 
   const webViewLitener = useCallback(
     (e: MessageEvent) => {
+      console.log(e.data);
       const { type, value } = JSON.parse(e.data);
 
       if (type === "save") {
@@ -388,14 +388,13 @@ export default function Sample() {
     //   setFile(base64Sample);
     //   return;
     // }
-    //@ts-ignore
-    // window.webviewApi = (data: string) => {
-    //   // const d = data;
-    //   alert("hi");
-    //   console.log("hi");
-    //   console.log(data);
-    //   // setFile(data);
-    // };
+    window.webviewApi = (data: string) => {
+      // const d = data;
+      alert("hi");
+      const param = JSON.parse(data);
+      console.log(data);
+      setFile(param?.data?.base64);
+    };
     // if (isFileLoad && !file) {
     //   setFile(base64Sample);
     // }
@@ -406,7 +405,7 @@ export default function Sample() {
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
         {true && (
           <Document
-            file={`data:application/pdf;base64,${base64Sample}`}
+            file={`data:application/pdf;base64,${file || base64Sample}`}
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
@@ -628,45 +627,45 @@ export default function Sample() {
                   {isStrokeOpen && (
                     <div className="bg-white w-[60px] h-[236px] absolute bottom-[70px] rounded-lg shadow-black shadow-sm flex flex-col justify-center items-center">
                       <button
-                        onClick={() => setStrokeStep(10)}
+                        onClick={() => setStrokeStep(20)}
                         className={
                           "pointer-events-auto size-[44px] flex-center"
                         }
                       >
                         <Stroke5Step
-                          color={strokeStep === 10 ? color : "#BCC2CB"}
+                          color={strokeStep === 20 ? color : "#BCC2CB"}
+                        />
+                      </button>
+                      <button
+                        onClick={() => setStrokeStep(16)}
+                        className="pointer-events-auto size-[44px] flex-center"
+                      >
+                        <Stroke4Step
+                          color={strokeStep === 16 ? color : "#BCC2CB"}
+                        />
+                      </button>
+                      <button
+                        onClick={() => setStrokeStep(12)}
+                        className="pointer-events-auto size-[44px] flex-center"
+                      >
+                        <Stroke3Step
+                          color={strokeStep === 12 ? color : "#BCC2CB"}
                         />
                       </button>
                       <button
                         onClick={() => setStrokeStep(8)}
                         className="pointer-events-auto size-[44px] flex-center"
                       >
-                        <Stroke4Step
+                        <Stroke2Step
                           color={strokeStep === 8 ? color : "#BCC2CB"}
-                        />
-                      </button>
-                      <button
-                        onClick={() => setStrokeStep(6)}
-                        className="pointer-events-auto size-[44px] flex-center"
-                      >
-                        <Stroke3Step
-                          color={strokeStep === 6 ? color : "#BCC2CB"}
                         />
                       </button>
                       <button
                         onClick={() => setStrokeStep(4)}
                         className="pointer-events-auto size-[44px] flex-center"
                       >
-                        <Stroke2Step
-                          color={strokeStep === 4 ? color : "#BCC2CB"}
-                        />
-                      </button>
-                      <button
-                        onClick={() => setStrokeStep(2)}
-                        className="pointer-events-auto size-[44px] flex-center"
-                      >
                         <Stroke1Step
-                          color={strokeStep === 2 ? color : "#BCC2CB"}
+                          color={strokeStep === 4 ? color : "#BCC2CB"}
                         />
                       </button>
                     </div>
