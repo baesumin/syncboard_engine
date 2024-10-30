@@ -2,7 +2,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
-import { isBrowser, useMobileOrientation } from "react-device-detect";
+import {
+  // isBrowser,
+  useMobileOrientation,
+} from "react-device-detect";
 // import { LineCapStyle, PDFDocument } from "pdf-lib";
 import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
@@ -58,9 +61,7 @@ export default function Sample() {
   const [canDraw, setCanDraw] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
-  const [renderedPageNumber, setRenderedPageNumber] = useState<number | null>(
-    null
-  );
+  const [renderedPageNumber, setRenderedPageNumber] = useState<number>(0);
   const [file, setFile] = useState("");
   const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
   const [pageSize, setPageSize] = useState({
@@ -78,7 +79,7 @@ export default function Sample() {
     "pen"
   );
   const [strokeStep, setStrokeStep] = useState(12);
-  const [devicePixelRatio] = useState(2);
+  const [devicePixelRatio, setDevicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
   const [isRendering, setIsRendering] = useState(false);
 
@@ -370,15 +371,15 @@ export default function Sample() {
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {/* {true && ( */}
-        {(isBrowser || file) && (
+        {true && (
+          // {(isBrowser || file) && (
           <Document
-            file={
-              isBrowser
-                ? "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
-                : `data:application/pdf;base64,${file}`
-            }
-            // file="https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
+            // file={
+            //   isBrowser
+            //     ? "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
+            //     : `data:application/pdf;base64,${file}`
+            // }
+            file="https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
@@ -410,25 +411,24 @@ export default function Sample() {
                   }}
                 >
                   <>
-                    {isLoading && renderedPageNumber && (
-                      <Thumbnail
-                        key={renderedPageNumber}
-                        pageNumber={renderedPageNumber}
-                        width={orientation === "portrait" ? width : undefined}
-                        height={height}
-                        devicePixelRatio={devicePixelRatio}
-                        loading={<></>}
-                      />
-                    )}
                     <Thumbnail
-                      key={pageNumber}
+                      key={`renderedPageNumber-${renderedPageNumber}`}
+                      className={isLoading ? "" : "hidden"}
+                      pageNumber={renderedPageNumber}
+                      width={orientation === "portrait" ? width : undefined}
+                      height={height}
+                      devicePixelRatio={devicePixelRatio}
+                      noData={<></>}
+                    />
+                    <Thumbnail
+                      key={`pageNumber-${pageNumber}`}
                       className={isLoading ? "hidden" : ""}
                       pageNumber={pageNumber}
                       width={orientation === "portrait" ? width : undefined}
                       height={height}
                       devicePixelRatio={devicePixelRatio}
                       onRenderSuccess={onRenderSuccess}
-                      loading={<></>}
+                      noData={<></>}
                     />
                     <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
                       <canvas
@@ -451,63 +451,65 @@ export default function Sample() {
                 </div>
               </TransformComponent>
             </TransformWrapper>
-            {isListOpen && (
-              <div className="absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px]">
-                <div className="flex justify-end items-center">
-                  <button
-                    onClick={() => setIsListOpen(false)}
-                    className="bg-white size-[44px] flex-center rounded-xl"
-                  >
-                    <Close />
-                  </button>
-                </div>
-                <div
-                  className="grid mt-[20px] gap-y-5"
-                  style={{
-                    gridTemplateColumns:
-                      "repeat(auto-fill, minmax(200px, 1fr))",
-                  }}
+            <div
+              className={clsx(
+                "absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px]",
+                isListOpen ? "" : "hidden"
+              )}
+            >
+              <div className="flex justify-end items-center">
+                <button
+                  onClick={() => setIsListOpen(false)}
+                  className="bg-white size-[44px] flex-center rounded-xl"
                 >
-                  {[...new Array(totalPage)].map((_, index) => {
-                    return (
-                      <div key={index} className="w-[180px]">
-                        <div
-                          className={clsx(
-                            pageNumber === index + 1
-                              ? "border-[3px] border-[#FF9A51]"
-                              : "",
-                            "overflow-hidden"
-                          )}
-                        >
-                          <Thumbnail
-                            pageNumber={index + 1}
-                            width={180}
-                            devicePixelRatio={2}
-                            onItemClick={({ pageNumber }) => {
-                              scaleRef.current?.resetTransform(0);
-                              setPageNumber(pageNumber);
-                              setIsListOpen(false);
-                            }}
-                            loading={<></>}
-                          />
-                        </div>
-                        <div className="h-[31px] flex justify-center items-center">
-                          <span
-                            className={
-                              pageNumber === index + 1
-                                ? "text-[#FF9A51] font-bold text-lg"
-                                : "text-white"
-                            }
-                          >
-                            {index + 1}/{totalPage}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                  <Close />
+                </button>
               </div>
-            )}
+              <div
+                className="grid mt-[20px] gap-y-5"
+                style={{
+                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                }}
+              >
+                {[...new Array(totalPage)].map((_, index) => {
+                  return (
+                    <div key={index} className="w-[180px]">
+                      <div
+                        className={clsx(
+                          pageNumber === index + 1
+                            ? "border-[3px] border-[#FF9A51]"
+                            : "",
+                          "overflow-hidden"
+                        )}
+                      >
+                        <Thumbnail
+                          pageNumber={index + 1}
+                          width={180}
+                          devicePixelRatio={2}
+                          onItemClick={({ pageNumber }) => {
+                            scaleRef.current?.resetTransform(0);
+                            setPageNumber(pageNumber);
+                            setIsListOpen(false);
+                          }}
+                          loading={<></>}
+                        />
+                      </div>
+                      <div className="h-[31px] flex justify-center items-center">
+                        <span
+                          className={
+                            pageNumber === index + 1
+                              ? "text-[#FF9A51] font-bold text-lg"
+                              : "text-white"
+                          }
+                        >
+                          {index + 1}/{totalPage}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </Document>
         )}
       </div>
