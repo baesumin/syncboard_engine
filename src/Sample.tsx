@@ -391,17 +391,9 @@ export default function Sample() {
     // }
     //@ts-ignore
     window.webviewApi = (data: string) => {
-      // const d = data;
-      alert("hi3");
       const param = JSON.parse(data);
-      console.log(data);
       setFile(param?.data?.base64);
     };
-
-    window.addEventListener("webviewApi", (e) => {
-      alert("hi4");
-      console.log(e);
-    });
 
     // if (isFileLoad && !file) {
     //   setFile(base64Sample);
@@ -536,24 +528,26 @@ export default function Sample() {
             </button>
           </div>
           <div className="absolute left-0 right-0 top-0 flex justify-between px-[30px] pt-[30px] pointer-events-none">
-            <button
-              onClick={() => setIsListOpen(true)}
-              className="pointer-events-auto w-[113px] h-[52px] rounded-xl bg-[#202325]/70 flex items-center pl-1 gap-3"
-            >
-              <div className="size-[44px] bg-white rounded-lg flex-center">
-                <ThumbnailList />
-              </div>
-              <span className="text-white text-lg">{`${pageNumber}/${totalPage}`}</span>
-            </button>
-            <button
-              onClick={() => {
-                postMessage("fullScreen");
-                setIsFullScreen((prev) => !prev);
-              }}
-              className="pointer-events-auto size-[52px] rounded-xl bg-white shadow-black shadow-sm flex-center"
-            >
-              {isFullScreen ? <SmallScreen /> : <FullScreen />}
-            </button>
+            <div className="flex w-full justify-between items-center">
+              <button
+                onClick={() => setIsListOpen(true)}
+                className="pointer-events-auto w-[113px] h-[52px] rounded-xl bg-[#202325]/70 flex items-center pl-1 gap-3"
+              >
+                <div className="size-[44px] bg-white rounded-lg flex-center">
+                  <ThumbnailList />
+                </div>
+                <span className="text-white text-lg">{`${pageNumber}/${totalPage}`}</span>
+              </button>
+              <button
+                onClick={() => {
+                  postMessage("fullScreen");
+                  setIsFullScreen((prev) => !prev);
+                }}
+                className="pointer-events-auto size-[44px] rounded-lg bg-white shadow-black shadow-sm flex-center"
+              >
+                {isFullScreen ? <SmallScreen /> : <FullScreen />}
+              </button>
+            </div>
           </div>
           <div className="absolute left-0 right-0 bottom-[40px] flex justify-center px-[30px] pt-[30px] pointer-events-none">
             {!canDraw && (
