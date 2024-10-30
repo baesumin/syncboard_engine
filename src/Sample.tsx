@@ -3,16 +3,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { isBrowser, useMobileOrientation } from "react-device-detect";
-import { LineCapStyle, PDFDocument } from "pdf-lib";
+// import { LineCapStyle, PDFDocument } from "pdf-lib";
 import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
   colorMap,
-  colorToRGB,
+  // colorToRGB,
   drawDashedLine,
   drawSmoothLine,
   DrawType,
   getDrawingPosition,
-  nativeLog,
+  // nativeLog,
   PathsType,
   postMessage,
 } from "./utils";
@@ -39,8 +39,6 @@ import Stroke4Step from "./assets/ico-stroke-4step.svg?react";
 import Stroke5Step from "./assets/ico-stroke-5step.svg?react";
 import clsx from "clsx";
 
-const DEVICE_PIXEL_RATIO = 2;
-
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
@@ -60,15 +58,18 @@ export default function Sample() {
   const [canDraw, setCanDraw] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
+  const [renderedPageNumber, setRenderedPageNumber] = useState<number | null>(
+    null
+  );
   const [file, setFile] = useState("");
   const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
   const [pageSize, setPageSize] = useState({
     width: 0,
     height: 0,
   });
-  const [paths, setPaths] = useState<{
+  const paths = useRef<{
     [pageNumber: number]: PathsType[];
-  }>([]);
+  }>({});
   const [drawOrder, setDrawOrder] = useState(0);
   const [isListOpen, setIsListOpen] = useState(false);
   const [totalPage, setTotalPage] = useState(0);
@@ -77,7 +78,9 @@ export default function Sample() {
     "pen"
   );
   const [strokeStep, setStrokeStep] = useState(12);
+  const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
+  const [isRendering, setIsRendering] = useState(false);
 
   const startDrawing = (e: DrawType) => {
     e.persist();
@@ -92,7 +95,7 @@ export default function Sample() {
     const { x, y } = getDrawingPosition(
       canvas,
       e,
-      DEVICE_PIXEL_RATIO,
+      devicePixelRatio,
       scale.current
     );
 
@@ -124,7 +127,7 @@ export default function Sample() {
     const { x, y } = getDrawingPosition(
       canvas,
       e,
-      DEVICE_PIXEL_RATIO,
+      devicePixelRatio,
       scale.current
     );
 
@@ -159,8 +162,8 @@ export default function Sample() {
     (pageWidth: number, pageHeight: number) => {
       if (canvas.current && width && height) {
         const context = canvas.current.getContext("2d")!;
-        const points = paths[pageNumber];
-        if (paths[pageNumber]) {
+        const points = paths.current[pageNumber];
+        if (points) {
           // 점을 그룹으로 나누기
           let currentGroup: PathsType[] = [];
           for (let i = 1; i < points.length; i++) {
@@ -206,6 +209,7 @@ export default function Sample() {
             }
           }
         }
+        setIsRendering(false);
       }
     },
     [height, pageNumber, paths, width]
@@ -217,7 +221,7 @@ export default function Sample() {
     if (drawType === "eraser") {
       // 손을 뗄 때 기존 선과 겹치는 부분 삭제
       if (pathsRef.current.length > 0) {
-        const currentPaths = paths[pageNumber] || [];
+        const currentPaths = paths.current[pageNumber] || [];
         const erasePaths = pathsRef.current;
 
         // 지우기 모드에서 겹치는 drawOrder를 찾기
@@ -278,10 +282,10 @@ export default function Sample() {
         });
 
         // paths 업데이트
-        setPaths((prev) => ({
-          ...prev,
+        paths.current = {
+          ...paths.current,
           [pageNumber]: newPaths,
-        }));
+        };
 
         // pathsRef 초기화
         pathsRef.current = [];
@@ -296,88 +300,64 @@ export default function Sample() {
     if (pathsRef.current.length > 0 && drawType !== "eraser") {
       const newValue = pathsRef.current;
       setDrawOrder((prev) => prev + 1);
-      setPaths((prev) => {
-        return {
-          ...prev,
-          [pageNumber]: [...(prev[pageNumber] || []), ...newValue],
-        };
-      });
+      paths.current = {
+        ...paths.current,
+        [pageNumber]: [...(paths.current[pageNumber] || []), ...newValue],
+      };
       // pathsRef 초기화
       pathsRef.current = [];
     }
   };
-
+  const isLoading = renderedPageNumber !== pageNumber;
   const onRenderSuccess: OnRenderSuccess = (page) => {
+    setRenderedPageNumber(pageNumber);
+    setIsRendering(true);
     setPageSize({
       width: page.width,
       height: page.height,
     });
   };
 
-  const downloadModifiedPDF = useCallback(async () => {
-    // 기존 PDF 로드
-    const existingPdfBytes = await fetch(file).then((res) => res.arrayBuffer());
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
-    for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-      const currentPaths = paths[i + 1]; // 현재 페이지의 경로 가져오기
-      if (currentPaths) {
-        const page = pdfDoc.getPage(i);
-        const { width: pageWidth, height: pageHeight } = page.getSize();
+  // const downloadModifiedPDF = useCallback(async () => {
+  //   // 기존 PDF 로드
+  //   const existingPdfBytes = await fetch(file).then((res) => res.arrayBuffer());
+  //   const pdfDoc = await PDFDocument.load(existingPdfBytes);
+  //   for (let i = 0; i < pdfDoc.getPageCount(); i++) {
+  //     const currentPaths = paths[i + 1]; // 현재 페이지의 경로 가져오기
+  //     if (currentPaths) {
+  //       const page = pdfDoc.getPage(i);
+  //       const { width: pageWidth, height: pageHeight } = page.getSize();
 
-        // 경로 그리기
-        currentPaths.forEach(({ x, y, lastX, lastY, color, lineWidth }) => {
-          page.drawLine({
-            start: {
-              x: (lastX * pageWidth) / DEVICE_PIXEL_RATIO,
-              y: pageHeight - (lastY * pageHeight) / DEVICE_PIXEL_RATIO,
-            }, // y 좌표 반전
-            end: {
-              x: (x * pageWidth) / DEVICE_PIXEL_RATIO,
-              y: pageHeight - (y * pageHeight) / DEVICE_PIXEL_RATIO,
-            }, // y 좌표 반전
-            color: colorToRGB(color), // 선 색상
-            thickness: (lineWidth * pageWidth) / DEVICE_PIXEL_RATIO, // 선 두께
-            lineCap: LineCapStyle.Round,
-          });
-        });
-      }
-    }
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    nativeLog(`blob size: ${blob.size}`);
-    const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
-    postMessage("save", base64DataUri);
-  }, [file, paths]);
-
-  const webViewLitener = useCallback(
-    (e: MessageEvent) => {
-      console.log(e.data);
-      const { type, value } = JSON.parse(e.data);
-
-      if (type === "save") {
-        downloadModifiedPDF();
-      } else if (type === "pdf") {
-        if (value) {
-          const base64 = (value as string).split(",")[1].slice(0, -1);
-          setFile(`data:application/pdf;base64,${base64}`);
-        }
-      }
-    },
-    [downloadModifiedPDF]
-  );
+  //       // 경로 그리기
+  //       currentPaths.forEach(({ x, y, lastX, lastY, color, lineWidth }) => {
+  //         page.drawLine({
+  //           start: {
+  //             x: (lastX * pageWidth) / devicePixelRatio,
+  //             y: pageHeight - (lastY * pageHeight) / devicePixelRatio,
+  //           }, // y 좌표 반전
+  //           end: {
+  //             x: (x * pageWidth) / devicePixelRatio,
+  //             y: pageHeight - (y * pageHeight) / devicePixelRatio,
+  //           }, // y 좌표 반전
+  //           color: colorToRGB(color), // 선 색상
+  //           thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
+  //           lineCap: LineCapStyle.Round,
+  //         });
+  //       });
+  //     }
+  //   }
+  //   const pdfBytes = await pdfDoc.save();
+  //   const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  //   nativeLog(`blob size: ${blob.size}`);
+  //   const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+  //   postMessage("save", base64DataUri);
+  // }, [file, paths]);
 
   useEffect(() => {
-    if (pageSize.width > 0) {
+    if (isRendering) {
       redrawPaths(pageSize.width, pageSize.height);
     }
-  }, [pageSize, redrawPaths]);
-
-  useEffect(() => {
-    window.addEventListener("message", webViewLitener as EventListener);
-    return () => {
-      window.removeEventListener("message", webViewLitener as EventListener);
-    };
-  }, [webViewLitener]);
+  }, [isRendering, pageSize, redrawPaths]);
 
   useEffect(() => {
     //@ts-ignore
@@ -390,6 +370,7 @@ export default function Sample() {
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
+        {/* {true && ( */}
         {(isBrowser || file) && (
           <Document
             file={
@@ -397,7 +378,7 @@ export default function Sample() {
                 ? "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
                 : `data:application/pdf;base64,${file}`
             }
-            // file={Sample2Pdf}
+            // file="https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
@@ -412,6 +393,9 @@ export default function Sample() {
               disablePadding
               onPinchingStop={(ref) => {
                 scale.current = ref.state.scale;
+                // 1 ~3
+                // 1일때 0 3일때 1
+                // setDevicePixelRatio(2 + ref.state.scale * 0.33);
               }}
             >
               <TransformComponent>
@@ -426,11 +410,23 @@ export default function Sample() {
                   }}
                 >
                   <>
+                    {isLoading && renderedPageNumber && (
+                      <Thumbnail
+                        key={renderedPageNumber}
+                        pageNumber={renderedPageNumber}
+                        width={orientation === "portrait" ? width : undefined}
+                        height={height}
+                        devicePixelRatio={devicePixelRatio}
+                        loading={<></>}
+                      />
+                    )}
                     <Thumbnail
+                      key={pageNumber}
+                      className={isLoading ? "hidden" : ""}
                       pageNumber={pageNumber}
                       width={orientation === "portrait" ? width : undefined}
                       height={height}
-                      devicePixelRatio={DEVICE_PIXEL_RATIO}
+                      devicePixelRatio={devicePixelRatio}
                       onRenderSuccess={onRenderSuccess}
                       loading={<></>}
                     />
@@ -438,8 +434,8 @@ export default function Sample() {
                       <canvas
                         ref={canvas}
                         key={pageNumber}
-                        width={pageSize.width * DEVICE_PIXEL_RATIO}
-                        height={pageSize.height * DEVICE_PIXEL_RATIO}
+                        width={pageSize.width * devicePixelRatio}
+                        height={pageSize.height * devicePixelRatio}
                         style={{
                           width: `${pageSize.width}px`,
                           height: `${pageSize.height}px`,
