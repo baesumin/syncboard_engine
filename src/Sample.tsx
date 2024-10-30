@@ -39,7 +39,7 @@ import Stroke4Step from "./assets/ico-stroke-4step.svg?react";
 import Stroke5Step from "./assets/ico-stroke-5step.svg?react";
 // import SamplePdf from "./assets/sample.pdf";
 import clsx from "clsx";
-import { base64Sample } from "./base64Sample";
+// import { base64Sample } from "./base64Sample";
 // import Sample2Pdf from "./assets/sample2.pdf";
 
 const DEVICE_PIXEL_RATIO = 2;
@@ -396,16 +396,17 @@ export default function Sample() {
     };
 
     // if (isFileLoad && !file) {
-    //   setFile(base64Sample);
+    //   setFile(Sample2Pdf);
     // }
   }, []);
 
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {true && (
+        {file && (
           <Document
-            file={`data:application/pdf;base64,${file || base64Sample}`}
+            file={`data:application/pdf;base64,${file}`}
+            // file={Sample2Pdf}
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
@@ -460,31 +461,52 @@ export default function Sample() {
               </TransformComponent>
             </TransformWrapper>
             {isListOpen && (
-              <div className="absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[30px] pt-[30px]">
+              <div className="absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[20px]">
                 <div className="h-[52px] flex justify-end items-center">
                   <button
                     onClick={() => setIsListOpen(false)}
-                    className="bg-white size-[52px] flex-center rounded-xl"
+                    className="bg-white size-[48px] flex-center rounded-xl"
                   >
                     <Close />
                   </button>
                 </div>
-                <div className="flex gap-4 flex-wrap">
+                <div
+                  className="grid mt-[20px] gap-y-5"
+                  style={{
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(200px, 1fr))",
+                  }}
+                >
                   {[...new Array(totalPage)].map((_, index) => {
                     return (
                       <div key={index} className="w-[180px]">
-                        <Thumbnail
-                          pageNumber={index + 1}
-                          width={180}
-                          devicePixelRatio={2}
-                          onItemClick={({ pageNumber }) => {
-                            scaleRef.current?.resetTransform(0);
-                            setPageNumber(pageNumber);
-                            setIsListOpen(false);
-                          }}
-                        />
-                        <div className="h-[31px] flex justify-center">
-                          <span className="text-white">
+                        <div
+                          className={clsx(
+                            pageNumber === index + 1
+                              ? "border-[3px] border-[#FF9A51]"
+                              : "",
+                            "overflow-hidden"
+                          )}
+                        >
+                          <Thumbnail
+                            pageNumber={index + 1}
+                            width={180}
+                            devicePixelRatio={2}
+                            onItemClick={({ pageNumber }) => {
+                              scaleRef.current?.resetTransform(0);
+                              setPageNumber(pageNumber);
+                              setIsListOpen(false);
+                            }}
+                          />
+                        </div>
+                        <div className="h-[31px] flex justify-center items-center">
+                          <span
+                            className={
+                              pageNumber === index + 1
+                                ? "text-[#FF9A51] font-bold text-lg"
+                                : "text-white"
+                            }
+                          >
                             {index + 1}/{totalPage}
                           </span>
                         </div>
@@ -527,11 +549,11 @@ export default function Sample() {
               </div>
             </button>
           </div>
-          <div className="absolute left-0 right-0 top-0 flex justify-between px-[30px] pt-[30px] pointer-events-none">
+          <div className="absolute left-0 right-0 top-0 flex justify-between px-[20px] pt-[24px] pointer-events-none">
             <div className="flex w-full justify-between items-center">
               <button
                 onClick={() => setIsListOpen(true)}
-                className="pointer-events-auto w-[113px] h-[52px] rounded-xl bg-[#202325]/70 flex items-center pl-1 gap-3"
+                className="pointer-events-auto h-[52px] rounded-xl bg-[#202325]/70 flex items-center pl-1 pr-4 gap-3"
               >
                 <div className="size-[44px] bg-white rounded-lg flex-center">
                   <ThumbnailList />
@@ -549,7 +571,7 @@ export default function Sample() {
               </button>
             </div>
           </div>
-          <div className="absolute left-0 right-0 bottom-[40px] flex justify-center px-[30px] pt-[30px] pointer-events-none">
+          <div className="absolute left-0 right-0 bottom-[30px] flex justify-center px-[30px] pt-[30px] pointer-events-none">
             {!canDraw && (
               <button
                 onClick={() => setCanDraw((prev) => !prev)}
@@ -560,7 +582,7 @@ export default function Sample() {
               </button>
             )}
             {canDraw && (
-              <div className="h-[60px] bg-white rounded-xl flex items-center px-[8px] shadow-black shadow-sm">
+              <div className="h-[56px] bg-white rounded-xl flex items-center px-[8px] shadow-black shadow-sm">
                 <div className="w-[140px] flex justify-between">
                   <button
                     onClick={() => setDrawType("pen")}
