@@ -351,7 +351,7 @@ export default function Sample() {
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     nativeLog(`blob size: ${blob.size}`);
-    const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+    const base64DataUri = await pdfDoc.saveAsBase64();
     return base64DataUri;
   }, [devicePixelRatio, file]);
 
