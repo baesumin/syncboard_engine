@@ -132,15 +132,15 @@ export const drawDashedLine = (
   y: number
 ) => {
   context.setLineDash([1, 10]); // 점선 스타일 설정
-  context.lineCap = "round";
-  context.beginPath();
-  context.moveTo(lastX, lastY);
-  context.lineTo(x, y);
   context.strokeStyle = "red"; // 점선 색상
   context.lineWidth = 5;
+  // context.lineCap = "round";
+  // context.beginPath();
+  context.moveTo(lastX, lastY);
+  context.lineTo(x, y);
   context.stroke();
   context.setLineDash([]); // 점선 스타일 초기화
-  context.closePath();
+  // context.closePath();
 };
 
 export const drawSmoothLine = (
@@ -152,27 +152,31 @@ export const drawSmoothLine = (
   color: (typeof colorMap)[number],
   lineWidth: number
 ) => {
-  const radius = lineWidth / 2; // 원의 반지름을 선 두께의 절반으로 설정
+  // const radius = lineWidth / 2; // 원의 반지름을 선 두께의 절반으로 설정
 
   // 시작점에 원 그리기
-  context.fillStyle = color;
-  context.beginPath();
-  context.arc(lastX, lastY, radius, 0, Math.PI * 2);
-  context.fill();
+  // context.fillStyle = color;
+  // context.beginPath();
+  // context.arc(lastX, lastY, radius, 0, Math.PI * 2);
+  // context.fill();
 
   // 끝점에 원 그리기
-  context.beginPath();
-  context.arc(x, y, radius, 0, Math.PI * 2);
-  context.fill();
+  // context.beginPath();
+  // context.arc(x, y, radius, 0, Math.PI * 2);
+  // context.fill();
 
   // 선 그리기 (부드러운 선을 원으로 연결)
-  context.beginPath();
+  // context.beginPath();
+  context.strokeStyle = color;
+  // context.strokeStyle = "rgba(255,165,0,0.1)";
+  context.lineWidth = lineWidth;
+  // context.lineJoin = "round";
+  context.lineCap = "round";
+
   context.moveTo(lastX, lastY);
   context.lineTo(x, y);
-  context.strokeStyle = color;
-  context.lineWidth = lineWidth;
   context.stroke();
-  context.closePath();
+  // context.closePath();
 };
 
 export const colorToRGB = (color: (typeof colorMap)[number]) => {
