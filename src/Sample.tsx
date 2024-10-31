@@ -351,7 +351,14 @@ export default function Sample() {
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     nativeLog(`blob size: ${blob.size}`);
     const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
-    return base64DataUri;
+    // return base64DataUri;
+    //@ts-ignore
+    window.AndroidInterface.getBase64(
+      JSON.stringify({
+        base64: base64DataUri,
+        ok: true,
+      })
+    );
   }, [devicePixelRatio, file]);
 
   useEffect(() => {
@@ -374,7 +381,7 @@ export default function Sample() {
     };
     //@ts-ignore
     window.getBase64 = async () => {
-      return await downloadModifiedPDF();
+      downloadModifiedPDF();
     };
   }, [downloadModifiedPDF]);
 
