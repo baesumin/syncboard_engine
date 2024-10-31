@@ -319,7 +319,9 @@ export default function Sample() {
 
   const downloadModifiedPDF = useCallback(async () => {
     // 기존 PDF 로드
-    const existingPdfBytes = await fetch(file).then((res) => res.arrayBuffer());
+    const existingPdfBytes = isBrowser
+      ? await fetch(file).then((res) => res.arrayBuffer())
+      : file;
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     for (let i = 0; i < pdfDoc.getPageCount(); i++) {
       const currentPaths = paths.current[i + 1]; // 현재 페이지의 경로 가져오기
@@ -350,6 +352,7 @@ export default function Sample() {
     nativeLog(`blob size: ${blob.size}`);
     try {
       const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+      console.log(base64DataUri);
       //@ts-ignore
       window.AndroidInterface?.getBase64(
         JSON.stringify({
@@ -377,6 +380,12 @@ export default function Sample() {
   }, [isRendering, pageSize, redrawPaths]);
 
   useEffect(() => {
+    if (isBrowser) {
+      setFile(
+        "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
+      );
+      return;
+    }
     //@ts-ignore
     window.webviewApi = (data: string) => {
       const param = JSON.parse(data);
@@ -390,12 +399,10 @@ export default function Sample() {
         {/* {true && ( */}
         {(isBrowser || file) && (
           <Document
-            file={
-              isBrowser
-                ? "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
-                : `data:application/pdf;base64,${file}`
-            }
-            // file="https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
+            file={isBrowser ? file : `data:application/pdf;base64,${file}`}
+            // file={
+            //   "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
+            // }
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
@@ -594,6 +601,15 @@ export default function Sample() {
               >
                 <Drawing />
                 그리기
+              </button>
+            )}
+            {!canDraw && (
+              <button
+                onClick={() => downloadModifiedPDF()}
+                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+              >
+                <Drawing />
+                저장
               </button>
             )}
             {canDraw && (
