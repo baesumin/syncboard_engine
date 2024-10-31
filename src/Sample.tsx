@@ -38,6 +38,7 @@ import Stroke3Step from "./assets/ico-stroke-3step.svg?react";
 import Stroke4Step from "./assets/ico-stroke-4step.svg?react";
 import Stroke5Step from "./assets/ico-stroke-5step.svg?react";
 import clsx from "clsx";
+import { base64 } from "./base64";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -351,14 +352,7 @@ export default function Sample() {
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     nativeLog(`blob size: ${blob.size}`);
     const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
-    // return base64DataUri;
-    //@ts-ignore
-    window.AndroidInterface.getBase64(
-      JSON.stringify({
-        base64: base64DataUri,
-        ok: true,
-      })
-    );
+    return base64DataUri;
   }, [devicePixelRatio, file]);
 
   useEffect(() => {
@@ -368,12 +362,12 @@ export default function Sample() {
   }, [isRendering, pageSize, redrawPaths]);
 
   useEffect(() => {
-    if (isBrowser) {
-      setFile(
-        "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
-      );
-      return;
+    if (isBrowser || import.meta.env.MODE === "development") {
+      setFile(base64);
     }
+  }, []);
+
+  useEffect(() => {
     //@ts-ignore
     window.webviewApi = (data: string) => {
       const param = JSON.parse(data);
@@ -381,20 +375,18 @@ export default function Sample() {
     };
     //@ts-ignore
     window.getBase64 = async () => {
-      downloadModifiedPDF();
+      const data = await downloadModifiedPDF();
+      //@ts-ignore
+      window.AndroidInterface.getBase64(data);
     };
   }, [downloadModifiedPDF]);
 
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {/* {true && ( */}
-        {(isBrowser || file) && (
+        {file && (
           <Document
-            file={isBrowser ? file : `data:application/pdf;base64,${file}`}
-            // file={
-            //   "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
-            // }
+            file={`data:application/pdf;base64,${file}`}
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
