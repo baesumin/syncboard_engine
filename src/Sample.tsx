@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
@@ -46,6 +45,15 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
+interface window {
+  webviewApi: (data: string) => void;
+  getBase64: () => void;
+  AndroidInterface: {
+    getBase64: (data: string) => void;
+    setFullMode: (data: boolean) => void;
+  };
+}
+
 export default function Sample() {
   const { orientation } = useMobileOrientation();
   const { width, height, ref } = useResizeDetector();
@@ -58,6 +66,7 @@ export default function Sample() {
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
 
   const [canDraw, setCanDraw] = useState(false);
+  const [isToolBarOpen, setIsToolBarOpen] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [renderedPageNumber, setRenderedPageNumber] = useState<number>(0);
@@ -74,9 +83,9 @@ export default function Sample() {
   const [isListOpen, setIsListOpen] = useState(false);
   const [totalPage, setTotalPage] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [drawType, setDrawType] = useState<"pen" | "highlight" | "eraser">(
-    "pen"
-  );
+  const [drawType, setDrawType] = useState<
+    "pen" | "highlight" | "eraser" | "zoom"
+  >("pen");
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
@@ -369,16 +378,13 @@ export default function Sample() {
   }, []);
 
   useEffect(() => {
-    //@ts-ignore
-    window.webviewApi = (data: string) => {
+    (window as unknown as window).webviewApi = (data: string) => {
       const param = JSON.parse(data);
       setFile(param?.data?.base64);
     };
-    //@ts-ignore
-    window.getBase64 = async () => {
+    (window as unknown as window).getBase64 = async () => {
       const data = await downloadModifiedPDF();
-      //@ts-ignore
-      window.AndroidInterface.getBase64(data);
+      (window as unknown as window).AndroidInterface.getBase64(data);
     };
   }, [downloadModifiedPDF]);
 
@@ -528,36 +534,8 @@ export default function Sample() {
       </div>
       {!isListOpen && (
         <>
-          <div className="fixed left-0 right-0 top-0 bottom-0 flex justify-between items-center pointer-events-none">
-            <button
-              onClick={() => {
-                if (pageNumber !== 1) {
-                  scaleRef.current?.resetTransform(0);
-                  setPageNumber((prev) => prev - 1);
-                }
-              }}
-              className="pointer-events-auto w-[80px] h-[160px] rounded-tr-[100px] rounded-br-[100px] bg-[#56657E]/50 flex-center text-white"
-            >
-              <ArrowLeft color={pageNumber === 1 ? "#BCC2CB" : "white"} />
-            </button>
-            <button
-              onClick={() => {
-                if (pageNumber !== totalPage) {
-                  scaleRef.current?.resetTransform(0);
-                  setPageNumber((prev) => prev + 1);
-                }
-              }}
-              className="pointer-events-auto w-[80px] h-[160px] rounded-tl-[100px] rounded-bl-[100px] bg-[#56657E]/50 flex-center text-white"
-            >
-              <div className="rotate-180">
-                <ArrowLeft
-                  color={pageNumber === totalPage ? "#BCC2CB" : "white"}
-                />
-              </div>
-            </button>
-          </div>
-          <div className="absolute left-0 right-0 top-0 flex justify-between px-[20px] pt-[20px] pointer-events-none">
-            <div className="flex w-full justify-between items-center">
+          <div className="absolute left-0 right-0 top-0 bottom-0 flex flex-col justify-between px-[20px] py-[20px] pointer-events-none">
+            <div className="flex h-[52px] justify-between items-center">
               <button
                 onClick={() => setIsListOpen(true)}
                 className="pointer-events-auto h-[48px] rounded-[10px] bg-[#202325]/70 flex items-center pl-[2px] pr-4 gap-3"
@@ -571,157 +549,207 @@ export default function Sample() {
                 onClick={() => {
                   postMessage("fullScreen");
                   setIsFullScreen((prev) => !prev);
-                  //@ts-ignore
-                  window.AndroidInterface.setFullMode(!isFullScreen);
+                  (window as unknown as window).AndroidInterface.setFullMode(
+                    !isFullScreen
+                  );
                 }}
                 className="pointer-events-auto size-[44px] rounded-lg bg-white shadow-black shadow-sm flex-center"
               >
                 {isFullScreen ? <SmallScreen /> : <FullScreen />}
               </button>
             </div>
-          </div>
-          <div className="absolute left-0 right-0 bottom-[30px] flex justify-center px-[30px] pt-[30px] pointer-events-none">
-            {!canDraw && (
+
+            <div className="flex justify-between mx-[-20px]">
               <button
-                onClick={() => setCanDraw((prev) => !prev)}
-                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                onClick={() => {
+                  if (pageNumber !== 1) {
+                    scaleRef.current?.resetTransform(0);
+                    setPageNumber((prev) => prev - 1);
+                  }
+                }}
+                className="pointer-events-auto w-[80px] h-[160px] rounded-tr-[100px] rounded-br-[100px] bg-[#56657E]/50 flex-center text-white"
               >
-                <Drawing />
-                그리기
+                <ArrowLeft color={pageNumber === 1 ? "#BCC2CB" : "white"} />
               </button>
-            )}
-            {canDraw && (
-              <div className="h-[56px] bg-white rounded-xl flex items-center px-[8px] shadow-black shadow-sm">
-                <div className="w-[140px] flex justify-between">
-                  <button
-                    onClick={() => setDrawType("pen")}
-                    className={clsx(
-                      "pointer-events-auto size-[44px] rounded-lg flex-center",
-                      drawType === "pen" ? "bg-[#5865FA]" : "#ffffff"
-                    )}
-                  >
-                    <Pen color={drawType === "pen" ? "#ffffff" : "#353B45"} />
-                  </button>
-                  <button
-                    onClick={() => setDrawType("highlight")}
-                    className={clsx(
-                      "pointer-events-auto size-[44px] rounded-lg flex-center",
-                      drawType === "highlight" ? "bg-[#5865FA]" : "#ffffff"
-                    )}
-                  >
-                    <Hightlighter
-                      color={drawType === "highlight" ? "#ffffff" : "#353B45"}
-                    />
-                  </button>
-                  <button
-                    onClick={() => setDrawType("eraser")}
-                    className={clsx(
-                      "pointer-events-auto size-[44px] rounded-lg flex-center",
-                      drawType === "eraser" ? "bg-[#5865FA]" : "#ffffff"
-                    )}
-                  >
-                    <Eraser
-                      color={drawType === "eraser" ? "#ffffff" : "#353B45"}
-                    />
-                  </button>
+              <button
+                onClick={() => {
+                  if (pageNumber !== totalPage) {
+                    scaleRef.current?.resetTransform(0);
+                    setPageNumber((prev) => prev + 1);
+                  }
+                }}
+                className="pointer-events-auto w-[80px] h-[160px] rounded-tl-[100px] rounded-bl-[100px] bg-[#56657E]/50 flex-center text-white"
+              >
+                <div className="rotate-180">
+                  <ArrowLeft
+                    color={pageNumber === totalPage ? "#BCC2CB" : "white"}
+                  />
                 </div>
-                <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
-                <div className="flex flex-row w-[220px] justify-between">
-                  {colorMap.map((item) => {
-                    return (
-                      <div
-                        key={item}
-                        className="pointer-events-auto size-[44px] flex-center"
-                        onClick={() => {
-                          setColor(item);
-                        }}
-                      >
-                        <div
-                          className="rounded-full size-[24px] flex-center"
-                          style={{ backgroundColor: item }}
-                        >
-                          {drawType !== "eraser" && item === color && (
-                            <Checked color={"white"} />
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
-                <button
-                  onClick={() => setIsStrokeOpen((prev) => !prev)}
-                  className={clsx(
-                    "pointer-events-auto size-[44px] rounded-lg flex-center",
-                    isStrokeOpen ? "bg-[#EEEFF3]" : "#ffffff"
-                  )}
-                >
-                  <Stroke />
-                  {isStrokeOpen && (
-                    <div className="bg-white w-[60px] h-[236px] absolute bottom-[70px] rounded-lg shadow-black shadow-sm flex flex-col justify-center items-center">
-                      <button
-                        onClick={() => setStrokeStep(20)}
-                        className={
-                          "pointer-events-auto size-[44px] flex-center"
-                        }
-                      >
-                        <Stroke5Step
-                          color={strokeStep === 20 ? color : "#BCC2CB"}
-                        />
-                      </button>
-                      <button
-                        onClick={() => setStrokeStep(16)}
-                        className="pointer-events-auto size-[44px] flex-center"
-                      >
-                        <Stroke4Step
-                          color={strokeStep === 16 ? color : "#BCC2CB"}
-                        />
-                      </button>
-                      <button
-                        onClick={() => setStrokeStep(12)}
-                        className="pointer-events-auto size-[44px] flex-center"
-                      >
-                        <Stroke3Step
-                          color={strokeStep === 12 ? color : "#BCC2CB"}
-                        />
-                      </button>
-                      <button
-                        onClick={() => setStrokeStep(8)}
-                        className="pointer-events-auto size-[44px] flex-center"
-                      >
-                        <Stroke2Step
-                          color={strokeStep === 8 ? color : "#BCC2CB"}
-                        />
-                      </button>
-                      <button
-                        onClick={() => setStrokeStep(4)}
-                        className="pointer-events-auto size-[44px] flex-center"
-                      >
-                        <Stroke1Step
-                          color={strokeStep === 4 ? color : "#BCC2CB"}
-                        />
-                      </button>
-                    </div>
-                  )}
-                </button>
-                <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+              </button>
+            </div>
+
+            <div className="flex h-[56px] justify-center">
+              {!isToolBarOpen && (
                 <button
                   onClick={() => {
-                    setCanDraw(false);
+                    setCanDraw((prev) => !prev);
+                    setIsToolBarOpen(true);
                   }}
-                  className="pointer-events-auto size-[44px] flex-center"
+                  className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
                 >
-                  <Zoom />
+                  <Drawing />
+                  그리기
                 </button>
-                <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
-                <button
-                  onClick={() => setCanDraw((prev) => !prev)}
-                  className="pointer-events-auto size-[44px] flex-center"
-                >
-                  <Close />
-                </button>
-              </div>
-            )}
+              )}
+              {isToolBarOpen && (
+                <div className="h-[56px] bg-white rounded-xl flex items-center px-[8px] shadow-black shadow-sm">
+                  <div className="w-[140px] flex justify-between">
+                    <button
+                      onClick={() => {
+                        setCanDraw(true);
+                        setDrawType("pen");
+                      }}
+                      className={clsx(
+                        "pointer-events-auto size-[44px] rounded-lg flex-center",
+                        drawType === "pen" ? "bg-[#5865FA]" : "#ffffff"
+                      )}
+                    >
+                      <Pen color={drawType === "pen" ? "#ffffff" : "#353B45"} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCanDraw(true);
+                        setDrawType("highlight");
+                      }}
+                      className={clsx(
+                        "pointer-events-auto size-[44px] rounded-lg flex-center",
+                        drawType === "highlight" ? "bg-[#5865FA]" : "#ffffff"
+                      )}
+                    >
+                      <Hightlighter
+                        color={drawType === "highlight" ? "#ffffff" : "#353B45"}
+                      />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCanDraw(true);
+                        setDrawType("eraser");
+                      }}
+                      className={clsx(
+                        "pointer-events-auto size-[44px] rounded-lg flex-center",
+                        drawType === "eraser" ? "bg-[#5865FA]" : "#ffffff"
+                      )}
+                    >
+                      <Eraser
+                        color={drawType === "eraser" ? "#ffffff" : "#353B45"}
+                      />
+                    </button>
+                  </div>
+                  <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                  <div className="flex flex-row w-[220px] justify-between">
+                    {colorMap.map((item) => {
+                      return (
+                        <div
+                          key={item}
+                          className="pointer-events-auto size-[44px] flex-center"
+                          onClick={() => {
+                            setColor(item);
+                          }}
+                        >
+                          <div
+                            className="rounded-full size-[24px] flex-center"
+                            style={{ backgroundColor: item }}
+                          >
+                            {drawType !== "eraser" && item === color && (
+                              <Checked color={"white"} />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                  <button
+                    onClick={() => setIsStrokeOpen((prev) => !prev)}
+                    className={clsx(
+                      "pointer-events-auto size-[44px] rounded-lg flex-center",
+                      isStrokeOpen ? "bg-[#EEEFF3]" : "#ffffff"
+                    )}
+                  >
+                    <Stroke />
+                    {isStrokeOpen && (
+                      <div className="bg-white w-[60px] h-[236px] absolute bottom-[70px] rounded-lg shadow-black shadow-sm flex flex-col justify-center items-center">
+                        <button
+                          onClick={() => setStrokeStep(20)}
+                          className={
+                            "pointer-events-auto size-[44px] flex-center"
+                          }
+                        >
+                          <Stroke5Step
+                            color={strokeStep === 20 ? color : "#BCC2CB"}
+                          />
+                        </button>
+                        <button
+                          onClick={() => setStrokeStep(16)}
+                          className="pointer-events-auto size-[44px] flex-center"
+                        >
+                          <Stroke4Step
+                            color={strokeStep === 16 ? color : "#BCC2CB"}
+                          />
+                        </button>
+                        <button
+                          onClick={() => setStrokeStep(12)}
+                          className="pointer-events-auto size-[44px] flex-center"
+                        >
+                          <Stroke3Step
+                            color={strokeStep === 12 ? color : "#BCC2CB"}
+                          />
+                        </button>
+                        <button
+                          onClick={() => setStrokeStep(8)}
+                          className="pointer-events-auto size-[44px] flex-center"
+                        >
+                          <Stroke2Step
+                            color={strokeStep === 8 ? color : "#BCC2CB"}
+                          />
+                        </button>
+                        <button
+                          onClick={() => setStrokeStep(4)}
+                          className="pointer-events-auto size-[44px] flex-center"
+                        >
+                          <Stroke1Step
+                            color={strokeStep === 4 ? color : "#BCC2CB"}
+                          />
+                        </button>
+                      </div>
+                    )}
+                  </button>
+                  <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                  <button
+                    onClick={() => {
+                      setCanDraw(false);
+                      setDrawType("zoom");
+                    }}
+                    className={clsx(
+                      "pointer-events-auto size-[44px] rounded-lg flex-center",
+                      drawType === "zoom" ? "bg-[#5865FA]" : "#ffffff"
+                    )}
+                  >
+                    <Zoom color={drawType === "zoom" ? "#ffffff" : "#353B45"} />
+                  </button>
+                  <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                  <button
+                    onClick={() => {
+                      setCanDraw((prev) => !prev);
+                      setIsToolBarOpen(false);
+                    }}
+                    className="pointer-events-auto size-[44px] flex-center"
+                  >
+                    <Close />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
