@@ -37,6 +37,7 @@ import Stroke2Step from "./assets/ico-stroke-2step.svg?react";
 import Stroke3Step from "./assets/ico-stroke-3step.svg?react";
 import Stroke4Step from "./assets/ico-stroke-4step.svg?react";
 import Stroke5Step from "./assets/ico-stroke-5step.svg?react";
+import Zoom from "./assets/ico-zoom.svg?react";
 import clsx from "clsx";
 import { base64 } from "./base64";
 
@@ -559,7 +560,7 @@ export default function Sample() {
             <div className="flex w-full justify-between items-center">
               <button
                 onClick={() => setIsListOpen(true)}
-                className="pointer-events-auto h-[52px] rounded-xl bg-[#202325]/70 flex items-center pl-1 pr-4 gap-3"
+                className="pointer-events-auto h-[48px] rounded-[10px] bg-[#202325]/70 flex items-center pl-[2px] pr-4 gap-3"
               >
                 <div className="size-[44px] bg-white rounded-lg flex-center">
                   <ThumbnailList />
@@ -570,6 +571,8 @@ export default function Sample() {
                 onClick={() => {
                   postMessage("fullScreen");
                   setIsFullScreen((prev) => !prev);
+                  //@ts-ignore
+                  window.AndroidInterface.setFullMode(!isFullScreen);
                 }}
                 className="pointer-events-auto size-[44px] rounded-lg bg-white shadow-black shadow-sm flex-center"
               >
@@ -700,6 +703,15 @@ export default function Sample() {
                       </button>
                     </div>
                   )}
+                </button>
+                <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                <button
+                  onClick={() => {
+                    setCanDraw(false);
+                  }}
+                  className="pointer-events-auto size-[44px] flex-center"
+                >
+                  <Zoom />
                 </button>
                 <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
                 <button
