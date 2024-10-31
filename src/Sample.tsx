@@ -350,27 +350,8 @@ export default function Sample() {
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     nativeLog(`blob size: ${blob.size}`);
-    try {
-      const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
-      console.log(base64DataUri);
-      //@ts-ignore
-      window.AndroidInterface?.getBase64(
-        JSON.stringify({
-          base64: base64DataUri,
-          ok: true,
-        })
-      );
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      //@ts-ignore
-      window.AndroidInterface?.getBase64(
-        JSON.stringify({
-          base64: "",
-          ok: false,
-        })
-      );
-    }
-    //@ts-ignore
+    const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+    return base64DataUri;
   }, [devicePixelRatio, file]);
 
   useEffect(() => {
@@ -391,7 +372,11 @@ export default function Sample() {
       const param = JSON.parse(data);
       setFile(param?.data?.base64);
     };
-  }, []);
+    //@ts-ignore
+    window.getBase64 = async () => {
+      return await downloadModifiedPDF();
+    };
+  }, [downloadModifiedPDF]);
 
   return (
     <>
@@ -601,15 +586,6 @@ export default function Sample() {
               >
                 <Drawing />
                 그리기
-              </button>
-            )}
-            {!canDraw && (
-              <button
-                onClick={() => downloadModifiedPDF()}
-                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
-              >
-                <Drawing />
-                저장
               </button>
             )}
             {canDraw && (
