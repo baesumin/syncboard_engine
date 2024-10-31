@@ -3,16 +3,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { isBrowser, useMobileOrientation } from "react-device-detect";
-// import { LineCapStyle, PDFDocument } from "pdf-lib";
+import { LineCapStyle, PDFDocument } from "pdf-lib";
 import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
   colorMap,
-  // colorToRGB,
+  colorToRGB,
   drawDashedLine,
   drawSmoothLine,
   DrawType,
   getDrawingPosition,
-  // nativeLog,
+  nativeLog,
   PathsType,
   postMessage,
 } from "./utils";
@@ -317,40 +317,58 @@ export default function Sample() {
     });
   };
 
-  // const downloadModifiedPDF = useCallback(async () => {
-  //   // 기존 PDF 로드
-  //   const existingPdfBytes = await fetch(file).then((res) => res.arrayBuffer());
-  //   const pdfDoc = await PDFDocument.load(existingPdfBytes);
-  //   for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-  //     const currentPaths = paths[i + 1]; // 현재 페이지의 경로 가져오기
-  //     if (currentPaths) {
-  //       const page = pdfDoc.getPage(i);
-  //       const { width: pageWidth, height: pageHeight } = page.getSize();
+  const downloadModifiedPDF = useCallback(async () => {
+    // 기존 PDF 로드
+    const existingPdfBytes = await fetch(file).then((res) => res.arrayBuffer());
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    for (let i = 0; i < pdfDoc.getPageCount(); i++) {
+      const currentPaths = paths.current[i + 1]; // 현재 페이지의 경로 가져오기
+      if (currentPaths) {
+        const page = pdfDoc.getPage(i);
+        const { width: pageWidth, height: pageHeight } = page.getSize();
 
-  //       // 경로 그리기
-  //       currentPaths.forEach(({ x, y, lastX, lastY, color, lineWidth }) => {
-  //         page.drawLine({
-  //           start: {
-  //             x: (lastX * pageWidth) / devicePixelRatio,
-  //             y: pageHeight - (lastY * pageHeight) / devicePixelRatio,
-  //           }, // y 좌표 반전
-  //           end: {
-  //             x: (x * pageWidth) / devicePixelRatio,
-  //             y: pageHeight - (y * pageHeight) / devicePixelRatio,
-  //           }, // y 좌표 반전
-  //           color: colorToRGB(color), // 선 색상
-  //           thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
-  //           lineCap: LineCapStyle.Round,
-  //         });
-  //       });
-  //     }
-  //   }
-  //   const pdfBytes = await pdfDoc.save();
-  //   const blob = new Blob([pdfBytes], { type: "application/pdf" });
-  //   nativeLog(`blob size: ${blob.size}`);
-  //   const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
-  //   postMessage("save", base64DataUri);
-  // }, [file, paths]);
+        // 경로 그리기
+        currentPaths.forEach(({ x, y, lastX, lastY, color, lineWidth }) => {
+          page.drawLine({
+            start: {
+              x: (lastX * pageWidth) / devicePixelRatio,
+              y: pageHeight - (lastY * pageHeight) / devicePixelRatio,
+            }, // y 좌표 반전
+            end: {
+              x: (x * pageWidth) / devicePixelRatio,
+              y: pageHeight - (y * pageHeight) / devicePixelRatio,
+            }, // y 좌표 반전
+            color: colorToRGB(color), // 선 색상
+            thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
+            lineCap: LineCapStyle.Round,
+          });
+        });
+      }
+    }
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    nativeLog(`blob size: ${blob.size}`);
+    try {
+      const base64DataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+      //@ts-ignore
+      window.AndroidInterface?.getBase64(
+        JSON.stringify({
+          base64: base64DataUri,
+          ok: true,
+        })
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      //@ts-ignore
+      window.AndroidInterface?.getBase64(
+        JSON.stringify({
+          base64: "",
+          ok: false,
+        })
+      );
+    }
+    //@ts-ignore
+  }, [devicePixelRatio, file]);
 
   useEffect(() => {
     if (isRendering) {
