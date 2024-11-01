@@ -150,14 +150,16 @@ export const drawSmoothLine = (
   color: (typeof colorMap)[number],
   lineWidth: number
 ) => {
-  context.globalCompositeOperation = "source-over";
-  context.globalAlpha = 1;
+  context.beginPath();
+  // context.globalCompositeOperation = "source-over";
+  // context.globalAlpha = 1;
   context.strokeStyle = color;
   context.lineWidth = lineWidth;
   context.lineCap = "round";
   context.moveTo(lastX, lastY);
   context.lineTo(x, y);
   context.stroke();
+  context.closePath();
 };
 
 export const drawHighlightLine = (

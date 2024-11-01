@@ -100,7 +100,7 @@ export default function Sample() {
     }
 
     const context = canvas.current.getContext("2d")!;
-    context.beginPath();
+
     const { x, y } = getDrawingPosition(
       canvas,
       e,
@@ -143,10 +143,8 @@ export default function Sample() {
     );
 
     // 이전 점과의 거리 계산
-    const distance = Math.sqrt(
-      Math.pow(x - lastXRef.current, 2) + Math.pow(y - lastYRef.current, 2)
-    );
-    const DISTANCE_THRESHOLD = 0;
+    const distance = Math.hypot(x - lastXRef.current, y - lastYRef.current);
+    const DISTANCE_THRESHOLD = 20;
 
     // 설정된 간격 이상일 때만 그리기
     if (distance >= DISTANCE_THRESHOLD) {
@@ -191,7 +189,7 @@ export default function Sample() {
     (pageWidth: number, pageHeight: number) => {
       if (canvas.current && width && height) {
         const context = canvas.current.getContext("2d")!;
-        context.beginPath();
+
         const points = paths.current[pageNumber];
         if (points) {
           // 점을 그룹으로 나누기
@@ -268,11 +266,11 @@ export default function Sample() {
             }
           }
         }
-        context.closePath();
+
         setIsRendering(false);
       }
     },
-    [height, pageNumber, paths, width]
+    [height, pageNumber, width]
   );
 
   const stopDrawing = async () => {
@@ -294,9 +292,9 @@ export default function Sample() {
 
         // currentPaths를 반복하여 겹치는 경로를 찾기
         currentPaths.forEach((path) => {
-          const distance = Math.sqrt(
-            Math.pow(path.x * pageSize.width - eraseX, 2) +
-              Math.pow(path.y * pageSize.height - eraseY, 2)
+          const distance = Math.hypot(
+            path.x * pageSize.width - eraseX,
+            path.y * pageSize.height - eraseY
           );
 
           // 겹치는 경로가 있으면 drawOrder를 추가
@@ -322,10 +320,7 @@ export default function Sample() {
             const midY =
               (1 - t) * (path.y * pageSize.height) +
               t * (path.lastY * pageSize.height);
-            const midDistance = Math.sqrt(
-              Math.pow(midX - eraseX, 2) + Math.pow(midY - eraseY, 2)
-            );
-
+            const midDistance = Math.hypot(midX - eraseX, midY - eraseY);
             if (midDistance <= strokeStep) {
               drawOrdersToDelete.add(path.drawOrder);
               break; // 한 번이라도 겹치면 더 이상 체크할 필요 없음
@@ -348,14 +343,12 @@ export default function Sample() {
       pathsRef.current = [];
       // 점선도 지우기
       const context = canvas.current.getContext("2d")!;
-      context.closePath();
+
       context.clearRect(0, 0, canvas.current.width, canvas.current.height); // 전체 캔버스 지우기
       redrawPaths(pageSize.width, pageSize.height);
     }
 
     if (pathsRef.current.length > 0 && drawType !== "eraser") {
-      const context = canvas.current!.getContext("2d")!;
-      context.closePath();
       const newValue = pathsRef.current;
       setDrawOrder((prev) => prev + 1);
       paths.current = {
