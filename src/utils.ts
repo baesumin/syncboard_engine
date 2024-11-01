@@ -28,6 +28,7 @@ export type PathsType = {
   lineWidth: number;
   color: (typeof colorMap)[number];
   drawOrder: number;
+  alpha: number;
 };
 
 export const nativeLog = (
@@ -132,12 +133,15 @@ export const drawDashedLine = (
   y: number
 ) => {
   context.setLineDash([1, 10]); // 점선 스타일 설정
+  context.beginPath();
+  context.globalAlpha = 1;
   context.strokeStyle = "red"; // 점선 색상
   context.lineWidth = 5;
   context.lineCap = "round";
   context.moveTo(lastX, lastY);
   context.lineTo(x, y);
   context.stroke();
+  context.closePath();
   context.setLineDash([]); // 점선 스타일 초기화
 };
 
@@ -148,48 +152,49 @@ export const drawSmoothLine = (
   x: number,
   y: number,
   color: (typeof colorMap)[number],
-  lineWidth: number
+  lineWidth: number,
+  alpha: number
 ) => {
   context.beginPath();
-  // context.globalCompositeOperation = "source-over";
-  // context.globalAlpha = 1;
+  context.globalAlpha = alpha;
   context.strokeStyle = color;
   context.lineWidth = lineWidth;
-  context.lineCap = "round";
-  context.moveTo(lastX, lastY);
-  context.lineTo(x, y);
+  context.lineCap = alpha === 1 ? "round" : "butt";
+  context.lineJoin = "round";
+
+  // 제어점 계산
+  const dx = x - lastX;
+  const dy = y - lastY;
+  const distance = Math.hypot(dx, dy);
+
+  if (distance > 0) {
+    // 베지어 곡선의 제어점 계산
+    const controlX1 = lastX + dx * 0.25;
+    const controlY1 = lastY + dy * 0.25;
+    const controlX2 = lastX + dx * 0.75;
+    const controlY2 = lastY + dy * 0.75;
+
+    context.moveTo(lastX, lastY);
+    context.bezierCurveTo(
+      controlX1,
+      controlY1, // 첫 번째 제어점
+      controlX2,
+      controlY2, // 두 번째 제어점
+      x,
+      y // 끝점
+    );
+  } else {
+    // 점을 찍을 때는 직선으로
+    context.moveTo(lastX, lastY);
+    context.lineTo(x, y);
+  }
+
+  // context.moveTo(lastX, lastY);
+  // context.lineTo(x, y);
   context.stroke();
   context.closePath();
 };
 
-export const drawHighlightLine = (
-  context: CanvasRenderingContext2D,
-  lastX: number,
-  lastY: number,
-  x: number,
-  y: number,
-  color: (typeof colorMap)[number],
-  lineWidth: number
-) => {
-  const rgba = hexToRGBA(color, 0.3);
-  context.globalCompositeOperation = "multiply";
-  context.strokeStyle = rgba;
-  context.lineWidth = lineWidth;
-  context.lineCap = "round";
-  context.globalAlpha = 0.1;
-  context.moveTo(lastX, lastY);
-  context.lineTo(x, y);
-  context.stroke();
-};
-
 export const colorToRGB = (color: (typeof colorMap)[number]) => {
   return colors[color as keyof typeof colors];
-};
-
-// hex 컬러를 rgba로 변환하는 유틸 함수
-const hexToRGBA = (hex: string, alpha: number) => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };

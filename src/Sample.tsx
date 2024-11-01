@@ -8,7 +8,6 @@ import {
   colorMap,
   colorToRGB,
   drawDashedLine,
-  drawHighlightLine,
   drawSmoothLine,
   DrawType,
   getDrawingPosition,
@@ -110,20 +109,29 @@ export default function Sample() {
 
     if (drawType === "eraser") {
       drawDashedLine(context, x, y, x, y);
-    } else if (drawType === "highlight") {
-      drawHighlightLine(context, x, y, x, y, color, strokeStep);
     } else {
-      drawSmoothLine(context, x, y, x, y, color, strokeStep);
+      drawSmoothLine(
+        context,
+        x,
+        y,
+        x,
+        y,
+        color,
+        strokeStep * (drawType === "highlight" ? 2 : 1),
+        drawType === "highlight" ? 0.2 : 1
+      );
     }
-
+    const lineWidth =
+      (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
     pathsRef.current.push({
       x: x / pageSize.width,
       y: y / pageSize.height,
       lastX: x / pageSize.width,
       lastY: y / pageSize.height,
-      lineWidth: strokeStep / pageSize.width,
+      lineWidth,
       color,
       drawOrder,
+      alpha: drawType === "highlight" ? 0.2 : 1,
     });
     lastXRef.current = x;
     lastYRef.current = y;
@@ -150,16 +158,6 @@ export default function Sample() {
     if (distance >= DISTANCE_THRESHOLD) {
       if (drawType === "eraser") {
         drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
-      } else if (drawType === "highlight") {
-        drawHighlightLine(
-          context,
-          lastXRef.current,
-          lastYRef.current,
-          x,
-          y,
-          color,
-          strokeStep
-        );
       } else {
         drawSmoothLine(
           context,
@@ -168,17 +166,21 @@ export default function Sample() {
           x,
           y,
           color,
-          strokeStep
+          strokeStep * (drawType === "highlight" ? 2 : 1),
+          drawType === "highlight" ? 0.2 : 1
         );
       }
+      const lineWidth =
+        (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
       pathsRef.current.push({
         x: x / pageSize.width,
         y: y / pageSize.height,
         lastX: lastXRef.current / pageSize.width,
         lastY: lastYRef.current / pageSize.height,
-        lineWidth: strokeStep / pageSize.width,
+        lineWidth,
         color,
         drawOrder,
+        alpha: drawType === "highlight" ? 0.2 : 1,
       });
       lastXRef.current = x;
       lastYRef.current = y;
@@ -229,7 +231,8 @@ export default function Sample() {
                     currentGroup[j].x * pageWidth,
                     currentGroup[j].y * pageHeight,
                     currentGroup[j].color,
-                    currentGroup[j].lineWidth * pageWidth
+                    currentGroup[j].lineWidth * pageWidth,
+                    currentGroup[j].alpha
                   );
                 }
               }
@@ -244,7 +247,8 @@ export default function Sample() {
                   points[1].x * pageWidth,
                   points[1].y * pageHeight,
                   points[1].color,
-                  points[1].lineWidth * pageWidth
+                  points[1].lineWidth * pageWidth,
+                  points[1].alpha
                 );
               }
               // 선이 이어진 경우
@@ -261,7 +265,8 @@ export default function Sample() {
                 currentGroup[j].x * pageWidth,
                 currentGroup[j].y * pageHeight,
                 currentGroup[j].color,
-                currentGroup[j].lineWidth * pageWidth
+                currentGroup[j].lineWidth * pageWidth,
+                currentGroup[j].alpha
               );
             }
           }
@@ -380,21 +385,25 @@ export default function Sample() {
         const { width: pageWidth, height: pageHeight } = page.getSize();
 
         // 경로 그리기
-        currentPaths.forEach(({ x, y, lastX, lastY, color, lineWidth }) => {
-          page.drawLine({
-            start: {
-              x: (lastX * pageWidth) / devicePixelRatio,
-              y: pageHeight - (lastY * pageHeight) / devicePixelRatio,
-            }, // y 좌표 반전
-            end: {
-              x: (x * pageWidth) / devicePixelRatio,
-              y: pageHeight - (y * pageHeight) / devicePixelRatio,
-            }, // y 좌표 반전
-            color: colorToRGB(color), // 선 색상
-            thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
-            lineCap: LineCapStyle.Round,
-          });
-        });
+        currentPaths.forEach(
+          ({ x, y, lastX, lastY, color, lineWidth, alpha }) => {
+            page.drawLine({
+              start: {
+                x: (lastX * pageWidth) / devicePixelRatio,
+                y: pageHeight - (lastY * pageHeight) / devicePixelRatio,
+              }, // y 좌표 반전
+              end: {
+                x: (x * pageWidth) / devicePixelRatio,
+                y: pageHeight - (y * pageHeight) / devicePixelRatio,
+              }, // y 좌표 반전
+              color: colorToRGB(color), // 선 색상
+              thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
+              lineCap:
+                alpha === 1 ? LineCapStyle.Round : LineCapStyle.Projecting,
+              opacity: alpha,
+            });
+          }
+        );
       }
     }
     const pdfBytes = await pdfDoc.save();
