@@ -135,12 +135,10 @@ export const drawDashedLine = (
   context.strokeStyle = "red"; // 점선 색상
   context.lineWidth = 5;
   context.lineCap = "round";
-  // context.beginPath();
   context.moveTo(lastX, lastY);
   context.lineTo(x, y);
   context.stroke();
   context.setLineDash([]); // 점선 스타일 초기화
-  // context.closePath();
 };
 
 export const drawSmoothLine = (
@@ -152,33 +150,44 @@ export const drawSmoothLine = (
   color: (typeof colorMap)[number],
   lineWidth: number
 ) => {
-  // const radius = lineWidth / 2; // 원의 반지름을 선 두께의 절반으로 설정
-
-  // 시작점에 원 그리기
-  // context.fillStyle = color;
-  // context.beginPath();
-  // context.arc(lastX, lastY, radius, 0, Math.PI * 2);
-  // context.fill();
-
-  // 끝점에 원 그리기
-  // context.beginPath();
-  // context.arc(x, y, radius, 0, Math.PI * 2);
-  // context.fill();
-
-  // 선 그리기 (부드러운 선을 원으로 연결)
-  // context.beginPath();
   context.strokeStyle = color;
-  // context.globalAlpha = 0.3;
-  // context.strokeStyle = "rgba(255,165,0,0.1)";
   context.lineWidth = lineWidth;
   context.lineCap = "round";
-
   context.moveTo(lastX, lastY);
   context.lineTo(x, y);
   context.stroke();
-  // context.closePath();
+};
+
+export const drawHighlightLine = (
+  context: CanvasRenderingContext2D,
+  lastX: number,
+  lastY: number,
+  x: number,
+  y: number,
+  color: (typeof colorMap)[number],
+  lineWidth: number
+) => {
+  context.globalAlpha = 0.1;
+  // context.globalCompositeOperation = "xor";
+  const rgba = hexToRGBA(color, 0.3);
+  context.strokeStyle = rgba;
+  context.lineWidth = lineWidth;
+  context.lineCap = "round";
+  context.moveTo(lastX, lastY);
+  context.lineTo(x, y);
+  context.stroke();
+  context.globalAlpha = 1;
+  // context.globalCompositeOperation = "source-over";
 };
 
 export const colorToRGB = (color: (typeof colorMap)[number]) => {
   return colors[color as keyof typeof colors];
+};
+
+// hex 컬러를 rgba로 변환하는 유틸 함수
+const hexToRGBA = (hex: string, alpha: number) => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };

@@ -8,6 +8,7 @@ import {
   colorMap,
   colorToRGB,
   drawDashedLine,
+  drawHighlightLine,
   drawSmoothLine,
   DrawType,
   getDrawingPosition,
@@ -109,6 +110,8 @@ export default function Sample() {
 
     if (drawType === "eraser") {
       drawDashedLine(context, x, y, x, y);
+    } else if (drawType === "highlight") {
+      drawHighlightLine(context, x, y, x, y, color, strokeStep);
     } else {
       drawSmoothLine(context, x, y, x, y, color, strokeStep);
     }
@@ -141,6 +144,16 @@ export default function Sample() {
 
     if (drawType === "eraser") {
       drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
+    } else if (drawType === "highlight") {
+      drawHighlightLine(
+        context,
+        lastXRef.current,
+        lastYRef.current,
+        x,
+        y,
+        color,
+        strokeStep
+      );
     } else {
       drawSmoothLine(
         context,
@@ -357,9 +370,7 @@ export default function Sample() {
 
   const getModifiedPDFBase64 = useCallback(async () => {
     // 기존 PDF 로드
-    const existingPdfBytes = isBrowser
-      ? await fetch(file).then((res) => res.arrayBuffer())
-      : file;
+    const existingPdfBytes = file;
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     for (let i = 0; i < pdfDoc.getPageCount(); i++) {
       const currentPaths = paths.current[i + 1]; // 현재 페이지의 경로 가져오기
@@ -386,8 +397,17 @@ export default function Sample() {
       }
     }
     const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    nativeLog(`blob size: ${blob.size}`);
+    if (isBrowser) {
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      nativeLog(`blob size: ${blob.size}`);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "modified.pdf");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
     const base64DataUri = await pdfDoc.saveAsBase64();
     return base64DataUri;
   }, [devicePixelRatio, file]);
@@ -405,14 +425,16 @@ export default function Sample() {
   }, []);
 
   useEffect(() => {
-    (window as unknown as window).webviewApi = (data: string) => {
-      const param = JSON.parse(data);
-      setFile(param?.data?.base64);
-    };
-    (window as unknown as window).getBase64 = async () => {
-      const data = await getModifiedPDFBase64();
-      (window as unknown as window).AndroidInterface.getBase64(data);
-    };
+    if (!isBrowser) {
+      (window as unknown as window).webviewApi = (data: string) => {
+        const param = JSON.parse(data);
+        setFile(param?.data?.base64);
+      };
+      (window as unknown as window).getBase64 = async () => {
+        const data = await getModifiedPDFBase64();
+        (window as unknown as window).AndroidInterface.getBase64(data);
+      };
+    }
   }, [getModifiedPDFBase64]);
 
   return (
@@ -626,6 +648,17 @@ export default function Sample() {
                 >
                   <Drawing />
                   그리기
+                </button>
+              )}
+              {(!isToolBarOpen || isBrowser) && (
+                <button
+                  onClick={async () => {
+                    await getModifiedPDFBase64();
+                  }}
+                  className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                >
+                  <Drawing />
+                  저장
                 </button>
               )}
               {isToolBarOpen && (
