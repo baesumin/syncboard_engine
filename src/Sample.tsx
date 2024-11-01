@@ -658,7 +658,7 @@ export default function Sample() {
                   그리기
                 </button>
               )}
-              {(!isToolBarOpen || isBrowser) && (
+              {!isToolBarOpen && isBrowser && (
                 <button
                   onClick={async () => {
                     await getModifiedPDFBase64();
