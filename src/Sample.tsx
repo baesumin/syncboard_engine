@@ -767,8 +767,9 @@ export default function Sample() {
                   <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
                   <button
                     onClick={() => {
-                      setCanDraw((prev) => !prev);
+                      setCanDraw(false);
                       setIsToolBarOpen(false);
+                      setDrawType("pen");
                     }}
                     className="pointer-events-auto size-[44px] flex-center"
                   >
