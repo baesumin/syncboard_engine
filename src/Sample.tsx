@@ -118,7 +118,7 @@ export default function Sample() {
         y,
         color,
         strokeStep * (drawType === "highlight" ? 2 : 1),
-        drawType === "highlight" ? 0.2 : 1
+        drawType === "highlight" ? 0.4 : 1
       );
     }
     const lineWidth =
@@ -131,7 +131,7 @@ export default function Sample() {
       lineWidth,
       color,
       drawOrder,
-      alpha: drawType === "highlight" ? 0.2 : 1,
+      alpha: drawType === "highlight" ? 0.4 : 1,
     });
     lastXRef.current = x;
     lastYRef.current = y;
@@ -167,7 +167,7 @@ export default function Sample() {
           y,
           color,
           strokeStep * (drawType === "highlight" ? 2 : 1),
-          drawType === "highlight" ? 0.2 : 1
+          drawType === "highlight" ? 0.4 : 1
         );
       }
       const lineWidth =
@@ -180,7 +180,7 @@ export default function Sample() {
         lineWidth,
         color,
         drawOrder,
-        alpha: drawType === "highlight" ? 0.2 : 1,
+        alpha: drawType === "highlight" ? 0.4 : 1,
       });
       lastXRef.current = x;
       lastYRef.current = y;
