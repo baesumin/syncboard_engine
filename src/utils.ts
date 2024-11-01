@@ -155,43 +155,22 @@ export const drawSmoothLine = (
   lineWidth: number,
   alpha: number
 ) => {
+  const offset = alpha === 1 ? 0 : 10000;
   context.beginPath();
+  context.translate(-offset, 0);
   context.globalAlpha = alpha;
   context.strokeStyle = color;
   context.lineWidth = lineWidth;
   context.lineCap = alpha === 1 ? "round" : "butt";
   context.lineJoin = "round";
+  context.moveTo(lastX, lastY);
+  context.lineTo(x, y);
+  context.shadowOffsetX = offset;
+  context.shadowColor = alpha === 1 ? "transparent" : color;
+  context.shadowBlur = alpha === 1 ? 0 : lineWidth;
 
-  // 제어점 계산
-  const dx = x - lastX;
-  const dy = y - lastY;
-  const distance = Math.hypot(dx, dy);
-
-  if (distance > 0) {
-    // 베지어 곡선의 제어점 계산
-    const controlX1 = lastX + dx * 0.25;
-    const controlY1 = lastY + dy * 0.25;
-    const controlX2 = lastX + dx * 0.75;
-    const controlY2 = lastY + dy * 0.75;
-
-    context.moveTo(lastX, lastY);
-    context.bezierCurveTo(
-      controlX1,
-      controlY1, // 첫 번째 제어점
-      controlX2,
-      controlY2, // 두 번째 제어점
-      x,
-      y // 끝점
-    );
-  } else {
-    // 점을 찍을 때는 직선으로
-    context.moveTo(lastX, lastY);
-    context.lineTo(x, y);
-  }
-
-  // context.moveTo(lastX, lastY);
-  // context.lineTo(x, y);
   context.stroke();
+  context.translate(offset, 0);
   context.closePath();
 };
 
