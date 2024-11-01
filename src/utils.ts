@@ -10,11 +10,11 @@ export const colorMap = [
 ] as const;
 
 export const colors = {
-  "#202325": rgb(0, 0, 0),
-  "#007AFF": rgb(0, 0, 1),
-  "#00ff00": rgb(0, 1, 0),
-  "#FFBB00": rgb(1, 1, 0),
-  "#F34A47": rgb(0.95, 0.29, 0.28),
+  "#202325": rgb(32 / 255, 35 / 255, 37 / 255),
+  "#007AFF": rgb(0 / 255, 122 / 255, 255 / 255),
+  "#54B41D": rgb(84 / 255, 180 / 255, 29 / 255),
+  "#FFBB00": rgb(255 / 255, 187 / 255, 0 / 255),
+  "#F34A47": rgb(243 / 255, 74 / 255, 71 / 255),
 } as const;
 
 export type DrawType = React.PointerEvent<HTMLCanvasElement> &
@@ -150,6 +150,8 @@ export const drawSmoothLine = (
   color: (typeof colorMap)[number],
   lineWidth: number
 ) => {
+  context.globalCompositeOperation = "source-over";
+  context.globalAlpha = 1;
   context.strokeStyle = color;
   context.lineWidth = lineWidth;
   context.lineCap = "round";
@@ -167,17 +169,15 @@ export const drawHighlightLine = (
   color: (typeof colorMap)[number],
   lineWidth: number
 ) => {
-  context.globalAlpha = 0.1;
-  // context.globalCompositeOperation = "xor";
   const rgba = hexToRGBA(color, 0.3);
+  context.globalCompositeOperation = "multiply";
   context.strokeStyle = rgba;
   context.lineWidth = lineWidth;
   context.lineCap = "round";
+  context.globalAlpha = 0.1;
   context.moveTo(lastX, lastY);
   context.lineTo(x, y);
   context.stroke();
-  context.globalAlpha = 1;
-  // context.globalCompositeOperation = "source-over";
 };
 
 export const colorToRGB = (color: (typeof colorMap)[number]) => {

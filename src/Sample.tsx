@@ -142,41 +142,49 @@ export default function Sample() {
       scale.current
     );
 
-    if (drawType === "eraser") {
-      drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
-    } else if (drawType === "highlight") {
-      drawHighlightLine(
-        context,
-        lastXRef.current,
-        lastYRef.current,
-        x,
-        y,
-        color,
-        strokeStep
-      );
-    } else {
-      drawSmoothLine(
-        context,
-        lastXRef.current,
-        lastYRef.current,
-        x,
-        y,
-        color,
-        strokeStep
-      );
-    }
+    // 이전 점과의 거리 계산
+    const distance = Math.sqrt(
+      Math.pow(x - lastXRef.current, 2) + Math.pow(y - lastYRef.current, 2)
+    );
+    const DISTANCE_THRESHOLD = 0;
 
-    pathsRef.current.push({
-      x: x / pageSize.width,
-      y: y / pageSize.height,
-      lastX: lastXRef.current / pageSize.width,
-      lastY: lastYRef.current / pageSize.height,
-      lineWidth: strokeStep / pageSize.width,
-      color,
-      drawOrder,
-    });
-    lastXRef.current = x;
-    lastYRef.current = y;
+    // 설정된 간격 이상일 때만 그리기
+    if (distance >= DISTANCE_THRESHOLD) {
+      if (drawType === "eraser") {
+        drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
+      } else if (drawType === "highlight") {
+        drawHighlightLine(
+          context,
+          lastXRef.current,
+          lastYRef.current,
+          x,
+          y,
+          color,
+          strokeStep
+        );
+      } else {
+        drawSmoothLine(
+          context,
+          lastXRef.current,
+          lastYRef.current,
+          x,
+          y,
+          color,
+          strokeStep
+        );
+      }
+      pathsRef.current.push({
+        x: x / pageSize.width,
+        y: y / pageSize.height,
+        lastX: lastXRef.current / pageSize.width,
+        lastY: lastYRef.current / pageSize.height,
+        lineWidth: strokeStep / pageSize.width,
+        color,
+        drawOrder,
+      });
+      lastXRef.current = x;
+      lastYRef.current = y;
+    }
   };
 
   const redrawPaths = useCallback(
