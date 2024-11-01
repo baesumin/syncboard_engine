@@ -134,7 +134,7 @@ export const drawDashedLine = (
   context.setLineDash([1, 10]); // 점선 스타일 설정
   context.strokeStyle = "red"; // 점선 색상
   context.lineWidth = 5;
-  // context.lineCap = "round";
+  context.lineCap = "round";
   // context.beginPath();
   context.moveTo(lastX, lastY);
   context.lineTo(x, y);
@@ -168,9 +168,9 @@ export const drawSmoothLine = (
   // 선 그리기 (부드러운 선을 원으로 연결)
   // context.beginPath();
   context.strokeStyle = color;
+  // context.globalAlpha = 0.3;
   // context.strokeStyle = "rgba(255,165,0,0.1)";
   context.lineWidth = lineWidth;
-  // context.lineJoin = "round";
   context.lineCap = "round";
 
   context.moveTo(lastX, lastY);

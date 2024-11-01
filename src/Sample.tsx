@@ -107,11 +107,11 @@ export default function Sample() {
       scale.current
     );
 
-    // if (drawType === "eraser") {
-    //   drawDashedLine(context, x, y, x, y);
-    // } else {
-    //   drawSmoothLine(context, x, y, x, y, color, strokeStep);
-    // }
+    if (drawType === "eraser") {
+      drawDashedLine(context, x, y, x, y);
+    } else {
+      drawSmoothLine(context, x, y, x, y, color, strokeStep);
+    }
 
     pathsRef.current.push({
       x: x / pageSize.width,
@@ -175,9 +175,26 @@ export default function Sample() {
         if (points) {
           // 점을 그룹으로 나누기
           let currentGroup: PathsType[] = [];
+
           for (let i = 1; i < points.length; i++) {
+            // 단일 점 처리
+            // if (
+            //   points[i].lastX !== points[i - 1].x ||
+            //   points[i].lastY !== points[i - 1].y
+            // ) {
+            //   drawSmoothLine(
+            //     context,
+            //     points[i].x * pageWidth,
+            //     points[i].y * pageHeight,
+            //     points[i].x * pageWidth,
+            //     points[i].y * pageHeight,
+            //     points[i].color,
+            //     points[i].lineWidth * pageWidth
+            //   );
+            //   continue;
+            // }
+
             if (
-              i === 0 ||
               points[i].lastX !== points[i - 1].x ||
               points[i].lastY !== points[i - 1].y
             ) {
@@ -197,8 +214,20 @@ export default function Sample() {
                   );
                 }
               }
+
               currentGroup = [points[i]]; // 새로운 그룹 초기화
             } else {
+              if (i === 1) {
+                drawSmoothLine(
+                  context,
+                  points[0].x * pageWidth,
+                  points[0].y * pageHeight,
+                  points[1].x * pageWidth,
+                  points[1].y * pageHeight,
+                  points[1].color,
+                  points[1].lineWidth * pageWidth
+                );
+              }
               // 선이 이어진 경우
               currentGroup.push(points[i]); // 현재 그룹에 점 추가
             }
@@ -300,7 +329,6 @@ export default function Sample() {
       const context = canvas.current.getContext("2d")!;
       context.closePath();
       context.clearRect(0, 0, canvas.current.width, canvas.current.height); // 전체 캔버스 지우기
-
       redrawPaths(pageSize.width, pageSize.height);
     }
 
@@ -327,7 +355,7 @@ export default function Sample() {
     });
   };
 
-  const downloadModifiedPDF = useCallback(async () => {
+  const getModifiedPDFBase64 = useCallback(async () => {
     // 기존 PDF 로드
     const existingPdfBytes = isBrowser
       ? await fetch(file).then((res) => res.arrayBuffer())
@@ -382,10 +410,10 @@ export default function Sample() {
       setFile(param?.data?.base64);
     };
     (window as unknown as window).getBase64 = async () => {
-      const data = await downloadModifiedPDF();
+      const data = await getModifiedPDFBase64();
       (window as unknown as window).AndroidInterface.getBase64(data);
     };
-  }, [downloadModifiedPDF]);
+  }, [getModifiedPDFBase64]);
 
   return (
     <>
