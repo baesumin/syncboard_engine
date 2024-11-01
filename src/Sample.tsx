@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
-import { isBrowser, useMobileOrientation } from "react-device-detect";
+import { useMobileOrientation, isMobile } from "react-device-detect";
 import { LineCapStyle, PDFDocument } from "pdf-lib";
 import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
@@ -405,7 +405,7 @@ export default function Sample() {
       }
     }
     const pdfBytes = await pdfDoc.save();
-    if (isBrowser) {
+    if (!isMobile) {
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       nativeLog(`blob size: ${blob.size}`);
       const url = URL.createObjectURL(blob);
@@ -427,13 +427,13 @@ export default function Sample() {
   }, [isRendering, pageSize, redrawPaths]);
 
   useEffect(() => {
-    if (isBrowser || import.meta.env.MODE === "development") {
+    if (!isMobile || import.meta.env.MODE === "development") {
       setFile(base64);
     }
   }, []);
 
   useEffect(() => {
-    if (!isBrowser) {
+    if (isMobile) {
       (window as unknown as window).webviewApi = (data: string) => {
         const param = JSON.parse(data);
         setFile(param?.data?.base64);
@@ -658,7 +658,7 @@ export default function Sample() {
                   그리기
                 </button>
               )}
-              {!isToolBarOpen && isBrowser && (
+              {!isToolBarOpen && !isMobile && (
                 <button
                   onClick={async () => {
                     await getModifiedPDFBase64();
