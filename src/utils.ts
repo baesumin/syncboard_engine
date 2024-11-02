@@ -177,3 +177,63 @@ export const drawSmoothLine = (
 export const colorToRGB = (color: (typeof colorMap)[number]) => {
   return colors[color as keyof typeof colors];
 };
+
+export const getSearchTextLength = (str: string, searchText: string) => {
+  // 문자열을 주어진 문자로 분리하고, 배열의 길이를 구한 후 1을 빼면 해당 문자의 개수
+  return str.split(searchText).length - 1;
+};
+
+export const highlightPattern = (
+  text: string,
+  pattern: string,
+  isCurrent: boolean
+) => {
+  const regex = new RegExp(pattern, "gi");
+  return text.replace(
+    regex,
+    (value) =>
+      `<mark style="background:${
+        isCurrent ? "#FFB84D" : "#FFF600"
+      } !important">${value}</mark>`
+  );
+};
+
+// export const highlightPattern = (
+//   text: string,
+//   pattern: string,
+//   isCurrentIndex: boolean
+// ) => {
+//   if (!pattern) return text;
+
+//   try {
+//     const regex = new RegExp(pattern, "gi");
+//     const parts = text.split(regex);
+
+//     if (parts.length <= 1) return text;
+
+//     const matches = text.match(regex);
+
+//     return parts.reduce((arr: (string | JSX.Element)[], part, i) => {
+//       if (matches && i < matches.length) {
+//         arr.push(part);
+//         arr.push(
+//           `<mark
+//             key={i}
+//             className={
+//               ${isCurrentIndex ? "current-highlight" : "default-highlight"}
+//             }
+//           >
+//             {matches[i]}
+//           </mark>`
+//         );
+//       } else {
+//         arr.push(part);
+//       }
+//       return arr;
+//     }, []);
+//   } catch (error: unknown) {
+//     console.log(error);
+//     return text;
+//   }
+// };
+//

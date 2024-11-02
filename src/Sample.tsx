@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Document, pdfjs, Thumbnail } from "react-pdf";
+import { Document, Page, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { useMobileOrientation, isMobile } from "react-device-detect";
 import { LineCapStyle, PDFDocument } from "pdf-lib";
-import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
+import {
+  CustomTextRenderer,
+  OnRenderSuccess,
+} from "react-pdf/src/shared/types.js";
 import {
   colorMap,
   colorToRGB,
@@ -39,6 +42,10 @@ import Stroke5Step from "./assets/ico-stroke-5step.svg?react";
 import Zoom from "./assets/ico-zoom.svg?react";
 import clsx from "clsx";
 import { base64 } from "./base64";
+import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
+
+import "react-pdf/dist/esm/Page/TextLayer.css";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -89,7 +96,15 @@ export default function Sample() {
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
   const [isRendering, setIsRendering] = useState(false);
+  const [searchText] = useState("");
+  const { resultsList, totalLength, findPageByIndex } = usePdfTextSearch(
+    file,
+    searchText
+  );
+  const [isSearchMode] = useState(false);
+  const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const isLoading = renderedPageNumber !== pageNumber;
+  const matchIndex = useRef(0);
 
   const startDrawing = (e: DrawType) => {
     e.persist();
@@ -429,15 +444,22 @@ export default function Sample() {
 
   useEffect(() => {
     if (!isMobile || import.meta.env.MODE === "development") {
-      setFile(base64);
+      setFile(`data:application/pdf;base64,${base64}`);
     }
   }, []);
+
+  useEffect(() => {
+    if (isSearchMode) {
+      const pageNumber = findPageByIndex(currentSearchIndex);
+      setPageNumber(pageNumber);
+    }
+  }, [currentSearchIndex, findPageByIndex, isSearchMode]);
 
   useEffect(() => {
     if (isMobile) {
       (window as unknown as window).webviewApi = (data: string) => {
         const param = JSON.parse(data);
-        setFile(param?.data?.base64);
+        setFile(`data:application/pdf;base64,${param?.data?.base64}`);
       };
       (window as unknown as window).getBase64 = async () => {
         const data = await getModifiedPDFBase64();
@@ -446,12 +468,39 @@ export default function Sample() {
     }
   }, [getModifiedPDFBase64]);
 
+  const textRenderer: CustomTextRenderer = useCallback(
+    (textItem) => {
+      if (!searchText || !resultsList.length) return textItem.str;
+
+      const currentPageResult = resultsList.find(
+        (result) => result.pageNumber === pageNumber
+      );
+      if (!currentPageResult) return textItem.str;
+
+      // 현재 텍스트에 검색어가 포함되어 있는지 확인
+      const regex = new RegExp(searchText, "gi");
+      if (!regex.test(textItem.str)) return textItem.str;
+
+      // 현재 페이지 내에서의 검색어 순서를 추적
+      matchIndex.current = currentPageResult.indices[0];
+      return textItem.str.replace(regex, (match) => {
+        // console.log(matchIndex);
+        const isCurrentMatch = matchIndex.current === currentSearchIndex;
+        matchIndex.current += 1;
+        return `<mark style="background:${
+          isCurrentMatch ? "#FFB84D" : "#FFF600"
+        } !important">${match}</mark>`;
+      });
+    },
+    [searchText, currentSearchIndex, resultsList, pageNumber]
+  );
+
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
         {file && (
           <Document
-            file={`data:application/pdf;base64,${file}`}
+            file={file}
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
@@ -494,7 +543,7 @@ export default function Sample() {
                         noData={<></>}
                       />
                     )}
-                    <Thumbnail
+                    <Page
                       key={pageNumber}
                       className={isLoading ? "hidden" : ""}
                       pageNumber={pageNumber}
@@ -504,6 +553,7 @@ export default function Sample() {
                       onRenderSuccess={onRenderSuccess}
                       loading={<></>}
                       noData={<></>}
+                      customTextRenderer={textRenderer}
                     />
                     <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
                       <canvas
@@ -603,6 +653,36 @@ export default function Sample() {
                 </div>
                 <span className="text-white text-lg">{`${pageNumber}/${totalPage}`}</span>
               </button>
+              {/* TODO: 나중에 없애기 */}
+              {!isMobile && (
+                <div className="flex -mt-10 gap-x-2">
+                  <button
+                    onClick={() => {
+                      if (currentSearchIndex !== 0) {
+                        setCurrentSearchIndex((prev) => prev - 1);
+                      } else {
+                        setCurrentSearchIndex(totalLength - 1);
+                      }
+                    }}
+                    className="pointer-events-auto h-[48px] rounded-[10px] bg-white flex-center"
+                  >
+                    이전
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (currentSearchIndex === totalLength - 1) {
+                        setCurrentSearchIndex(0);
+                      } else {
+                        setCurrentSearchIndex((prev) => prev + 1);
+                      }
+                    }}
+                    className="pointer-events-auto h-[48px] rounded-[10px] bg-white flex-center"
+                  >
+                    다음
+                  </button>
+                </div>
+              )}
+
               <button
                 onClick={() => {
                   postMessage("fullScreen");
