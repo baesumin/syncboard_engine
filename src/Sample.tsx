@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { useMobileOrientation, isMobile } from "react-device-detect";
-import { LineCapStyle, PDFDocument } from "pdf-lib";
+import { LineCapStyle, PDFDocument, PDFName } from "pdf-lib";
 import {
   CustomTextRenderer,
   OnRenderSuccess,
@@ -399,29 +399,55 @@ export default function Sample() {
         const page = pdfDoc.getPage(i);
         const { width: pageWidth, height: pageHeight } = page.getSize();
 
+        currentPaths.forEach((path) => {
+          // InkAnnotation 생성
+          const annotation = pdfDoc.context.obj({
+            Type: "Annot",
+            Subtype: "Ink",
+            InkList: [
+              [
+                (path.lastX * pageWidth) / devicePixelRatio,
+                pageHeight - (path.lastY * pageHeight) / devicePixelRatio,
+                (path.x * pageWidth) / devicePixelRatio,
+                pageHeight - (path.y * pageHeight) / devicePixelRatio,
+              ],
+            ],
+            C: [
+              parseInt(path.color.slice(1, 3), 16) / 255,
+              parseInt(path.color.slice(3, 5), 16) / 255,
+              parseInt(path.color.slice(5, 7), 16) / 255,
+            ],
+            Border: [(path.lineWidth * pageWidth) / devicePixelRatio],
+            Opacity: path.alpha,
+          });
+
+          // 페이지에 주석 추가
+          page.node.set(PDFName.of("Annots"), pdfDoc.context.obj([annotation]));
+        });
+
         // 경로 그리기
-        currentPaths.forEach(
-          ({ x, y, lastX, lastY, color, lineWidth, alpha }) => {
-            page.drawLine({
-              start: {
-                x: (lastX * pageWidth) / devicePixelRatio,
-                y: pageHeight - (lastY * pageHeight) / devicePixelRatio,
-              }, // y 좌표 반전
-              end: {
-                x: (x * pageWidth) / devicePixelRatio,
-                y: pageHeight - (y * pageHeight) / devicePixelRatio,
-              }, // y 좌표 반전
-              color: colorToRGB(color), // 선 색상
-              thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
-              lineCap: alpha === 1 ? LineCapStyle.Round : LineCapStyle.Butt,
-              opacity: alpha,
-            });
-          }
-        );
+        // currentPaths.forEach(
+        //   ({ x, y, lastX, lastY, color, lineWidth, alpha }) => {
+        //     page.drawLine({
+        //       start: {
+        //         x: (lastX * pageWidth) / devicePixelRatio,
+        //         y: pageHeight - (lastY * pageHeight) / devicePixelRatio,
+        //       }, // y 좌표 반전
+        //       end: {
+        //         x: (x * pageWidth) / devicePixelRatio,
+        //         y: pageHeight - (y * pageHeight) / devicePixelRatio,
+        //       }, // y 좌표 반전
+        //       color: colorToRGB(color), // 선 색상
+        //       thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
+        //       lineCap: alpha === 1 ? LineCapStyle.Round : LineCapStyle.Butt,
+        //       opacity: alpha,
+        //     });
+        //   }
+        // );
       }
     }
-    const pdfBytes = await pdfDoc.save();
     if (!isMobile) {
+      const pdfBytes = await pdfDoc.save();
       const blob = new Blob([pdfBytes], { type: "application/pdf" });
       nativeLog(`blob size: ${blob.size}`);
       const url = URL.createObjectURL(blob);
