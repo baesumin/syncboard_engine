@@ -1,20 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
-import { useMobileOrientation, isMobile } from "react-device-detect";
-import { LineCapStyle, PDFDocument, PDFName } from "pdf-lib";
-import {
-  CustomTextRenderer,
-  OnRenderSuccess,
-} from "react-pdf/src/shared/types.js";
+import { useMobileOrientation, isMobile, isDesktop } from "react-device-detect";
+import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
   colorMap,
-  colorToRGB,
   drawDashedLine,
   drawSmoothLine,
   DrawType,
   getDrawingPosition,
-  nativeLog,
+  getModifiedPDFBase64,
   PathsType,
   postMessage,
 } from "./utils";
@@ -42,7 +37,6 @@ import Stroke5Step from "./assets/ico-stroke-5step.svg?react";
 import Zoom from "./assets/ico-zoom.svg?react";
 import clsx from "clsx";
 import { base64 } from "./base64";
-import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
@@ -96,15 +90,15 @@ export default function Sample() {
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
   const [isRendering, setIsRendering] = useState(false);
-  const [searchText] = useState("");
-  const { resultsList, totalLength, findPageByIndex } = usePdfTextSearch(
-    file,
-    searchText
-  );
-  const [isSearchMode] = useState(false);
-  const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
+  // const [searchText] = useState("");
+  // const { resultsList, totalLength, findPageByIndex } = usePdfTextSearch(
+  //   file,
+  //   searchText
+  // );
+  // const [isSearchMode] = useState(false);
+  // const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const isLoading = renderedPageNumber !== pageNumber;
-  const matchIndex = useRef(0);
+  // const matchIndex = useRef(0);
 
   const startDrawing = (e: DrawType) => {
     e.persist();
@@ -389,79 +383,6 @@ export default function Sample() {
     });
   };
 
-  const getModifiedPDFBase64 = useCallback(async () => {
-    // 기존 PDF 로드
-    const existingPdfBytes = file;
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
-    for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-      const currentPaths = paths.current[i + 1]; // 현재 페이지의 경로 가져오기
-      if (currentPaths) {
-        const page = pdfDoc.getPage(i);
-        const { width: pageWidth, height: pageHeight } = page.getSize();
-
-        currentPaths.forEach((path) => {
-          // InkAnnotation 생성
-          const annotation = pdfDoc.context.obj({
-            Type: "Annot",
-            Subtype: "Ink",
-            InkList: [
-              [
-                (path.lastX * pageWidth) / devicePixelRatio,
-                pageHeight - (path.lastY * pageHeight) / devicePixelRatio,
-                (path.x * pageWidth) / devicePixelRatio,
-                pageHeight - (path.y * pageHeight) / devicePixelRatio,
-              ],
-            ],
-            C: [
-              parseInt(path.color.slice(1, 3), 16) / 255,
-              parseInt(path.color.slice(3, 5), 16) / 255,
-              parseInt(path.color.slice(5, 7), 16) / 255,
-            ],
-            Border: [(path.lineWidth * pageWidth) / devicePixelRatio],
-            Opacity: path.alpha,
-          });
-
-          // 페이지에 주석 추가
-          page.node.set(PDFName.of("Annots"), pdfDoc.context.obj([annotation]));
-        });
-
-        // 경로 그리기
-        // currentPaths.forEach(
-        //   ({ x, y, lastX, lastY, color, lineWidth, alpha }) => {
-        //     page.drawLine({
-        //       start: {
-        //         x: (lastX * pageWidth) / devicePixelRatio,
-        //         y: pageHeight - (lastY * pageHeight) / devicePixelRatio,
-        //       }, // y 좌표 반전
-        //       end: {
-        //         x: (x * pageWidth) / devicePixelRatio,
-        //         y: pageHeight - (y * pageHeight) / devicePixelRatio,
-        //       }, // y 좌표 반전
-        //       color: colorToRGB(color), // 선 색상
-        //       thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
-        //       lineCap: alpha === 1 ? LineCapStyle.Round : LineCapStyle.Butt,
-        //       opacity: alpha,
-        //     });
-        //   }
-        // );
-      }
-    }
-    if (!isMobile) {
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      nativeLog(`blob size: ${blob.size}`);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "modified.pdf");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-    const base64DataUri = await pdfDoc.saveAsBase64();
-    return base64DataUri;
-  }, [devicePixelRatio, file]);
-
   useEffect(() => {
     if (isRendering) {
       redrawPaths(pageSize.width, pageSize.height);
@@ -470,63 +391,71 @@ export default function Sample() {
 
   useEffect(() => {
     if (!isMobile || import.meta.env.MODE === "development") {
-      setFile(`data:application/pdf;base64,${base64}`);
+      setFile(base64);
     }
   }, []);
 
-  useEffect(() => {
-    if (isSearchMode) {
-      const pageNumber = findPageByIndex(currentSearchIndex);
-      setPageNumber(pageNumber);
-    }
-  }, [currentSearchIndex, findPageByIndex, isSearchMode]);
+  // useEffect(() => {
+  //   if (isSearchMode) {
+  //     const pageNumber = findPageByIndex(currentSearchIndex);
+  //     setPageNumber(pageNumber);
+  //   }
+  // }, [currentSearchIndex, findPageByIndex, isSearchMode]);
 
   useEffect(() => {
     if (isMobile) {
       (window as unknown as window).webviewApi = (data: string) => {
         const param = JSON.parse(data);
-        setFile(`data:application/pdf;base64,${param?.data?.base64}`);
+        setFile(param?.data?.base64);
       };
       (window as unknown as window).getBase64 = async () => {
-        const data = await getModifiedPDFBase64();
+        const data = await getModifiedPDFBase64(paths.current, file);
         (window as unknown as window).AndroidInterface.getBase64(data);
       };
     }
-  }, [getModifiedPDFBase64]);
+  }, [file]);
 
-  const textRenderer: CustomTextRenderer = useCallback(
-    (textItem) => {
-      if (!searchText || !resultsList.length) return textItem.str;
+  // useEffect(() => {
+  //   const getData = async () => {
+  //     const d = await loadPDFAnnotations(annotBase64);
+  //     // console.log(d);
+  //   };
+  //   getData();
+  // });
 
-      const currentPageResult = resultsList.find(
-        (result) => result.pageNumber === pageNumber
-      );
-      if (!currentPageResult) return textItem.str;
+  // const textRenderer: CustomTextRenderer = useCallback(
+  //   (textItem) => {
+  //     if (!searchText || !resultsList.length) return textItem.str;
 
-      // 현재 텍스트에 검색어가 포함되어 있는지 확인
-      const regex = new RegExp(searchText, "gi");
-      if (!regex.test(textItem.str)) return textItem.str;
+  //     const currentPageResult = resultsList.find(
+  //       (result) => result.pageNumber === pageNumber
+  //     );
+  //     if (!currentPageResult) return textItem.str;
 
-      // 현재 페이지 내에서의 검색어 순서를 추적
-      matchIndex.current = currentPageResult.indices[0];
-      return textItem.str.replace(regex, (match) => {
-        // console.log(matchIndex);
-        const isCurrentMatch = matchIndex.current === currentSearchIndex;
-        matchIndex.current += 1;
-        return `<mark style="background:${
-          isCurrentMatch ? "#FFB84D" : "#FFF600"
-        } !important">${match}</mark>`;
-      });
-    },
-    [searchText, currentSearchIndex, resultsList, pageNumber]
-  );
+  //     // 현재 텍스트에 검색어가 포함되어 있는지 확인
+  //     const regex = new RegExp(searchText, "gi");
+  //     if (!regex.test(textItem.str)) return textItem.str;
+
+  //     // 현재 페이지 내에서의 검색어 순서를 추적
+  //     matchIndex.current = currentPageResult.indices[0];
+  //     return textItem.str.replace(regex, (match) => {
+  //       // console.log(matchIndex);
+  //       const isCurrentMatch = matchIndex.current === currentSearchIndex;
+  //       matchIndex.current += 1;
+  //       return `<mark style="background:${
+  //         isCurrentMatch ? "#FFB84D" : "#FFF600"
+  //       } !important">${match}</mark>`;
+  //     });
+  //   },
+  //   [searchText, currentSearchIndex, resultsList, pageNumber]
+  // );
 
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
         {file && (
           <Document
-            file={file}
+            file={`data:application/pdf;base64,${file}`}
             onLoadSuccess={(pdf) => {
               setTotalPage(pdf.numPages);
             }}
@@ -559,7 +488,7 @@ export default function Sample() {
                 >
                   <>
                     {isLoading && (
-                      <Thumbnail
+                      <Page
                         key={renderedPageNumber}
                         pageNumber={renderedPageNumber}
                         width={orientation === "portrait" ? width : undefined}
@@ -579,7 +508,9 @@ export default function Sample() {
                       onRenderSuccess={onRenderSuccess}
                       loading={<></>}
                       noData={<></>}
-                      customTextRenderer={textRenderer}
+                      // customTextRenderer={textRenderer}
+                      renderAnnotationLayer={true}
+                      renderTextLayer={true}
                     />
                     <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
                       <canvas
@@ -591,6 +522,7 @@ export default function Sample() {
                           width: `${pageSize.width}px`,
                           height: `${pageSize.height}px`,
                           pointerEvents: canDraw ? "auto" : "none",
+                          zIndex: 1000,
                         }}
                         onTouchStart={startDrawing}
                         onTouchMove={draw}
@@ -680,7 +612,7 @@ export default function Sample() {
                 <span className="text-white text-lg">{`${pageNumber}/${totalPage}`}</span>
               </button>
               {/* TODO: 나중에 없애기 */}
-              {!isMobile && (
+              {/* {!isMobile && (
                 <div className="flex -mt-10 gap-x-2">
                   <button
                     onClick={() => {
@@ -707,7 +639,7 @@ export default function Sample() {
                     다음
                   </button>
                 </div>
-              )}
+              )} */}
 
               <button
                 onClick={() => {
@@ -765,10 +697,10 @@ export default function Sample() {
                   그리기
                 </button>
               )}
-              {!isToolBarOpen && !isMobile && (
+              {!isToolBarOpen && import.meta.env.MODE === "development" && (
                 <button
                   onClick={async () => {
-                    await getModifiedPDFBase64();
+                    await getModifiedPDFBase64(paths.current, file);
                   }}
                   className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
                 >
