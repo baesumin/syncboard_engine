@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { LineCapStyle, PDFArray, PDFDocument, PDFName, rgb } from "pdf-lib";
+import { LineCapStyle, PDFDocument, rgb } from "pdf-lib";
 import { isMobile } from "react-device-detect";
 
 export const colorMap = [
