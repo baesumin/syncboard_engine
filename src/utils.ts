@@ -102,19 +102,8 @@ export const colorToRGB = (color: (typeof colorMap)[number]) => {
   return colors[color as keyof typeof colors];
 };
 
-export const highlightPattern = (
-  text: string,
-  pattern: string,
-  isCurrent: boolean
-) => {
-  const regex = new RegExp(pattern, "gi");
-  return text.replace(
-    regex,
-    (value) =>
-      `<mark style="background:${
-        isCurrent ? "#FFB84D" : "#FFF600"
-      } !important">${value}</mark>`
-  );
+export const highlightPattern = (text: string, pattern: string) => {
+  return text.replace(pattern, (value) => `<mark>${value}</mark>`);
 };
 
 export const getModifiedPDFBase64 = async (

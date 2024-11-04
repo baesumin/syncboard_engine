@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document, Page } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { useMobileOrientation, isMobile } from "react-device-detect";
-import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
+import {
+  CustomTextRenderer,
+  OnRenderSuccess,
+} from "react-pdf/src/shared/types.js";
 import {
   ReactZoomPanPinchContentRef,
   TransformComponent,
@@ -12,7 +15,8 @@ import { base64 } from "./base64";
 import useCanvas from "./hooks/useCanvas";
 import PdfOverlay from "./components/PdfOverlay";
 import ThumbnailOvelay from "./components/ThumbnailOvelay";
-import { getModifiedPDFBase64 } from "./utils";
+import { getModifiedPDFBase64, highlightPattern } from "./utils";
+// import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 
 interface window {
   webviewApi: (data: string) => void;
@@ -43,15 +47,13 @@ export default function PdfEngine() {
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
-  // const [searchText] = useState("");
-  // const { resultsList, totalLength, findPageByIndex } = usePdfTextSearch(
-  //   file,
-  //   searchText
-  // );
-  // const [isSearchMode] = useState(false);
-  // const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
-  const isLoading = renderedPageNumber !== pageNumber;
-  // const matchIndex = useRef(0);
+  const [searchText] = useState("");
+  // const { resultsList } = usePdfTextSearch(file, searchText);
+  // console.log(resultsList.map((result) => result.pageNumber));
+  const isLoading = useMemo(
+    () => renderedPageNumber !== pageNumber,
+    [pageNumber, renderedPageNumber]
+  );
 
   const {
     canvas,
@@ -76,14 +78,17 @@ export default function PdfEngine() {
     pageNumber,
   });
 
-  const onRenderSuccess: OnRenderSuccess = (page) => {
-    setRenderedPageNumber(pageNumber);
-    setIsRendering(true);
-    setPageSize({
-      width: page.width,
-      height: page.height,
-    });
-  };
+  const onRenderSuccess: OnRenderSuccess = useCallback(
+    (page) => {
+      setRenderedPageNumber(pageNumber);
+      setIsRendering(true);
+      setPageSize({
+        width: page.width,
+        height: page.height,
+      });
+    },
+    [pageNumber, setIsRendering]
+  );
 
   useEffect(() => {
     if (isRendering) {
@@ -96,13 +101,6 @@ export default function PdfEngine() {
       setFile(base64);
     }
   }, []);
-
-  // useEffect(() => {
-  //   if (isSearchMode) {
-  //     const pageNumber = findPageByIndex(currentSearchIndex);
-  //     setPageNumber(pageNumber);
-  //   }
-  // }, [currentSearchIndex, findPageByIndex, isSearchMode]);
 
   useEffect(() => {
     if (isMobile) {
@@ -125,32 +123,10 @@ export default function PdfEngine() {
   //   getData();
   // });
 
-  // const textRenderer: CustomTextRenderer = useCallback(
-  //   (textItem) => {
-  //     if (!searchText || !resultsList.length) return textItem.str;
-
-  //     const currentPageResult = resultsList.find(
-  //       (result) => result.pageNumber === pageNumber
-  //     );
-  //     if (!currentPageResult) return textItem.str;
-
-  //     // 현재 텍스트에 검색어가 포함되어 있는지 확인
-  //     const regex = new RegExp(searchText, "gi");
-  //     if (!regex.test(textItem.str)) return textItem.str;
-
-  //     // 현재 페이지 내에서의 검색어 순서를 추적
-  //     matchIndex.current = currentPageResult.indices[0];
-  //     return textItem.str.replace(regex, (match) => {
-  //       // console.log(matchIndex);
-  //       const isCurrentMatch = matchIndex.current === currentSearchIndex;
-  //       matchIndex.current += 1;
-  //       return `<mark style="background:${
-  //         isCurrentMatch ? "#FFB84D" : "#FFF600"
-  //       } !important">${match}</mark>`;
-  //     });
-  //   },
-  //   [searchText, currentSearchIndex, resultsList, pageNumber]
-  // );
+  const textRenderer: CustomTextRenderer = useCallback(
+    (textItem) => highlightPattern(textItem.str, searchText),
+    [searchText]
+  );
 
   return (
     <>
@@ -210,9 +186,7 @@ export default function PdfEngine() {
                       onRenderSuccess={onRenderSuccess}
                       loading={<></>}
                       noData={<></>}
-                      // customTextRenderer={textRenderer}
-                      renderAnnotationLayer={true}
-                      renderTextLayer={true}
+                      customTextRenderer={textRenderer}
                     />
                     <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
                       <canvas

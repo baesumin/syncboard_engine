@@ -19,7 +19,9 @@ export const usePdfTextSearch = (file: string, searchString: string) => {
   // PDF 로딩 최적화
   const loadPdfPages = useCallback(async (file: string) => {
     try {
-      const docData = await pdfjs.getDocument(file).promise;
+      const docData = await pdfjs.getDocument(
+        `data:application/pdf;base64,${file}`
+      ).promise;
       const pageCount = docData._pdfInfo.numPages;
 
       const pagePromises = Array.from({ length: pageCount }, async (_, i) => {
