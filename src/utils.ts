@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { LineCapStyle, PDFDocument, rgb } from "pdf-lib";
+import { canvasEventType, PathsType } from "./types/common";
 import { isMobile } from "react-device-detect";
 
 export const colorMap = [
@@ -18,49 +18,8 @@ export const colors = {
   "#F34A47": rgb(243 / 255, 74 / 255, 71 / 255),
 } as const;
 
-export type DrawType = React.PointerEvent<HTMLCanvasElement> &
-  React.TouchEvent<HTMLCanvasElement>;
-
-export type PathsType = {
-  x: number;
-  y: number;
-  lastX: number;
-  lastY: number;
-  lineWidth: number;
-  color: (typeof colorMap)[number];
-  drawOrder: number;
-  alpha: number;
-};
-
-export const nativeLog = (
-  value: unknown,
-  webViewType = "ReactNativeWebView"
-) => {
-  //@ts-ignore
-  window[webViewType]?.postMessage(
-    JSON.stringify({
-      type: "log",
-      value: JSON.stringify(value),
-    })
-  );
-};
-
-export const postMessage = (
-  type: string,
-  value?: unknown,
-  webViewType = "ReactNativeWebView"
-) => {
-  //@ts-ignore
-  return window[webViewType]?.postMessage(
-    JSON.stringify({
-      type,
-      value: JSON.stringify(value),
-    })
-  );
-};
-
 export const getClientPosition = (
-  e: DrawType,
+  e: canvasEventType,
   devicePixelRatio: number,
   type: "x" | "y"
 ) => {
@@ -73,7 +32,7 @@ export const getClientPosition = (
 
 export const getDrawingPosition = (
   canvas: React.RefObject<HTMLCanvasElement>,
-  e: DrawType,
+  e: canvasEventType,
   devicePixelRatio: number,
   scale: number
 ) => {
@@ -88,42 +47,6 @@ export const getDrawingPosition = (
   const y = (clientY - devicePixelRatio * rect.top) / scale;
 
   return { x, y };
-};
-
-// 선분과 점 간의 거리 계산
-export const distanceToLine = (
-  px: number,
-  py: number,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number
-) => {
-  const A = px - x1;
-  const B = py - y1;
-  const C = x2 - x1;
-  const D = y2 - y1;
-
-  const dot = A * C + B * D;
-  const len_sq = C * C + D * D;
-  const param = len_sq !== 0 ? dot / len_sq : -1;
-
-  let xx, yy;
-
-  if (param < 0) {
-    xx = x1;
-    yy = y1;
-  } else if (param > 1) {
-    xx = x2;
-    yy = y2;
-  } else {
-    xx = x1 + param * C;
-    yy = y1 + param * D;
-  }
-
-  const dx = px - xx;
-  const dy = py - yy;
-  return Math.sqrt(dx * dx + dy * dy);
 };
 
 export const drawDashedLine = (
@@ -280,7 +203,6 @@ export const getModifiedPDFBase64 = async (
   if (!isMobile || import.meta.env.MODE === "development") {
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    nativeLog(`blob size: ${blob.size}`);
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;

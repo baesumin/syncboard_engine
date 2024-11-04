@@ -3,19 +3,16 @@ import {
   colorMap,
   drawDashedLine,
   drawSmoothLine,
-  DrawType,
   getDrawingPosition,
-  PathsType,
 } from "../utils";
+import { canvasEventType, DrawType, PathsType } from "../types/common";
 
-interface UseCanvasProps {
+interface Props {
   devicePixelRatio: number;
   pageSize: {
     width: number;
     height: number;
   };
-  drawType: "pen" | "highlight" | "eraser" | "zoom";
-  color: (typeof colorMap)[number];
   strokeStep: number;
   pageNumber: number;
 }
@@ -23,11 +20,9 @@ interface UseCanvasProps {
 export default function useCanvas({
   devicePixelRatio,
   pageSize,
-  drawType,
-  color,
   strokeStep,
   pageNumber,
-}: UseCanvasProps) {
+}: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const lastXRef = useRef(0);
   const lastYRef = useRef(0);
@@ -37,9 +32,11 @@ export default function useCanvas({
   const [canDraw, setCanDraw] = useState(false);
   const [isRendering, setIsRendering] = useState(false);
   const [drawOrder, setDrawOrder] = useState(0);
+  const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
+  const [drawType, setDrawType] = useState<DrawType>("pen");
 
   const startDrawing = useCallback(
-    (e: DrawType) => {
+    (e: canvasEventType) => {
       e.persist();
 
       if (!canDraw || !canvas.current) {
@@ -96,10 +93,9 @@ export default function useCanvas({
   );
 
   const draw = useCallback(
-    (e: DrawType) => {
+    (e: canvasEventType) => {
       e.persist();
       if (!canvas.current) return;
-
       const context = canvas.current.getContext("2d")!;
       const { x, y } = getDrawingPosition(
         canvas,
@@ -329,10 +325,14 @@ export default function useCanvas({
   return {
     canvas,
     canDraw,
-    setCanDraw,
     paths,
     scale,
     isRendering,
+    drawType,
+    color,
+    setCanDraw,
+    setColor,
+    setDrawType,
     setIsRendering,
     startDrawing,
     draw,
