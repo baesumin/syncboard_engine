@@ -6,23 +6,23 @@ import {
   CustomTextRenderer,
   OnRenderSuccess,
 } from "react-pdf/src/shared/types.js";
-import {
-  ReactZoomPanPinchContentRef,
-  TransformComponent,
-  TransformWrapper,
-} from "react-zoom-pan-pinch";
-import { base64 } from "./base64";
+import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
+import { base64 } from "./mock/base64";
 import useCanvas from "./hooks/useCanvas";
 import PdfOverlay from "./components/PdfOverlay";
 import ThumbnailOvelay from "./components/ThumbnailOvelay";
-import { getModifiedPDFBase64, highlightPattern } from "./utils";
-// import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
+import { getModifiedPDFBase64, highlightPattern } from "./utils/common";
+import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
+import PinchZoomLayout from "./components/PinchZoomLayout";
 
 interface window {
   webviewApi: (data: string) => void;
+  getSearchText: (data: string) => void;
+  getPageNumber: (data: string) => void;
   getBase64: () => void;
   AndroidInterface: {
     getBase64: (data: string) => void;
+    getSearchTextPageList: (data: string) => void;
     setFullMode: (data: boolean) => void;
   };
 }
@@ -47,14 +47,12 @@ export default function PdfEngine() {
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
-  const [searchText] = useState("");
-  // const { resultsList } = usePdfTextSearch(file, searchText);
-  // console.log(resultsList.map((result) => result.pageNumber));
+  const [searchText, setSearchText] = useState("");
+  const { resultsList } = usePdfTextSearch(file, searchText);
   const isLoading = useMemo(
     () => renderedPageNumber !== pageNumber,
     [pageNumber, renderedPageNumber]
   );
-
   const {
     canvas,
     canDraw,
@@ -90,6 +88,11 @@ export default function PdfEngine() {
     [pageNumber, setIsRendering]
   );
 
+  const textRenderer: CustomTextRenderer = useCallback(
+    (textItem) => highlightPattern(textItem.str, searchText),
+    [searchText]
+  );
+
   useEffect(() => {
     if (isRendering) {
       redrawPaths(pageSize.width, pageSize.height);
@@ -112,8 +115,26 @@ export default function PdfEngine() {
         const data = await getModifiedPDFBase64(paths.current, file);
         (window as unknown as window).AndroidInterface.getBase64(data);
       };
+      (window as unknown as window).getSearchText = async (data: string) => {
+        setSearchText(data);
+      };
+      (window as unknown as window).getPageNumber = async (data: string) => {
+        if (!isNaN(Number(data))) {
+          setPageNumber(Number(data));
+        }
+      };
     }
   }, [file, paths]);
+
+  useEffect(() => {
+    if (resultsList.length > 0) {
+      if (isMobile) {
+        (window as unknown as window).AndroidInterface.getSearchTextPageList(
+          JSON.stringify(resultsList.map((result) => result.pageNumber))
+        );
+      }
+    }
+  }, [resultsList]);
 
   // useEffect(() => {
   //   const getData = async () => {
@@ -122,11 +143,6 @@ export default function PdfEngine() {
   //   };
   //   getData();
   // });
-
-  const textRenderer: CustomTextRenderer = useCallback(
-    (textItem) => highlightPattern(textItem.str, searchText),
-    [searchText]
-  );
 
   return (
     <>
@@ -139,77 +155,56 @@ export default function PdfEngine() {
             }}
             loading={<></>}
           >
-            <TransformWrapper
-              ref={scaleRef}
-              disabled={canDraw}
-              initialScale={1}
-              maxScale={3}
-              minScale={1}
-              disablePadding
-              onPinchingStop={(ref) => {
-                scale.current = ref.state.scale;
-                // 1 ~3
-                // 1일때 0 3일때 1
-                // setDevicePixelRatio(2 + ref.state.scale * 0.33);
-              }}
+            <PinchZoomLayout
+              isFullScreen={isFullScreen}
+              canDraw={canDraw}
+              scale={scale}
+              scaleRef={scaleRef}
+              pinchZoomRef={ref}
             >
-              <TransformComponent>
-                <div
-                  ref={ref}
-                  className="w-dvw h-dvh flex-center"
+              {isLoading && (
+                <Page
+                  key={renderedPageNumber}
+                  pageNumber={renderedPageNumber}
+                  width={orientation === "portrait" ? width : undefined}
+                  height={height}
+                  devicePixelRatio={devicePixelRatio}
+                  loading={<></>}
+                  noData={<></>}
+                />
+              )}
+              <Page
+                key={pageNumber}
+                className={isLoading ? "hidden" : ""}
+                pageNumber={pageNumber}
+                width={orientation === "portrait" ? width : undefined}
+                height={height}
+                devicePixelRatio={devicePixelRatio}
+                onRenderSuccess={onRenderSuccess}
+                loading={<></>}
+                noData={<></>}
+                customTextRenderer={textRenderer}
+              />
+              <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
+                <canvas
+                  ref={canvas}
+                  key={pageNumber}
+                  width={pageSize.width * devicePixelRatio}
+                  height={pageSize.height * devicePixelRatio}
                   style={{
-                    paddingLeft: isFullScreen ? 0 : 100,
-                    paddingRight: isFullScreen ? 0 : 100,
-                    paddingTop: isFullScreen ? 0 : 40,
-                    paddingBottom: isFullScreen ? 0 : 40,
+                    width: `${pageSize.width}px`,
+                    height: `${pageSize.height}px`,
+                    pointerEvents: canDraw ? "auto" : "none",
+                    zIndex: 1000,
                   }}
-                >
-                  <>
-                    {isLoading && (
-                      <Page
-                        key={renderedPageNumber}
-                        pageNumber={renderedPageNumber}
-                        width={orientation === "portrait" ? width : undefined}
-                        height={height}
-                        devicePixelRatio={devicePixelRatio}
-                        loading={<></>}
-                        noData={<></>}
-                      />
-                    )}
-                    <Page
-                      key={pageNumber}
-                      className={isLoading ? "hidden" : ""}
-                      pageNumber={pageNumber}
-                      width={orientation === "portrait" ? width : undefined}
-                      height={height}
-                      devicePixelRatio={devicePixelRatio}
-                      onRenderSuccess={onRenderSuccess}
-                      loading={<></>}
-                      noData={<></>}
-                      customTextRenderer={textRenderer}
-                    />
-                    <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
-                      <canvas
-                        ref={canvas}
-                        key={pageNumber}
-                        width={pageSize.width * devicePixelRatio}
-                        height={pageSize.height * devicePixelRatio}
-                        style={{
-                          width: `${pageSize.width}px`,
-                          height: `${pageSize.height}px`,
-                          pointerEvents: canDraw ? "auto" : "none",
-                          zIndex: 1000,
-                        }}
-                        onTouchStart={startDrawing}
-                        onTouchMove={draw}
-                        onTouchCancel={stopDrawing}
-                        onTouchEnd={stopDrawing}
-                      />
-                    </div>
-                  </>
-                </div>
-              </TransformComponent>
-            </TransformWrapper>
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchCancel={stopDrawing}
+                  onTouchEnd={stopDrawing}
+                />
+              </div>
+            </PinchZoomLayout>
+
             {isListOpen && (
               <ThumbnailOvelay
                 pageNumber={pageNumber}

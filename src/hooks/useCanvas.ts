@@ -4,7 +4,7 @@ import {
   drawDashedLine,
   drawSmoothLine,
   getDrawingPosition,
-} from "../utils";
+} from "../utils/common";
 import { canvasEventType, DrawType, PathsType } from "../types/common";
 
 interface Props {

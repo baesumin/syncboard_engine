@@ -1,5 +1,5 @@
 import { LineCapStyle, PDFDocument, rgb } from "pdf-lib";
-import { canvasEventType, PathsType } from "./types/common";
+import { canvasEventType, PathsType } from "../types/common";
 import { isMobile } from "react-device-detect";
 
 export const colorMap = [

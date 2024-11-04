@@ -1,4 +1,4 @@
-import { colorMap } from "../utils";
+import { colorMap } from "../utils/common";
 
 export type DrawType = "pen" | "highlight" | "eraser" | "zoom";
 export type canvasEventType = React.PointerEvent<HTMLCanvasElement> &

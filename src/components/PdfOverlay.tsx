@@ -19,15 +19,18 @@ import {
   Zoom,
 } from "../assets/icons";
 import { Dispatch, RefObject, SetStateAction } from "react";
-import { colorMap, getModifiedPDFBase64 } from "../utils";
+import { colorMap, getModifiedPDFBase64 } from "../utils/common";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { DrawType, PathsType } from "../types/common";
 
 interface window {
   webviewApi: (data: string) => void;
+  getSearchText: (data: string) => void;
+  getPageNumber: (data: string) => void;
   getBase64: () => void;
   AndroidInterface: {
     getBase64: (data: string) => void;
+    getSearchTextPageList: (data: string) => void;
     setFullMode: (data: boolean) => void;
   };
 }
