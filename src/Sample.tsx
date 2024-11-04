@@ -1,19 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Document, Page, pdfjs, Thumbnail } from "react-pdf";
+import { useEffect, useRef, useState } from "react";
+import { Document, Page, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { useMobileOrientation, isMobile } from "react-device-detect";
-import { PDFDocument, PDFName } from "pdf-lib";
 import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
-import {
-  colorMap,
-  drawDashedLine,
-  drawSmoothLine,
-  DrawType,
-  getDrawingPosition,
-  nativeLog,
-  PathsType,
-  postMessage,
-} from "./utils";
+import { colorMap, getModifiedPDFBase64, postMessage } from "./utils";
 import {
   ReactZoomPanPinchContentRef,
   TransformComponent,
@@ -39,13 +29,7 @@ import Zoom from "./assets/ico-zoom.svg?react";
 import clsx from "clsx";
 import { base64 } from "./base64";
 
-import "react-pdf/dist/esm/Page/TextLayer.css";
-import "react-pdf/dist/esm/Page/AnnotationLayer.css";
-
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+import useCanvas from "./hooks/useCanvas";
 
 interface window {
   webviewApi: (data: string) => void;
@@ -59,28 +43,18 @@ interface window {
 export default function Sample() {
   const { orientation } = useMobileOrientation();
   const { width, height, ref } = useResizeDetector();
-
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const lastXRef = useRef(0);
-  const lastYRef = useRef(0);
-  const scale = useRef(1);
-  const pathsRef = useRef<PathsType[]>([]);
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
-
-  const [canDraw, setCanDraw] = useState(false);
   const [isToolBarOpen, setIsToolBarOpen] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [renderedPageNumber, setRenderedPageNumber] = useState<number>(0);
-  const [file, setFile] = useState("");
+  const [file, setFile] = useState(
+    import.meta.env.MODE === "development" ? base64 : ""
+  );
   const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
   const [pageSize, setPageSize] = useState({
     width: 0,
     height: 0,
   });
-  const paths = useRef<{
-    [pageNumber: number]: PathsType[];
-  }>({});
-  const [drawOrder, setDrawOrder] = useState(0);
   const [isListOpen, setIsListOpen] = useState(false);
   const [totalPage, setTotalPage] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -90,7 +64,6 @@ export default function Sample() {
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
-  const [isRendering, setIsRendering] = useState(false);
   // const [searchText] = useState("");
   // const { resultsList, totalLength, findPageByIndex } = usePdfTextSearch(
   //   file,
@@ -101,280 +74,26 @@ export default function Sample() {
   const isLoading = renderedPageNumber !== pageNumber;
   // const matchIndex = useRef(0);
 
-  const startDrawing = (e: DrawType) => {
-    console.log("hi");
-    e.persist();
-
-    if (!canDraw || !width || !height || !canvas.current) {
-      return;
-    }
-
-    const context = canvas.current.getContext("2d")!;
-
-    const { x, y } = getDrawingPosition(
-      canvas,
-      e,
-      devicePixelRatio,
-      scale.current
-    );
-
-    if (drawType === "eraser") {
-      drawDashedLine(context, x, y, x, y);
-    } else {
-      drawSmoothLine(
-        context,
-        x,
-        y,
-        x,
-        y,
-        color,
-        strokeStep * (drawType === "highlight" ? 2 : 1),
-        drawType === "highlight" ? 0.4 : 1
-      );
-    }
-    const lineWidth =
-      (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
-    pathsRef.current.push({
-      x: x / pageSize.width,
-      y: y / pageSize.height,
-      lastX: x / pageSize.width,
-      lastY: y / pageSize.height,
-      lineWidth,
-      color,
-      drawOrder,
-      alpha: drawType === "highlight" ? 0.4 : 1,
-    });
-    lastXRef.current = x;
-    lastYRef.current = y;
-  };
-
-  const draw = (e: DrawType) => {
-    e.persist();
-    if (!canvas.current || !width || !height) return;
-
-    const context = canvas.current.getContext("2d")!;
-
-    const { x, y } = getDrawingPosition(
-      canvas,
-      e,
-      devicePixelRatio,
-      scale.current
-    );
-
-    // 이전 점과의 거리 계산
-    const distance = Math.hypot(x - lastXRef.current, y - lastYRef.current);
-    const DISTANCE_THRESHOLD = 20;
-
-    // 설정된 간격 이상일 때만 그리기
-    if (distance >= DISTANCE_THRESHOLD) {
-      if (drawType === "eraser") {
-        drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
-      } else {
-        drawSmoothLine(
-          context,
-          lastXRef.current,
-          lastYRef.current,
-          x,
-          y,
-          color,
-          strokeStep * (drawType === "highlight" ? 2 : 1),
-          drawType === "highlight" ? 0.4 : 1
-        );
-      }
-      const lineWidth =
-        (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
-      pathsRef.current.push({
-        x: x / pageSize.width,
-        y: y / pageSize.height,
-        lastX: lastXRef.current / pageSize.width,
-        lastY: lastYRef.current / pageSize.height,
-        lineWidth,
-        color,
-        drawOrder,
-        alpha: drawType === "highlight" ? 0.4 : 1,
-      });
-      lastXRef.current = x;
-      lastYRef.current = y;
-    }
-  };
-
-  const redrawPaths = useCallback(
-    (pageWidth: number, pageHeight: number) => {
-      if (canvas.current && width && height) {
-        const context = canvas.current.getContext("2d")!;
-
-        const points = paths.current[pageNumber];
-        if (points) {
-          // 점을 그룹으로 나누기
-          let currentGroup: PathsType[] = [];
-
-          for (let i = 1; i < points.length; i++) {
-            // 단일 점 처리
-            // if (
-            //   points[i].lastX !== points[i - 1].x ||
-            //   points[i].lastY !== points[i - 1].y
-            // ) {
-            //   drawSmoothLine(
-            //     context,
-            //     points[i].x * pageWidth,
-            //     points[i].y * pageHeight,
-            //     points[i].x * pageWidth,
-            //     points[i].y * pageHeight,
-            //     points[i].color,
-            //     points[i].lineWidth * pageWidth
-            //   );
-            //   continue;
-            // }
-
-            if (
-              points[i].lastX !== points[i - 1].x ||
-              points[i].lastY !== points[i - 1].y
-            ) {
-              // 선이 띄워진 경우
-              // 새로운 그룹 시작
-              if (currentGroup.length > 1) {
-                // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
-                for (let j = 1; j < currentGroup.length; j++) {
-                  drawSmoothLine(
-                    context,
-                    currentGroup[j - 1].x * pageWidth,
-                    currentGroup[j - 1].y * pageHeight,
-                    currentGroup[j].x * pageWidth,
-                    currentGroup[j].y * pageHeight,
-                    currentGroup[j].color,
-                    currentGroup[j].lineWidth * pageWidth,
-                    currentGroup[j].alpha
-                  );
-                }
-              }
-
-              currentGroup = [points[i]]; // 새로운 그룹 초기화
-            } else {
-              if (i === 1) {
-                drawSmoothLine(
-                  context,
-                  points[0].x * pageWidth,
-                  points[0].y * pageHeight,
-                  points[1].x * pageWidth,
-                  points[1].y * pageHeight,
-                  points[1].color,
-                  points[1].lineWidth * pageWidth,
-                  points[1].alpha
-                );
-              }
-              // 선이 이어진 경우
-              currentGroup.push(points[i]); // 현재 그룹에 점 추가
-            }
-          }
-          // 마지막 그룹 처리
-          if (currentGroup.length > 1) {
-            for (let j = 1; j < currentGroup.length; j++) {
-              drawSmoothLine(
-                context,
-                currentGroup[j - 1].x * pageWidth,
-                currentGroup[j - 1].y * pageHeight,
-                currentGroup[j].x * pageWidth,
-                currentGroup[j].y * pageHeight,
-                currentGroup[j].color,
-                currentGroup[j].lineWidth * pageWidth,
-                currentGroup[j].alpha
-              );
-            }
-          }
-        }
-
-        setIsRendering(false);
-      }
-    },
-    [height, pageNumber, width]
-  );
-
-  const stopDrawing = async () => {
-    if (
-      drawType === "eraser" &&
-      pathsRef.current.length > 0 &&
-      canvas.current
-    ) {
-      const currentPaths = paths.current[pageNumber] || [];
-      const erasePaths = pathsRef.current;
-
-      // 지우기 모드에서 겹치는 drawOrder를 찾기
-      const drawOrdersToDelete = new Set();
-
-      // 모든 erasePath에 대해 반복
-      erasePaths.forEach((erasePath) => {
-        const eraseX = erasePath.x * pageSize.width;
-        const eraseY = erasePath.y * pageSize.height;
-
-        // currentPaths를 반복하여 겹치는 경로를 찾기
-        currentPaths.forEach((path) => {
-          const distance = Math.hypot(
-            path.x * pageSize.width - eraseX,
-            path.y * pageSize.height - eraseY
-          );
-
-          // 겹치는 경로가 있으면 drawOrder를 추가
-          if (distance <= strokeStep) {
-            drawOrdersToDelete.add(path.drawOrder);
-          }
-
-          // 선이 지나간 경우도 처리
-          const pathLength = Math.sqrt(
-            Math.pow(path.lastX * pageSize.width - path.x * pageSize.width, 2) +
-              Math.pow(
-                path.lastY * pageSize.height - path.y * pageSize.height,
-                2
-              )
-          );
-
-          // 선의 중간 점들에 대해 거리 체크
-          for (let i = 0; i <= pathLength; i += 1) {
-            const t = i / pathLength;
-            const midX =
-              (1 - t) * (path.x * pageSize.width) +
-              t * (path.lastX * pageSize.width);
-            const midY =
-              (1 - t) * (path.y * pageSize.height) +
-              t * (path.lastY * pageSize.height);
-            const midDistance = Math.hypot(midX - eraseX, midY - eraseY);
-            if (midDistance <= strokeStep) {
-              drawOrdersToDelete.add(path.drawOrder);
-              break; // 한 번이라도 겹치면 더 이상 체크할 필요 없음
-            }
-          }
-        });
-      });
-      // drawOrder가 포함되지 않은 경로만 남기기
-      const newPaths = currentPaths.filter((path) => {
-        return !drawOrdersToDelete.has(path.drawOrder);
-      });
-
-      // paths 업데이트
-      paths.current = {
-        ...paths.current,
-        [pageNumber]: newPaths,
-      };
-
-      // pathsRef 초기화
-      pathsRef.current = [];
-      // 점선도 지우기
-      const context = canvas.current.getContext("2d")!;
-
-      context.clearRect(0, 0, canvas.current.width, canvas.current.height); // 전체 캔버스 지우기
-      redrawPaths(pageSize.width, pageSize.height);
-    }
-
-    if (pathsRef.current.length > 0 && drawType !== "eraser") {
-      const newValue = pathsRef.current;
-      setDrawOrder((prev) => prev + 1);
-      paths.current = {
-        ...paths.current,
-        [pageNumber]: [...(paths.current[pageNumber] || []), ...newValue],
-      };
-      // pathsRef 초기화
-      pathsRef.current = [];
-    }
-  };
+  const {
+    canvas,
+    canDraw,
+    setCanDraw,
+    paths,
+    scale,
+    isRendering,
+    setIsRendering,
+    startDrawing,
+    draw,
+    redrawPaths,
+    stopDrawing,
+  } = useCanvas({
+    devicePixelRatio,
+    pageSize,
+    drawType,
+    color,
+    strokeStep,
+    pageNumber,
+  });
 
   const onRenderSuccess: OnRenderSuccess = (page) => {
     setRenderedPageNumber(pageNumber);
@@ -385,79 +104,6 @@ export default function Sample() {
     });
   };
 
-  const getModifiedPDFBase64 = useCallback(async () => {
-    // 기존 PDF 로드
-    const existingPdfBytes = file;
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
-    for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-      const currentPaths = paths.current[i + 1]; // 현재 페이지의 경로 가져오기
-      if (currentPaths) {
-        const page = pdfDoc.getPage(i);
-        const { width: pageWidth, height: pageHeight } = page.getSize();
-
-        currentPaths.forEach((path) => {
-          // InkAnnotation 생성
-          const annotation = pdfDoc.context.obj({
-            Type: "Annot",
-            Subtype: "Ink",
-            InkList: [
-              [
-                (path.lastX * pageWidth) / devicePixelRatio,
-                pageHeight - (path.lastY * pageHeight) / devicePixelRatio,
-                (path.x * pageWidth) / devicePixelRatio,
-                pageHeight - (path.y * pageHeight) / devicePixelRatio,
-              ],
-            ],
-            C: [
-              parseInt(path.color.slice(1, 3), 16) / 255,
-              parseInt(path.color.slice(3, 5), 16) / 255,
-              parseInt(path.color.slice(5, 7), 16) / 255,
-            ],
-            Border: [(path.lineWidth * pageWidth) / devicePixelRatio],
-            Opacity: path.alpha,
-          });
-
-          // 페이지에 주석 추가
-          page.node.set(PDFName.of("Annots"), pdfDoc.context.obj([annotation]));
-        });
-
-        // 경로 그리기
-        // currentPaths.forEach(
-        //   ({ x, y, lastX, lastY, color, lineWidth, alpha }) => {
-        //     page.drawLine({
-        //       start: {
-        //         x: (lastX * pageWidth) / devicePixelRatio,
-        //         y: pageHeight - (lastY * pageHeight) / devicePixelRatio,
-        //       }, // y 좌표 반전
-        //       end: {
-        //         x: (x * pageWidth) / devicePixelRatio,
-        //         y: pageHeight - (y * pageHeight) / devicePixelRatio,
-        //       }, // y 좌표 반전
-        //       color: colorToRGB(color), // 선 색상
-        //       thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
-        //       lineCap: alpha === 1 ? LineCapStyle.Round : LineCapStyle.Butt,
-        //       opacity: alpha,
-        //     });
-        //   }
-        // );
-      }
-    }
-    if (!isMobile) {
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      nativeLog(`blob size: ${blob.size}`);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "modified.pdf");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-    const base64DataUri = await pdfDoc.saveAsBase64();
-    return base64DataUri;
-  }, [devicePixelRatio, file]);
-
   useEffect(() => {
     if (isRendering) {
       redrawPaths(pageSize.width, pageSize.height);
@@ -466,7 +112,7 @@ export default function Sample() {
 
   useEffect(() => {
     if (!isMobile || import.meta.env.MODE === "development") {
-      setFile(`${base64}`);
+      setFile(base64);
     }
   }, []);
 
@@ -481,14 +127,22 @@ export default function Sample() {
     if (isMobile) {
       (window as unknown as window).webviewApi = (data: string) => {
         const param = JSON.parse(data);
-        setFile(`${param?.data?.base64}`);
+        setFile(param?.data?.base64);
       };
       (window as unknown as window).getBase64 = async () => {
-        const data = await getModifiedPDFBase64();
+        const data = await getModifiedPDFBase64(paths.current, file);
         (window as unknown as window).AndroidInterface.getBase64(data);
       };
     }
-  }, [getModifiedPDFBase64]);
+  }, [file, paths]);
+
+  // useEffect(() => {
+  //   const getData = async () => {
+  //     const d = await loadPDFAnnotations(annotBase64);
+  //     // console.log(d);
+  //   };
+  //   getData();
+  // });
 
   // const textRenderer: CustomTextRenderer = useCallback(
   //   (textItem) => {
@@ -576,6 +230,8 @@ export default function Sample() {
                       loading={<></>}
                       noData={<></>}
                       // customTextRenderer={textRenderer}
+                      renderAnnotationLayer={true}
+                      renderTextLayer={true}
                     />
                     <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
                       <canvas
@@ -762,10 +418,10 @@ export default function Sample() {
                   그리기
                 </button>
               )}
-              {!isToolBarOpen && !isMobile && (
+              {!isToolBarOpen && import.meta.env.MODE === "development" && (
                 <button
                   onClick={async () => {
-                    await getModifiedPDFBase64();
+                    await getModifiedPDFBase64(paths.current, file);
                   }}
                   className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
                 >
