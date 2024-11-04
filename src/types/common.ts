@@ -13,3 +13,4 @@ export type PathsType = {
   drawOrder: number;
   alpha: number;
 };
+export type PageSize = { width: number; height: number };

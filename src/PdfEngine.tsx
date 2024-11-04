@@ -11,7 +11,11 @@ import { base64 } from "./mock/base64";
 import useCanvas from "./hooks/useCanvas";
 import PdfOverlay from "./components/PdfOverlay";
 import ThumbnailOvelay from "./components/ThumbnailOvelay";
-import { getModifiedPDFBase64, highlightPattern } from "./utils/common";
+import {
+  convertAnnotationsToPaths,
+  getModifiedPDFBase64,
+  highlightPattern,
+} from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
 
@@ -47,7 +51,7 @@ export default function PdfEngine() {
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState("for");
   const { resultsList } = usePdfTextSearch(file, searchText);
   const isLoading = useMemo(
     () => renderedPageNumber !== pageNumber,
@@ -136,13 +140,18 @@ export default function PdfEngine() {
     }
   }, [resultsList]);
 
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     const d = await loadPDFAnnotations(annotBase64);
-  //     // console.log(d);
-  //   };
-  //   getData();
-  // });
+  useEffect(() => {
+    if (file) {
+      const getdata = async () => {
+        const d = await convertAnnotationsToPaths(file, pageSize);
+        if (d) {
+          paths.current = d;
+          redrawPaths(pageSize.width, pageSize.height);
+        }
+      };
+      getdata();
+    }
+  }, [file, pageSize, paths, redrawPaths]);
 
   return (
     <>
@@ -171,6 +180,8 @@ export default function PdfEngine() {
                   devicePixelRatio={devicePixelRatio}
                   loading={<></>}
                   noData={<></>}
+                  renderAnnotationLayer={false}
+                  renderTextLayer={false}
                 />
               )}
               <Page
@@ -184,6 +195,8 @@ export default function PdfEngine() {
                 loading={<></>}
                 noData={<></>}
                 customTextRenderer={textRenderer}
+                renderAnnotationLayer={false}
+                renderTextLayer={false}
               />
               <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
                 <canvas
@@ -204,7 +217,6 @@ export default function PdfEngine() {
                 />
               </div>
             </PinchZoomLayout>
-
             {isListOpen && (
               <ThumbnailOvelay
                 pageNumber={pageNumber}

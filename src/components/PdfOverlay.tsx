@@ -22,6 +22,7 @@ import { Dispatch, RefObject, SetStateAction } from "react";
 import { colorMap, getModifiedPDFBase64 } from "../utils/common";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { DrawType, PathsType } from "../types/common";
+import { isMobile } from "react-device-detect";
 
 interface window {
   webviewApi: (data: string) => void;
@@ -93,42 +94,14 @@ const PdfOverlay = ({
             </div>
             <span className="text-white text-lg">{`${pageNumber}/${totalPage}`}</span>
           </button>
-          {/* TODO: 나중에 없애기 */}
-          {/* {!isMobile && (
-                <div className="flex -mt-10 gap-x-2">
-                  <button
-                    onClick={() => {
-                      if (currentSearchIndex !== 0) {
-                        setCurrentSearchIndex((prev) => prev - 1);
-                      } else {
-                        setCurrentSearchIndex(totalLength - 1);
-                      }
-                    }}
-                    className="pointer-events-auto h-[48px] rounded-[10px] bg-white flex-center"
-                  >
-                    이전
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (currentSearchIndex === totalLength - 1) {
-                        setCurrentSearchIndex(0);
-                      } else {
-                        setCurrentSearchIndex((prev) => prev + 1);
-                      }
-                    }}
-                    className="pointer-events-auto h-[48px] rounded-[10px] bg-white flex-center"
-                  >
-                    다음
-                  </button>
-                </div>
-              )} */}
-
           <button
             onClick={() => {
               setIsFullScreen((prev) => !prev);
-              (window as unknown as window).AndroidInterface.setFullMode(
-                !isFullScreen
-              );
+              if (isMobile) {
+                (window as unknown as window).AndroidInterface.setFullMode(
+                  !isFullScreen
+                );
+              }
             }}
             className="pointer-events-auto size-[44px] rounded-lg bg-white shadow-black shadow-sm flex-center"
           >
