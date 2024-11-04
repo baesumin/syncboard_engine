@@ -19,10 +19,9 @@ import {
   Zoom,
 } from "../assets/icons";
 import { Dispatch, RefObject, SetStateAction } from "react";
-import { colorMap, getModifiedPDFBase64 } from "../utils/common";
+import { __DEV__, colorMap, getModifiedPDFBase64 } from "../utils/common";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { DrawType, PathsType } from "../types/common";
-import { isMobile } from "react-device-detect";
 
 interface window {
   webviewApi: (data: string) => void;
@@ -97,7 +96,7 @@ const PdfOverlay = ({
           <button
             onClick={() => {
               setIsFullScreen((prev) => !prev);
-              if (isMobile) {
+              if (!__DEV__) {
                 (window as unknown as window).AndroidInterface.setFullMode(
                   !isFullScreen
                 );

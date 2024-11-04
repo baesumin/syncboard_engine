@@ -105,7 +105,7 @@ export default function useCanvas({
       );
 
       const distance = Math.hypot(x - lastXRef.current, y - lastYRef.current);
-      const DISTANCE_THRESHOLD = 20;
+      const DISTANCE_THRESHOLD = 30;
 
       if (distance >= DISTANCE_THRESHOLD) {
         if (drawType === "eraser") {

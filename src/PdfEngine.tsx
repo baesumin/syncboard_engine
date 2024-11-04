@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document, Page } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
-import { useMobileOrientation, isMobile } from "react-device-detect";
+import { useMobileOrientation } from "react-device-detect";
 import {
   CustomTextRenderer,
   OnRenderSuccess,
@@ -12,9 +12,9 @@ import useCanvas from "./hooks/useCanvas";
 import PdfOverlay from "./components/PdfOverlay";
 import ThumbnailOvelay from "./components/ThumbnailOvelay";
 import {
-  convertAnnotationsToPaths,
   getModifiedPDFBase64,
   highlightPattern,
+  __DEV__,
 } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
@@ -38,9 +38,7 @@ export default function PdfEngine() {
   const [isToolBarOpen, setIsToolBarOpen] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [renderedPageNumber, setRenderedPageNumber] = useState<number>(0);
-  const [file, setFile] = useState(
-    import.meta.env.MODE === "development" ? base64 : ""
-  );
+  const [file, setFile] = useState(__DEV__ ? base64 : "");
   const [pageSize, setPageSize] = useState({
     width: 0,
     height: 0,
@@ -51,7 +49,7 @@ export default function PdfEngine() {
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
-  const [searchText, setSearchText] = useState("for");
+  const [searchText, setSearchText] = useState("");
   const { resultsList } = usePdfTextSearch(file, searchText);
   const isLoading = useMemo(
     () => renderedPageNumber !== pageNumber,
@@ -104,13 +102,7 @@ export default function PdfEngine() {
   }, [isRendering, pageSize, redrawPaths]);
 
   useEffect(() => {
-    if (!isMobile || import.meta.env.MODE === "development") {
-      setFile(base64);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isMobile) {
+    if (!__DEV__) {
       (window as unknown as window).webviewApi = (data: string) => {
         const param = JSON.parse(data);
         setFile(param?.data?.base64);
@@ -131,27 +123,27 @@ export default function PdfEngine() {
   }, [file, paths]);
 
   useEffect(() => {
-    if (resultsList.length > 0) {
-      if (isMobile) {
-        (window as unknown as window).AndroidInterface.getSearchTextPageList(
-          JSON.stringify(resultsList.map((result) => result.pageNumber))
-        );
-      }
+    if (resultsList.length > 0 && !__DEV__) {
+      (window as unknown as window).AndroidInterface.getSearchTextPageList(
+        JSON.stringify(resultsList.map((result) => result.pageNumber))
+      );
     }
   }, [resultsList]);
 
-  useEffect(() => {
-    if (file) {
-      const getdata = async () => {
-        const d = await convertAnnotationsToPaths(file, pageSize);
-        if (d) {
-          paths.current = d;
-          redrawPaths(pageSize.width, pageSize.height);
-        }
-      };
-      getdata();
-    }
-  }, [file, pageSize, paths, redrawPaths]);
+  // useEffect(() => {
+  //   if (file) {
+  //     const getdata = async () => {
+  //       const d = await convertAnnotationsToPaths(file, pageSize);
+  //       // const d = await convertAnnotationsToPaths(file, pageSize);
+  //       // console.log(d);
+  //       if (d) {
+  //         paths.current = d;
+  //         // redrawPaths(pageSize.width, pageSize.height);
+  //       }
+  //     };
+  //     getdata();
+  //   }
+  // }, [file, pageSize, paths, redrawPaths]);
 
   return (
     <>
@@ -180,8 +172,8 @@ export default function PdfEngine() {
                   devicePixelRatio={devicePixelRatio}
                   loading={<></>}
                   noData={<></>}
-                  renderAnnotationLayer={false}
-                  renderTextLayer={false}
+                  renderAnnotationLayer={true}
+                  renderTextLayer={true}
                 />
               )}
               <Page
@@ -195,8 +187,8 @@ export default function PdfEngine() {
                 loading={<></>}
                 noData={<></>}
                 customTextRenderer={textRenderer}
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
+                renderAnnotationLayer={true}
+                renderTextLayer={true}
               />
               <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
                 <canvas
