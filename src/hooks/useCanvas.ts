@@ -44,7 +44,8 @@ export default function useCanvas({
       }
 
       const context = canvas.current.getContext("2d")!;
-
+      const lineWidth =
+        (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
       const { x, y } = getDrawingPosition(
         canvas,
         e,
@@ -66,8 +67,7 @@ export default function useCanvas({
           drawType === "highlight" ? 0.4 : 1
         );
       }
-      const lineWidth =
-        (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
+
       pathsRef.current.push({
         x: x / pageSize.width,
         y: y / pageSize.height,
@@ -106,6 +106,8 @@ export default function useCanvas({
 
       const distance = Math.hypot(x - lastXRef.current, y - lastYRef.current);
       const DISTANCE_THRESHOLD = 30;
+      const lineWidth =
+        (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
 
       if (distance >= DISTANCE_THRESHOLD) {
         if (drawType === "eraser") {
@@ -122,9 +124,6 @@ export default function useCanvas({
             drawType === "highlight" ? 0.4 : 1
           );
         }
-
-        const lineWidth =
-          (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
 
         pathsRef.current.push({
           x: x / pageSize.width,

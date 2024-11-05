@@ -52,10 +52,6 @@ export default function PdfEngine() {
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const { resultsList } = usePdfTextSearch(file, searchText);
-  const isLoading = useMemo(
-    () => renderedPageNumber !== pageNumber,
-    [pageNumber, renderedPageNumber]
-  );
   const {
     canvas,
     canDraw,
@@ -78,6 +74,12 @@ export default function PdfEngine() {
     strokeStep,
     pageNumber,
   });
+  console.log(pageSize);
+
+  const isLoading = useMemo(
+    () => renderedPageNumber !== pageNumber,
+    [pageNumber, renderedPageNumber]
+  );
 
   const onRenderSuccess: OnRenderSuccess = useCallback(
     (page) => {
@@ -105,9 +107,7 @@ export default function PdfEngine() {
   useEffect(() => {
     if (!__DEV__) {
       (window as unknown as window).webviewApi = (appData: string) => {
-        console.time();
         const param: webviewApiType = JSON.parse(appData);
-        console.timeEnd();
         setFile(param?.data?.base64);
       };
       (window as unknown as window).getBase64 = async () => {

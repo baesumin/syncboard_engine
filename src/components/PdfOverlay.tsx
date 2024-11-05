@@ -151,15 +151,24 @@ const PdfOverlay = ({
             </button>
           )}
           {!isToolBarOpen && import.meta.env.MODE === "development" && (
-            <button
-              onClick={async () => {
-                await getModifiedPDFBase64(paths, file);
-              }}
-              className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
-            >
-              <Drawing />
-              저장
-            </button>
+            <>
+              <button
+                onClick={async () => {
+                  await getModifiedPDFBase64(paths, file);
+                }}
+                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+              >
+                저장
+              </button>
+              <button
+                onClick={async () => {
+                  await getModifiedPDFBase64(paths, file);
+                }}
+                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+              >
+                페이지 추가
+              </button>
+            </>
           )}
           {isToolBarOpen && (
             <div className="h-[56px] bg-white rounded-xl flex items-center px-[8px] shadow-black shadow-sm">
