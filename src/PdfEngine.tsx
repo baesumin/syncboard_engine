@@ -15,11 +15,11 @@ import {
   getModifiedPDFBase64,
   highlightPattern,
   __DEV__,
-  WebviewApiParse,
 } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
-import typia from "typia";
+import { webviewApiType } from "./types/json";
+import destr from "destr";
 
 interface window {
   webviewApi: (data: string) => void;
@@ -107,7 +107,7 @@ export default function PdfEngine() {
     if (!__DEV__) {
       (window as unknown as window).webviewApi = (appData: string) => {
         console.time();
-        const param = WebviewApiParse(appData);
+        const param: webviewApiType = destr(appData);
         console.timeEnd();
         setFile(param?.data?.base64);
       };
@@ -129,7 +129,7 @@ export default function PdfEngine() {
   useEffect(() => {
     if (resultsList.length > 0 && !__DEV__) {
       (window as unknown as window).AndroidInterface.getSearchTextPageList(
-        typia.json.stringify(resultsList.map((result) => result.pageNumber))
+        JSON.stringify(resultsList.map((result) => result.pageNumber))
       );
     }
   }, [resultsList]);
