@@ -19,7 +19,6 @@ import {
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
 import { webviewApiType } from "./types/json";
-import destr from "destr";
 
 interface window {
   webviewApi: (data: string) => void;
@@ -107,7 +106,7 @@ export default function PdfEngine() {
     if (!__DEV__) {
       (window as unknown as window).webviewApi = (appData: string) => {
         console.time();
-        const param: webviewApiType = destr(appData);
+        const param: webviewApiType = JSON.parse(appData);
         console.timeEnd();
         setFile(param?.data?.base64);
       };
