@@ -105,7 +105,6 @@ export default function PdfEngine() {
   useEffect(() => {
     if (!__DEV__) {
       (window as unknown as window).webviewApi = (appData: string) => {
-        console.log(appData);
         console.time();
         const param = JSON.parse(appData);
         console.timeEnd();
