@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useRef, useState } from "react";
 import {
   colorMap,
   drawDashedLine,
@@ -15,6 +15,8 @@ interface Props {
   };
   strokeStep: number;
   pageNumber: number;
+  isRendering: boolean;
+  setIsRendering: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function useCanvas({
@@ -22,6 +24,8 @@ export default function useCanvas({
   pageSize,
   strokeStep,
   pageNumber,
+  isRendering,
+  setIsRendering,
 }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const lastXRef = useRef(0);
@@ -30,7 +34,6 @@ export default function useCanvas({
   const pathsRef = useRef<PathsType[]>([]);
   const paths = useRef<{ [pageNumber: number]: PathsType[] }>({});
   const [canDraw, setCanDraw] = useState(false);
-  const [isRendering, setIsRendering] = useState(false);
   const [drawOrder, setDrawOrder] = useState(0);
   const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
   const [drawType, setDrawType] = useState<DrawType>("pen");

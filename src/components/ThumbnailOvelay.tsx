@@ -22,7 +22,7 @@ const ThumbnailOvelay = ({
   return (
     <div
       className={clsx(
-        "absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px]"
+        "absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px] z-[9999]"
       )}
     >
       <div className="flex justify-end items-center">

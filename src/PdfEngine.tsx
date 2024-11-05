@@ -1,13 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Document, Page } from "react-pdf";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Document, Page, Thumbnail } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { useMobileOrientation } from "react-device-detect";
 import {
   CustomTextRenderer,
+  OnDocumentLoadSuccess,
   OnRenderSuccess,
 } from "react-pdf/src/shared/types.js";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
-import { base64 } from "./mock/base64";
 import useCanvas from "./hooks/useCanvas";
 import PdfOverlay from "./components/PdfOverlay";
 import ThumbnailOvelay from "./components/ThumbnailOvelay";
@@ -15,31 +23,27 @@ import {
   getModifiedPDFBase64,
   highlightPattern,
   __DEV__,
+  createOrMergePdf,
 } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
-import { webviewApiType } from "./types/json";
+import { webviewType } from "./types/common";
+import { webviewApiDataType } from "./types/json";
+import { emptyPageBase64 } from "./mock/emptyPageBase64";
 
-interface window {
-  webviewApi: (data: string) => void;
-  getSearchText: (data: string) => void;
-  getPageNumber: (data: string) => void;
-  getBase64: () => void;
-  AndroidInterface: {
-    getBase64: (data: string) => void;
-    getSearchTextPageList: (data: string) => void;
-    setFullMode: (data: boolean) => void;
-  };
-}
-
-export default function PdfEngine() {
+export default function PdfEngine({
+  file,
+  setFile,
+}: {
+  file: webviewApiDataType;
+  setFile: Dispatch<SetStateAction<webviewApiDataType>>;
+}) {
   const { orientation } = useMobileOrientation();
   const { width, height, ref } = useResizeDetector();
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
   const [isToolBarOpen, setIsToolBarOpen] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [renderedPageNumber, setRenderedPageNumber] = useState<number>(0);
-  const [file, setFile] = useState(__DEV__ ? base64 : "");
   const [pageSize, setPageSize] = useState({
     width: 0,
     height: 0,
@@ -51,19 +55,18 @@ export default function PdfEngine() {
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const { resultsList } = usePdfTextSearch(file, searchText);
+  const [isRendering, setIsRendering] = useState(false);
+  const { resultsList } = usePdfTextSearch(file.base64, searchText);
   const {
     canvas,
     canDraw,
     setCanDraw,
     paths,
     scale,
-    isRendering,
     drawType,
     color,
     setColor,
     setDrawType,
-    setIsRendering,
     startDrawing,
     draw,
     redrawPaths,
@@ -73,10 +76,11 @@ export default function PdfEngine() {
     pageSize,
     strokeStep,
     pageNumber,
+    isRendering,
+    setIsRendering,
   });
-  console.log(pageSize);
 
-  const isLoading = useMemo(
+  const isRenderLoading = useMemo(
     () => renderedPageNumber !== pageNumber,
     [pageNumber, renderedPageNumber]
   );
@@ -93,10 +97,22 @@ export default function PdfEngine() {
     [pageNumber, setIsRendering]
   );
 
+  const onLoadSuccess: OnDocumentLoadSuccess = useCallback((pdf) => {
+    setTotalPage(pdf.numPages);
+  }, []);
+
   const textRenderer: CustomTextRenderer = useCallback(
     (textItem) => highlightPattern(textItem.str, searchText),
     [searchText]
   );
+
+  const onNewPageClick = useCallback(async () => {
+    const newBase64 = await createOrMergePdf(file.base64);
+    setFile({
+      ...file,
+      base64: newBase64,
+    });
+  }, [file, setFile]);
 
   useEffect(() => {
     if (isRendering) {
@@ -106,112 +122,102 @@ export default function PdfEngine() {
 
   useEffect(() => {
     if (!__DEV__) {
-      (window as unknown as window).webviewApi = (appData: string) => {
-        const param: webviewApiType = JSON.parse(appData);
-        setFile(param?.data?.base64);
+      (window as unknown as webviewType).getBase64 = async () => {
+        const data = await getModifiedPDFBase64(paths.current, file.base64);
+        (window as unknown as webviewType).AndroidInterface.getBase64(data);
       };
-      (window as unknown as window).getBase64 = async () => {
-        const data = await getModifiedPDFBase64(paths.current, file);
-        (window as unknown as window).AndroidInterface.getBase64(data);
+      (window as unknown as webviewType).newPage = async () => {
+        const newBase64 = await createOrMergePdf(file.base64);
+        setFile({
+          ...file,
+          base64: newBase64,
+        });
       };
-      (window as unknown as window).getSearchText = async (data: string) => {
+      (window as unknown as webviewType).getSearchText = async (
+        data: string
+      ) => {
         setSearchText(data);
       };
-      (window as unknown as window).getPageNumber = async (data: string) => {
+      (window as unknown as webviewType).getPageNumber = async (
+        data: string
+      ) => {
         if (!isNaN(Number(data))) {
           setPageNumber(Number(data));
         }
       };
     }
-  }, [file, paths]);
+  }, [file, paths, setFile]);
 
   useEffect(() => {
     if (resultsList.length > 0 && !__DEV__) {
-      (window as unknown as window).AndroidInterface.getSearchTextPageList(
+      (window as unknown as webviewType).AndroidInterface.getSearchTextPageList(
         JSON.stringify(resultsList.map((result) => result.pageNumber))
       );
     }
   }, [resultsList]);
 
-  // useEffect(() => {
-  //   if (file) {
-  //     const getdata = async () => {
-  //       const d = await convertAnnotationsToPaths(file, pageSize);
-  //       // const d = await convertAnnotationsToPaths(file, pageSize);
-  //       // console.log(d);
-  //       if (d) {
-  //         paths.current = d;
-  //         // redrawPaths(pageSize.width, pageSize.height);
-  //       }
-  //     };
-  //     getdata();
-  //   }
-  // }, [file, pageSize, paths, redrawPaths]);
-
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {file && (
-          <Document
-            file={`data:application/pdf;base64,${file}`}
-            onLoadSuccess={(pdf) => {
-              setTotalPage(pdf.numPages);
-            }}
-            loading={<></>}
-          >
-            <PinchZoomLayout
-              isFullScreen={isFullScreen}
-              canDraw={canDraw}
-              scale={scale}
-              scaleRef={scaleRef}
-              pinchZoomRef={ref}
-            >
-              {isLoading && (
-                <Page
-                  key={renderedPageNumber}
-                  pageNumber={renderedPageNumber}
+        <PinchZoomLayout
+          isFullScreen={isFullScreen}
+          canDraw={canDraw}
+          scale={scale}
+          scaleRef={scaleRef}
+          pinchZoomRef={ref}
+        >
+          {file.isNew && (
+            <div className="absolute">
+              <Document
+                file={`data:application/pdf;base64,${emptyPageBase64}`}
+                loading={<></>}
+                noData={<></>}
+              >
+                <Thumbnail
+                  pageNumber={1}
                   width={orientation === "portrait" ? width : undefined}
                   height={height}
-                  devicePixelRatio={devicePixelRatio}
                   loading={<></>}
                   noData={<></>}
-                  renderAnnotationLayer={true}
-                  renderTextLayer={true}
                 />
-              )}
+              </Document>
+            </div>
+          )}
+          <Document
+            file={`data:application/pdf;base64,${file.base64}`}
+            onLoadSuccess={onLoadSuccess}
+            loading={<></>}
+          >
+            {isRenderLoading && (
               <Page
-                key={pageNumber}
-                className={isLoading ? "hidden" : ""}
-                pageNumber={pageNumber}
+                key={renderedPageNumber}
+                pageNumber={renderedPageNumber}
                 width={orientation === "portrait" ? width : undefined}
                 height={height}
                 devicePixelRatio={devicePixelRatio}
-                onRenderSuccess={onRenderSuccess}
+                renderAnnotationLayer={false}
+                renderTextLayer={true}
                 loading={<></>}
                 noData={<></>}
-                customTextRenderer={textRenderer}
-                renderAnnotationLayer={true}
-                renderTextLayer={true}
               />
-              <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
-                <canvas
-                  ref={canvas}
-                  key={pageNumber}
-                  width={pageSize.width * devicePixelRatio}
-                  height={pageSize.height * devicePixelRatio}
-                  style={{
-                    width: `${pageSize.width}px`,
-                    height: `${pageSize.height}px`,
-                    pointerEvents: canDraw ? "auto" : "none",
-                    zIndex: 1000,
-                  }}
-                  onTouchStart={startDrawing}
-                  onTouchMove={draw}
-                  onTouchCancel={stopDrawing}
-                  onTouchEnd={stopDrawing}
-                />
-              </div>
-            </PinchZoomLayout>
+            )}
+            <Page
+              key={pageNumber}
+              className={isRenderLoading ? "hidden" : ""}
+              pageNumber={pageNumber}
+              width={orientation === "portrait" ? width : undefined}
+              height={height}
+              devicePixelRatio={devicePixelRatio}
+              onRenderSuccess={onRenderSuccess}
+              // onLoadSuccess={(page)=>{
+              //   page.
+              // }}
+              customTextRenderer={textRenderer}
+              renderAnnotationLayer={false}
+              renderTextLayer={true}
+              loading={<></>}
+              noData={<></>}
+            />
             {isListOpen && (
               <ThumbnailOvelay
                 pageNumber={pageNumber}
@@ -222,13 +228,31 @@ export default function PdfEngine() {
               />
             )}
           </Document>
-        )}
+          <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
+            <canvas
+              ref={canvas}
+              key={pageNumber}
+              width={pageSize.width * devicePixelRatio}
+              height={pageSize.height * devicePixelRatio}
+              style={{
+                width: `${pageSize.width}px`,
+                height: `${pageSize.height}px`,
+                pointerEvents: canDraw ? "auto" : "none",
+                zIndex: 1000,
+              }}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchCancel={stopDrawing}
+              onTouchEnd={stopDrawing}
+            />
+          </div>
+        </PinchZoomLayout>
       </div>
       {!isListOpen && (
         <PdfOverlay
           color={color}
           drawType={drawType}
-          file={file}
+          file={file.base64}
           isFullScreen={isFullScreen}
           isStrokeOpen={isStrokeOpen}
           isToolBarOpen={isToolBarOpen}
@@ -246,6 +270,7 @@ export default function PdfEngine() {
           setIsToolBarOpen={setIsToolBarOpen}
           setPageNumber={setPageNumber}
           setStrokeStep={setStrokeStep}
+          onNewPageClick={onNewPageClick}
         />
       )}
     </>

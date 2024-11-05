@@ -21,19 +21,7 @@ import {
 import { Dispatch, RefObject, SetStateAction } from "react";
 import { __DEV__, colorMap, getModifiedPDFBase64 } from "../utils/common";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
-import { DrawType, PathsType } from "../types/common";
-
-interface window {
-  webviewApi: (data: string) => void;
-  getSearchText: (data: string) => void;
-  getPageNumber: (data: string) => void;
-  getBase64: () => void;
-  AndroidInterface: {
-    getBase64: (data: string) => void;
-    getSearchTextPageList: (data: string) => void;
-    setFullMode: (data: boolean) => void;
-  };
-}
+import { DrawType, PathsType, webviewType } from "../types/common";
 
 interface Props {
   pageNumber: number;
@@ -56,6 +44,7 @@ interface Props {
   setIsStrokeOpen: Dispatch<SetStateAction<boolean>>;
   setColor: Dispatch<SetStateAction<(typeof colorMap)[number]>>;
   setStrokeStep: Dispatch<SetStateAction<number>>;
+  onNewPageClick: () => void;
 }
 
 const PdfOverlay = ({
@@ -79,6 +68,7 @@ const PdfOverlay = ({
   setIsStrokeOpen,
   setColor,
   setStrokeStep,
+  onNewPageClick,
 }: Props) => {
   return (
     <>
@@ -97,7 +87,7 @@ const PdfOverlay = ({
             onClick={() => {
               setIsFullScreen((prev) => !prev);
               if (!__DEV__) {
-                (window as unknown as window).AndroidInterface.setFullMode(
+                (window as unknown as webviewType).AndroidInterface.setFullMode(
                   !isFullScreen
                 );
               }
@@ -108,34 +98,36 @@ const PdfOverlay = ({
           </button>
         </div>
 
-        <div className="flex justify-between mx-[-20px]">
-          <button
-            onClick={() => {
-              if (pageNumber !== 1) {
-                scaleRef.current?.resetTransform(0);
-                setPageNumber((prev) => prev - 1);
-              }
-            }}
-            className="pointer-events-auto w-[80px] h-[160px] rounded-tr-[100px] rounded-br-[100px] bg-[#56657E]/50 flex-center text-white"
-          >
-            <ArrowLeft color={pageNumber === 1 ? "#BCC2CB" : "white"} />
-          </button>
-          <button
-            onClick={() => {
-              if (pageNumber !== totalPage) {
-                scaleRef.current?.resetTransform(0);
-                setPageNumber((prev) => prev + 1);
-              }
-            }}
-            className="pointer-events-auto w-[80px] h-[160px] rounded-tl-[100px] rounded-bl-[100px] bg-[#56657E]/50 flex-center text-white"
-          >
-            <div className="rotate-180">
-              <ArrowLeft
-                color={pageNumber === totalPage ? "#BCC2CB" : "white"}
-              />
-            </div>
-          </button>
-        </div>
+        {totalPage > 1 && (
+          <div className="flex justify-between mx-[-20px]">
+            <button
+              onClick={() => {
+                if (pageNumber !== 1) {
+                  scaleRef.current?.resetTransform(0);
+                  setPageNumber((prev) => prev - 1);
+                }
+              }}
+              className="pointer-events-auto w-[80px] h-[160px] rounded-tr-[100px] rounded-br-[100px] bg-[#56657E]/50 flex-center text-white"
+            >
+              <ArrowLeft color={pageNumber === 1 ? "#BCC2CB" : "white"} />
+            </button>
+            <button
+              onClick={() => {
+                if (pageNumber !== totalPage) {
+                  scaleRef.current?.resetTransform(0);
+                  setPageNumber((prev) => prev + 1);
+                }
+              }}
+              className="pointer-events-auto w-[80px] h-[160px] rounded-tl-[100px] rounded-bl-[100px] bg-[#56657E]/50 flex-center text-white"
+            >
+              <div className="rotate-180">
+                <ArrowLeft
+                  color={pageNumber === totalPage ? "#BCC2CB" : "white"}
+                />
+              </div>
+            </button>
+          </div>
+        )}
 
         <div className="flex h-[56px] justify-center">
           {!isToolBarOpen && (
@@ -161,9 +153,7 @@ const PdfOverlay = ({
                 저장
               </button>
               <button
-                onClick={async () => {
-                  await getModifiedPDFBase64(paths, file);
-                }}
+                onClick={onNewPageClick}
                 className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
               >
                 페이지 추가

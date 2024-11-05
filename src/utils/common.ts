@@ -294,6 +294,34 @@ export const convertAnnotationsToPaths = async (
   }
 };
 
+export async function createOrMergePdf(base64String?: string) {
+  let pdfDoc: PDFDocument;
+
+  if (!base64String) {
+    // Base64 문자열이 없는 경우 새로운 PDF 문서 생성
+    pdfDoc = await PDFDocument.create();
+  } else {
+    // 기존 Base64 문자열이 있는 경우 해당 PDF 로드
+    pdfDoc = await base64ToPdf(base64String);
+  }
+
+  // 새로운 페이지 추가
+  pdfDoc.addPage([600, 842]); // A4(72 dpi) 사이즈 (px)
+
+  // 최종 PDF를 Base64 문자열로 변환하여 반환
+  return pdfToBase64(pdfDoc);
+}
+
+export async function base64ToPdf(base64String: string) {
+  const pdfBytes = Uint8Array.from(atob(base64String), (c) => c.charCodeAt(0));
+  return await PDFDocument.load(pdfBytes);
+}
+
+export async function pdfToBase64(pdfDoc: PDFDocument) {
+  const pdfBytes = await pdfDoc.save();
+  return btoa(String.fromCharCode(...new Uint8Array(pdfBytes)));
+}
+
 // export async function removeAnnots() {
 //   const uint8Array = fs.readFileSync(importFilename);
 //   const pdfDoc = await PDFDocument.load(uint8Array);
