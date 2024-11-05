@@ -18,6 +18,7 @@ import {
 } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
+import typia from "typia";
 
 interface window {
   webviewApi: (data: string) => void;
@@ -103,8 +104,11 @@ export default function PdfEngine() {
 
   useEffect(() => {
     if (!__DEV__) {
-      (window as unknown as window).webviewApi = (data: string) => {
-        const param = JSON.parse(data);
+      (window as unknown as window).webviewApi = (appData: string) => {
+        console.log(appData);
+        console.time();
+        const param = JSON.parse(appData);
+        console.timeEnd();
         setFile(param?.data?.base64);
       };
       (window as unknown as window).getBase64 = async () => {
@@ -125,7 +129,7 @@ export default function PdfEngine() {
   useEffect(() => {
     if (resultsList.length > 0 && !__DEV__) {
       (window as unknown as window).AndroidInterface.getSearchTextPageList(
-        JSON.stringify(resultsList.map((result) => result.pageNumber))
+        typia.json.stringify(resultsList.map((result) => result.pageNumber))
       );
     }
   }, [resultsList]);
