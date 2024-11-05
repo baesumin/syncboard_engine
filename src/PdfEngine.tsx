@@ -15,6 +15,7 @@ import {
   getModifiedPDFBase64,
   highlightPattern,
   __DEV__,
+  WebviewApiParse,
 } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
@@ -106,7 +107,7 @@ export default function PdfEngine() {
     if (!__DEV__) {
       (window as unknown as window).webviewApi = (appData: string) => {
         console.time();
-        const param = JSON.parse(appData);
+        const param = WebviewApiParse(appData);
         console.timeEnd();
         setFile(param?.data?.base64);
       };

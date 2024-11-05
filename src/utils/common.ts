@@ -2,8 +2,12 @@ import { LineCapStyle, PDFDocument, rgb } from "pdf-lib";
 import { canvasEventType, PageSize, PathsType } from "../types/common";
 import { isMobile } from "react-device-detect";
 import { pdfjs } from "react-pdf";
+import typia from "typia";
+import { webviewApiType } from "../types/json";
 
 export const __DEV__ = import.meta.env.MODE === "development";
+
+export const WebviewApiParse = typia.json.createAssertParse<webviewApiType>();
 
 export const colorMap = [
   "#202325",
