@@ -1,9 +1,20 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { LineCapStyle, PDFDocument, rgb } from "pdf-lib";
 import { canvasEventType, PageSize, PathsType } from "../types/common";
 import { isMobile } from "react-device-detect";
 import { pdfjs } from "react-pdf";
 
 export const __DEV__ = import.meta.env.MODE === "development";
+
+export const nativeLog = (text: string) => {
+  //@ts-ignore
+  window.ReactNativeWebView.postMessage(
+    JSON.stringify({
+      type: "log",
+      value: JSON.stringify(text),
+    })
+  );
+};
 
 export const colorMap = [
   "#202325",

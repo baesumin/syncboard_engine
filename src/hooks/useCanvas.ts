@@ -4,6 +4,7 @@ import {
   drawDashedLine,
   drawSmoothLine,
   getDrawingPosition,
+  nativeLog,
 } from "../utils/common";
 import { canvasEventType, DrawType, PathsType } from "../types/common";
 
@@ -40,8 +41,11 @@ export default function useCanvas({
 
   const startDrawing = useCallback(
     (e: canvasEventType) => {
+      // nativeLog(e.pointerType);
+      // if (e.touches.length > 1) {
+      //   return;
+      // }
       e.persist();
-
       if (!canDraw || !canvas.current) {
         return;
       }
@@ -108,7 +112,7 @@ export default function useCanvas({
       );
 
       const distance = Math.hypot(x - lastXRef.current, y - lastYRef.current);
-      const DISTANCE_THRESHOLD = 30;
+      const DISTANCE_THRESHOLD = 0;
       const lineWidth =
         (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
 
@@ -234,7 +238,7 @@ export default function useCanvas({
         setIsRendering(false);
       }
     },
-    [pageNumber]
+    [pageNumber, setIsRendering]
   );
 
   const stopDrawing = useCallback(async () => {

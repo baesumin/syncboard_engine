@@ -24,6 +24,7 @@ import {
   highlightPattern,
   __DEV__,
   createOrMergePdf,
+  nativeLog,
 } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
@@ -196,7 +197,7 @@ export default function PdfEngine({
                 height={height}
                 devicePixelRatio={devicePixelRatio}
                 renderAnnotationLayer={false}
-                renderTextLayer={true}
+                renderTextLayer={file.isNew ? false : true}
                 loading={<></>}
                 noData={<></>}
               />
@@ -209,12 +210,9 @@ export default function PdfEngine({
               height={height}
               devicePixelRatio={devicePixelRatio}
               onRenderSuccess={onRenderSuccess}
-              // onLoadSuccess={(page)=>{
-              //   page.
-              // }}
               customTextRenderer={textRenderer}
               renderAnnotationLayer={false}
-              renderTextLayer={true}
+              renderTextLayer={file.isNew ? false : true}
               loading={<></>}
               noData={<></>}
             />
@@ -242,8 +240,10 @@ export default function PdfEngine({
               }}
               onTouchStart={startDrawing}
               onTouchMove={draw}
-              onTouchCancel={stopDrawing}
               onTouchEnd={stopDrawing}
+              // onPointerDown={startDrawing}
+              // onPointerMove={draw}
+              // onPointerLeave={stopDrawing}
             />
           </div>
         </PinchZoomLayout>
