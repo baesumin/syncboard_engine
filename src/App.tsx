@@ -8,6 +8,7 @@ import { __DEV__ } from "./utils/common";
 import { webviewApiType } from "./types/json";
 import { webviewType } from "./types/common";
 import { emptyPageBase64 } from "./mock/emptyPageBase64";
+import { isDesktop } from "react-device-detect";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -24,6 +25,15 @@ function App() {
 
   useEffect(() => {
     if (!__DEV__) {
+      if (isDesktop) {
+        setFile({
+          base64: emptyPageBase64,
+          paths: {},
+          isNew: true,
+        });
+        setIsLoading(false);
+        return;
+      }
       (window as unknown as webviewType).webviewApi = (appData: string) => {
         const param: webviewApiType = JSON.parse(appData);
         setFile({
