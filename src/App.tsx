@@ -4,7 +4,7 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import { useEffect, useState } from "react";
 import { __DEV__ } from "./utils/common";
-import { base64 } from "./mock/base64";
+// import { base64 } from "./mock/base64";
 import { webviewApiType } from "./types/json";
 import { webviewType } from "./types/common";
 import { emptyPageBase64 } from "./mock/emptyPageBase64";

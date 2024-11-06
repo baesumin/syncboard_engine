@@ -24,7 +24,6 @@ import {
   highlightPattern,
   __DEV__,
   createOrMergePdf,
-  nativeLog,
 } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";

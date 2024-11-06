@@ -4,7 +4,6 @@ import {
   drawDashedLine,
   drawSmoothLine,
   getDrawingPosition,
-  nativeLog,
 } from "../utils/common";
 import { canvasEventType, DrawType, PathsType } from "../types/common";
 
