@@ -15,3 +15,5 @@ export { default as Stroke3Step } from "./ico-stroke-3step.svg?react";
 export { default as Stroke4Step } from "./ico-stroke-4step.svg?react";
 export { default as Stroke5Step } from "./ico-stroke-5step.svg?react";
 export { default as Zoom } from "./ico-zoom.svg?react";
+export { default as PenMode } from "./ico-pen-mode.svg?react";
+export { default as TouchMode } from "./ico-touch-mode.svg?react";

@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Document, Page, Thumbnail } from "react-pdf";
+import { Document, Page } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { useMobileOrientation } from "react-device-detect";
 import {
@@ -29,7 +29,6 @@ import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
 import { webviewType } from "./types/common";
 import { webviewApiDataType } from "./types/json";
-import { emptyPageBase64 } from "./mock/emptyPageBase64";
 
 export default function PdfEngine({
   file,
@@ -65,12 +64,14 @@ export default function PdfEngine({
     scale,
     drawType,
     color,
+    touchType,
     setColor,
     setDrawType,
     startDrawing,
     draw,
     redrawPaths,
     stopDrawing,
+    setTouchType,
   } = useCanvas({
     devicePixelRatio,
     pageSize,
@@ -162,34 +163,34 @@ export default function PdfEngine({
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        <PinchZoomLayout
-          isFullScreen={isFullScreen}
-          canDraw={canDraw}
-          scale={scale}
-          scaleRef={scaleRef}
-          pinchZoomRef={ref}
-        >
-          {file.isNew && (
-            <div className="absolute">
-              <Document
-                file={`data:application/pdf;base64,${emptyPageBase64}`}
+        {/* {file.isNew && (
+          <div className="absolute">
+            <Document
+              file={`data:application/pdf;base64,${emptyPageBase64}`}
+              loading={<></>}
+              noData={<></>}
+            >
+              <Thumbnail
+                pageNumber={1}
+                width={orientation === "portrait" ? width : undefined}
+                height={height}
                 loading={<></>}
                 noData={<></>}
-              >
-                <Thumbnail
-                  pageNumber={1}
-                  width={orientation === "portrait" ? width : undefined}
-                  height={height}
-                  loading={<></>}
-                  noData={<></>}
-                />
-              </Document>
-            </div>
-          )}
-          <Document
-            file={`data:application/pdf;base64,${file.base64}`}
-            onLoadSuccess={onLoadSuccess}
-            loading={<></>}
+              />
+            </Document>
+          </div>
+        )} */}
+        <Document
+          file={`data:application/pdf;base64,${file.base64}`}
+          onLoadSuccess={onLoadSuccess}
+          loading={<></>}
+        >
+          <PinchZoomLayout
+            isFullScreen={isFullScreen}
+            disabled={canDraw && touchType === "touch"}
+            scale={scale}
+            scaleRef={scaleRef}
+            pinchZoomRef={ref}
           >
             {isRenderLoading && (
               <Page
@@ -218,40 +219,42 @@ export default function PdfEngine({
               loading={<></>}
               noData={<></>}
             />
-            {isListOpen && (
-              <ThumbnailOvelay
-                pageNumber={pageNumber}
-                scaleRef={scaleRef}
-                setIsListOpen={setIsListOpen}
-                setPageNumber={setPageNumber}
-                totalPage={totalPage}
+            <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
+              <canvas
+                ref={canvas}
+                key={pageNumber}
+                width={pageSize.width * devicePixelRatio}
+                height={pageSize.height * devicePixelRatio}
+                style={{
+                  width: `${pageSize.width}px`,
+                  height: `${pageSize.height}px`,
+                  pointerEvents: canDraw ? "auto" : "none",
+                  zIndex: 1000,
+                  touchAction: "none",
+                }}
+                // onTouchStart={startDrawing}
+                // onTouchMove={draw}
+                // onTouchEnd={stopDrawing}
+                onPointerDown={startDrawing}
+                onPointerMove={draw}
+                onPointerUp={stopDrawing}
               />
-            )}
-          </Document>
-          <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
-            <canvas
-              ref={canvas}
-              key={pageNumber}
-              width={pageSize.width * devicePixelRatio}
-              height={pageSize.height * devicePixelRatio}
-              style={{
-                width: `${pageSize.width}px`,
-                height: `${pageSize.height}px`,
-                pointerEvents: canDraw ? "auto" : "none",
-                zIndex: 1000,
-              }}
-              onTouchStart={startDrawing}
-              onTouchMove={draw}
-              onTouchEnd={stopDrawing}
-              // onPointerDown={startDrawing}
-              // onPointerMove={draw}
-              // onPointerLeave={stopDrawing}
+            </div>
+          </PinchZoomLayout>
+          {isListOpen && (
+            <ThumbnailOvelay
+              scaleRef={scaleRef}
+              pageNumber={pageNumber}
+              setIsListOpen={setIsListOpen}
+              setPageNumber={setPageNumber}
+              totalPage={totalPage}
             />
-          </div>
-        </PinchZoomLayout>
+          )}
+        </Document>
       </div>
       {!isListOpen && (
         <PdfOverlay
+          scaleRef={scaleRef}
           color={color}
           drawType={drawType}
           file={file.base64}
@@ -262,7 +265,8 @@ export default function PdfEngine({
           paths={paths.current}
           strokeStep={strokeStep}
           totalPage={totalPage}
-          scaleRef={scaleRef}
+          touchType={touchType}
+          setTouchType={setTouchType}
           setCanDraw={setCanDraw}
           setColor={setColor}
           setDrawType={setDrawType}

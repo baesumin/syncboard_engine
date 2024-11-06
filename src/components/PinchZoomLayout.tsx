@@ -9,7 +9,7 @@ import {
 interface Props {
   children: ReactNode;
   isFullScreen: boolean;
-  canDraw: boolean;
+  disabled: boolean;
   scale: MutableRefObject<number>;
   scaleRef: RefObject<ReactZoomPanPinchContentRef>;
   pinchZoomRef: OnRefChangeType<unknown>;
@@ -18,7 +18,7 @@ interface Props {
 export default function PinchZoomLayout({
   children,
   isFullScreen,
-  canDraw,
+  disabled,
   scale,
   scaleRef,
   pinchZoomRef,
@@ -26,7 +26,7 @@ export default function PinchZoomLayout({
   return (
     <TransformWrapper
       ref={scaleRef}
-      disabled={canDraw}
+      disabled={disabled}
       initialScale={1}
       maxScale={3}
       minScale={1}

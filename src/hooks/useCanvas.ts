@@ -5,7 +5,12 @@ import {
   drawSmoothLine,
   getDrawingPosition,
 } from "../utils/common";
-import { canvasEventType, DrawType, PathsType } from "../types/common";
+import {
+  canvasEventType,
+  DrawType,
+  PathsType,
+  TouchType,
+} from "../types/common";
 
 interface Props {
   devicePixelRatio: number;
@@ -31,25 +36,30 @@ export default function useCanvas({
   const lastXRef = useRef(0);
   const lastYRef = useRef(0);
   const scale = useRef(1);
+  const isDrawing = useRef(false);
+  const touchPoints = useRef(0);
   const pathsRef = useRef<PathsType[]>([]);
   const paths = useRef<{ [pageNumber: number]: PathsType[] }>({});
   const [canDraw, setCanDraw] = useState(false);
   const [drawOrder, setDrawOrder] = useState(0);
   const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
+  const [touchType, setTouchType] = useState<TouchType>("pen");
   const [drawType, setDrawType] = useState<DrawType>("pen");
 
   const startDrawing = useCallback(
     (e: canvasEventType) => {
-      // nativeLog(e.pointerType);
-      // if (e.touches.length > 1) {
-      //   return;
-      // }
+      touchPoints.current += 1;
       e.persist();
-      if (!canDraw || !canvas.current) {
+      if (
+        !canDraw ||
+        !canvas.current ||
+        e.pointerType !== touchType ||
+        touchPoints.current === 2
+      ) {
         return;
       }
-
-      const context = canvas.current.getContext("2d")!;
+      isDrawing.current = true;
+      // const context = canvas.current.getContext("2d")!;
       const lineWidth =
         (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
       const { x, y } = getDrawingPosition(
@@ -59,20 +69,20 @@ export default function useCanvas({
         scale.current
       );
 
-      if (drawType === "eraser") {
-        drawDashedLine(context, x, y, x, y);
-      } else {
-        drawSmoothLine(
-          context,
-          x,
-          y,
-          x,
-          y,
-          color,
-          strokeStep * (drawType === "highlight" ? 2 : 1),
-          drawType === "highlight" ? 0.4 : 1
-        );
-      }
+      // if (drawType === "eraser") {
+      //   drawDashedLine(context, x, y, x, y);
+      // } else {
+      //   drawSmoothLine(
+      //     context,
+      //     x,
+      //     y,
+      //     x,
+      //     y,
+      //     color,
+      //     strokeStep * (drawType === "highlight" ? 2 : 1),
+      //     drawType === "highlight" ? 0.4 : 1
+      //   );
+      // }
 
       pathsRef.current.push({
         x: x / pageSize.width,
@@ -95,59 +105,59 @@ export default function useCanvas({
       drawType,
       pageSize,
       strokeStep,
+      touchPoints,
+      touchType,
     ]
   );
 
-  const draw = useCallback(
-    (e: canvasEventType) => {
-      e.persist();
-      if (!canvas.current) return;
-      const context = canvas.current.getContext("2d")!;
-      const { x, y } = getDrawingPosition(
-        canvas,
-        e,
-        devicePixelRatio,
-        scale.current
-      );
+  const draw = (e: canvasEventType) => {
+    e.persist();
+    if (!canvas.current || !isDrawing.current || touchPoints.current === 2)
+      return;
+    const context = canvas.current.getContext("2d")!;
+    const { x, y } = getDrawingPosition(
+      canvas,
+      e,
+      devicePixelRatio,
+      scale.current
+    );
 
-      const distance = Math.hypot(x - lastXRef.current, y - lastYRef.current);
-      const DISTANCE_THRESHOLD = 0;
-      const lineWidth =
-        (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
+    const distance = Math.hypot(x - lastXRef.current, y - lastYRef.current);
+    const DISTANCE_THRESHOLD = 20;
+    const lineWidth =
+      (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
 
-      if (distance >= DISTANCE_THRESHOLD) {
-        if (drawType === "eraser") {
-          drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
-        } else {
-          drawSmoothLine(
-            context,
-            lastXRef.current,
-            lastYRef.current,
-            x,
-            y,
-            color,
-            strokeStep * (drawType === "highlight" ? 2 : 1),
-            drawType === "highlight" ? 0.4 : 1
-          );
-        }
-
-        pathsRef.current.push({
-          x: x / pageSize.width,
-          y: y / pageSize.height,
-          lastX: lastXRef.current / pageSize.width,
-          lastY: lastYRef.current / pageSize.height,
-          lineWidth,
+    if (distance >= DISTANCE_THRESHOLD) {
+      if (drawType === "eraser") {
+        drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
+      } else {
+        drawSmoothLine(
+          context,
+          lastXRef.current,
+          lastYRef.current,
+          x,
+          y,
           color,
-          drawOrder,
-          alpha: drawType === "highlight" ? 0.4 : 1,
-        });
-
-        lastXRef.current = x;
-        lastYRef.current = y;
+          strokeStep * (drawType === "highlight" ? 2 : 1),
+          drawType === "highlight" ? 0.4 : 1
+        );
       }
-    },
-    [color, devicePixelRatio, drawOrder, drawType, pageSize, strokeStep]
-  );
+
+      pathsRef.current.push({
+        x: x / pageSize.width,
+        y: y / pageSize.height,
+        lastX: lastXRef.current / pageSize.width,
+        lastY: lastYRef.current / pageSize.height,
+        lineWidth,
+        color,
+        drawOrder,
+        alpha: drawType === "highlight" ? 0.4 : 1,
+      });
+
+      lastXRef.current = x;
+      lastYRef.current = y;
+    }
+  };
 
   const redrawPaths = useCallback(
     (pageWidth: number, pageHeight: number) => {
@@ -241,6 +251,8 @@ export default function useCanvas({
   );
 
   const stopDrawing = useCallback(async () => {
+    isDrawing.current = false;
+    touchPoints.current = 0;
     if (
       drawType === "eraser" &&
       pathsRef.current.length > 0 &&
@@ -335,6 +347,7 @@ export default function useCanvas({
     isRendering,
     drawType,
     color,
+    touchType,
     setCanDraw,
     setColor,
     setDrawType,
@@ -343,5 +356,6 @@ export default function useCanvas({
     draw,
     redrawPaths,
     stopDrawing,
+    setTouchType,
   };
 }

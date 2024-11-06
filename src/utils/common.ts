@@ -6,7 +6,7 @@ import { pdfjs } from "react-pdf";
 
 export const __DEV__ = import.meta.env.MODE === "development";
 
-export const nativeLog = (text: string) => {
+export const nativeLog = (text: unknown) => {
   //@ts-ignore
   window.ReactNativeWebView.postMessage(
     JSON.stringify({

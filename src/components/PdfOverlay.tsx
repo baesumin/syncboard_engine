@@ -8,6 +8,7 @@ import {
   FullScreen,
   Hightlighter,
   Pen,
+  PenMode,
   SmallScreen,
   Stroke,
   Stroke1Step,
@@ -16,16 +17,17 @@ import {
   Stroke4Step,
   Stroke5Step,
   ThumbnailList,
+  TouchMode,
   Zoom,
 } from "../assets/icons";
 import { Dispatch, RefObject, SetStateAction } from "react";
 import { __DEV__, colorMap, getModifiedPDFBase64 } from "../utils/common";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
-import { DrawType, PathsType, webviewType } from "../types/common";
+import { DrawType, PathsType, TouchType, webviewType } from "../types/common";
 
 interface Props {
+  scaleRef: RefObject<ReactZoomPanPinchContentRef>;
   pageNumber: number;
-  totalPage: number;
   isFullScreen: boolean;
   drawType: DrawType;
   isToolBarOpen: boolean;
@@ -34,7 +36,9 @@ interface Props {
   strokeStep: number;
   file: string;
   paths: { [pageNumber: number]: PathsType[] };
-  scaleRef: RefObject<ReactZoomPanPinchContentRef>;
+  totalPage: number;
+  touchType: TouchType;
+  setTouchType: Dispatch<SetStateAction<TouchType>>;
   setIsListOpen: Dispatch<SetStateAction<boolean>>;
   setIsFullScreen: Dispatch<SetStateAction<boolean>>;
   setPageNumber: Dispatch<SetStateAction<number>>;
@@ -48,6 +52,7 @@ interface Props {
 }
 
 const PdfOverlay = ({
+  scaleRef,
   pageNumber,
   totalPage,
   isFullScreen,
@@ -58,7 +63,8 @@ const PdfOverlay = ({
   strokeStep,
   file,
   paths,
-  scaleRef,
+  touchType,
+  setTouchType,
   setIsListOpen,
   setIsFullScreen,
   setPageNumber,
@@ -284,17 +290,39 @@ const PdfOverlay = ({
               <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
               <button
                 onClick={() => {
-                  setCanDraw(false);
-                  setDrawType("zoom");
+                  setTouchType((prev) => {
+                    return prev === "pen" ? "touch" : "pen";
+                  });
                 }}
-                className={clsx(
-                  "pointer-events-auto size-[44px] rounded-lg flex-center",
-                  drawType === "zoom" ? "bg-[#5865FA]" : "#ffffff"
-                )}
+                className="pointer-events-auto w-[78px] h-[44px] rounded-lg bg-[#EEEFF3] flex items-center px-[4px]"
               >
-                <Zoom color={drawType === "zoom" ? "#ffffff" : "#353B45"} />
+                <div
+                  className={clsx(
+                    "size-[36px] bg-white rounded-md shadow flex-center transition-transform duration-300",
+                    touchType === "pen" ? "translate-x-0" : "translate-x-[34px]"
+                  )}
+                >
+                  {touchType === "pen" ? <PenMode /> : <TouchMode />}
+                </div>
               </button>
               <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+              {touchType === "touch" && (
+                <>
+                  <button
+                    onClick={() => {
+                      setCanDraw(false);
+                      setDrawType("zoom");
+                    }}
+                    className={clsx(
+                      "pointer-events-auto size-[44px] rounded-lg flex-center",
+                      drawType === "zoom" ? "bg-[#5865FA]" : "#ffffff"
+                    )}
+                  >
+                    <Zoom color={drawType === "zoom" ? "#ffffff" : "#353B45"} />
+                  </button>
+                  <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                </>
+              )}
               <button
                 onClick={() => {
                   setCanDraw(false);
