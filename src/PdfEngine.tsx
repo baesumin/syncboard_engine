@@ -162,6 +162,12 @@ export default function PdfEngine({
     }
   }, [resultsList]);
 
+  useEffect(() => {
+    if (paths.current && file.paths) {
+      paths.current = JSON.parse(file.paths);
+    }
+  }, [file.paths, paths]);
+
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
