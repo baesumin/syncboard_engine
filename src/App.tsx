@@ -18,7 +18,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 function App() {
   const [file, setFile] = useState({
     base64: "",
-    paths: {},
+    paths: "",
     isNew: false,
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -28,7 +28,7 @@ function App() {
       if (isDesktop) {
         setFile({
           base64: emptyPageBase64,
-          paths: {},
+          paths: "",
           isNew: true,
         });
         setIsLoading(false);
@@ -51,7 +51,7 @@ function App() {
       // });
       setFile({
         base64: emptyPageBase64,
-        paths: {},
+        paths: "",
         isNew: true,
       });
       setIsLoading(false);
