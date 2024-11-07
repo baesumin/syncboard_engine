@@ -45,10 +45,12 @@ export default function useCanvas({
   const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
   const [touchType, setTouchType] = useState<TouchType>("pen");
   const [drawType, setDrawType] = useState<DrawType>("pen");
+  const [zoomEnabled, setZoomEnabled] = useState(false);
 
   const startDrawing = useCallback(
     (e: canvasEventType) => {
       touchPoints.current += 1;
+      // nativeLog(e.pointerType);
       e.persist();
       if (
         !canDraw ||
@@ -348,10 +350,11 @@ export default function useCanvas({
     drawType,
     color,
     touchType,
+    zoomEnabled,
+    setZoomEnabled,
     setCanDraw,
     setColor,
     setDrawType,
-    setIsRendering,
     startDrawing,
     draw,
     redrawPaths,

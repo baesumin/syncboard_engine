@@ -1,6 +1,6 @@
 import { colorMap } from "../utils/common";
 
-export type DrawType = "pen" | "highlight" | "eraser" | "zoom";
+export type DrawType = "pen" | "highlight" | "eraser";
 export type TouchType = "touch" | "pen";
 export type canvasEventType = React.PointerEvent<HTMLCanvasElement> &
   React.TouchEvent<HTMLCanvasElement>;

@@ -38,6 +38,8 @@ interface Props {
   paths: { [pageNumber: number]: PathsType[] };
   totalPage: number;
   touchType: TouchType;
+  zoomEnabled: boolean;
+  setZoomEnabled: Dispatch<SetStateAction<boolean>>;
   setTouchType: Dispatch<SetStateAction<TouchType>>;
   setIsListOpen: Dispatch<SetStateAction<boolean>>;
   setIsFullScreen: Dispatch<SetStateAction<boolean>>;
@@ -64,6 +66,8 @@ const PdfOverlay = ({
   file,
   paths,
   touchType,
+  zoomEnabled,
+  setZoomEnabled,
   setTouchType,
   setIsListOpen,
   setIsFullScreen,
@@ -173,40 +177,61 @@ const PdfOverlay = ({
                   onClick={() => {
                     setCanDraw(true);
                     setDrawType("pen");
+                    setZoomEnabled(false);
                   }}
                   className={clsx(
                     "pointer-events-auto size-[44px] rounded-lg flex-center",
-                    drawType === "pen" ? "bg-[#5865FA]" : "#ffffff"
+                    drawType === "pen" && !zoomEnabled
+                      ? "bg-[#5865FA]"
+                      : "#ffffff"
                   )}
                 >
-                  <Pen color={drawType === "pen" ? "#ffffff" : "#353B45"} />
+                  <Pen
+                    color={
+                      drawType === "pen" && !zoomEnabled ? "#ffffff" : "#353B45"
+                    }
+                  />
                 </button>
                 <button
                   onClick={() => {
                     setCanDraw(true);
                     setDrawType("highlight");
+                    setZoomEnabled(false);
                   }}
                   className={clsx(
                     "pointer-events-auto size-[44px] rounded-lg flex-center",
-                    drawType === "highlight" ? "bg-[#5865FA]" : "#ffffff"
+                    drawType === "highlight" && !zoomEnabled
+                      ? "bg-[#5865FA]"
+                      : "#ffffff"
                   )}
                 >
                   <Hightlighter
-                    color={drawType === "highlight" ? "#ffffff" : "#353B45"}
+                    color={
+                      drawType === "highlight" && !zoomEnabled
+                        ? "#ffffff"
+                        : "#353B45"
+                    }
                   />
                 </button>
                 <button
                   onClick={() => {
                     setCanDraw(true);
                     setDrawType("eraser");
+                    setZoomEnabled(false);
                   }}
                   className={clsx(
                     "pointer-events-auto size-[44px] rounded-lg flex-center",
-                    drawType === "eraser" ? "bg-[#5865FA]" : "#ffffff"
+                    drawType === "eraser" && !zoomEnabled
+                      ? "bg-[#5865FA]"
+                      : "#ffffff"
                   )}
                 >
                   <Eraser
-                    color={drawType === "eraser" ? "#ffffff" : "#353B45"}
+                    color={
+                      drawType === "eraser" && !zoomEnabled
+                        ? "#ffffff"
+                        : "#353B45"
+                    }
                   />
                 </button>
               </div>
@@ -243,7 +268,7 @@ const PdfOverlay = ({
               >
                 <Stroke />
                 {isStrokeOpen && (
-                  <div className="bg-white w-[60px] h-[236px] absolute bottom-[70px] rounded-lg shadow-black shadow-sm flex flex-col justify-center items-center">
+                  <div className="bg-white w-[60px] h-[236px] absolute bottom-[90px] rounded-lg shadow-black shadow-sm flex flex-col justify-center items-center">
                     <button
                       onClick={() => setStrokeStep(20)}
                       className={"pointer-events-auto size-[44px] flex-center"}
@@ -291,6 +316,11 @@ const PdfOverlay = ({
               <button
                 onClick={() => {
                   setTouchType((prev) => {
+                    setDrawType("pen");
+                    setCanDraw(true);
+                    if (prev === "touch") {
+                      setZoomEnabled(false);
+                    }
                     return prev === "pen" ? "touch" : "pen";
                   });
                 }}
@@ -305,24 +335,21 @@ const PdfOverlay = ({
                   {touchType === "pen" ? <PenMode /> : <TouchMode />}
                 </div>
               </button>
+              <button
+                onClick={() => {
+                  setZoomEnabled((prev) => {
+                    setCanDraw(prev);
+                    return !prev;
+                  });
+                }}
+                className={clsx(
+                  "pointer-events-auto size-[44px] rounded-lg flex-center ml-[8px]",
+                  zoomEnabled ? "bg-[#5865FA]" : "#ffffff"
+                )}
+              >
+                <Zoom color={zoomEnabled ? "#ffffff" : "#353B45"} />
+              </button>
               <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
-              {touchType === "touch" && (
-                <>
-                  <button
-                    onClick={() => {
-                      setCanDraw(false);
-                      setDrawType("zoom");
-                    }}
-                    className={clsx(
-                      "pointer-events-auto size-[44px] rounded-lg flex-center",
-                      drawType === "zoom" ? "bg-[#5865FA]" : "#ffffff"
-                    )}
-                  >
-                    <Zoom color={drawType === "zoom" ? "#ffffff" : "#353B45"} />
-                  </button>
-                  <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
-                </>
-              )}
               <button
                 onClick={() => {
                   setCanDraw(false);

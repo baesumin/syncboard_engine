@@ -65,6 +65,8 @@ export default function PdfEngine({
     drawType,
     color,
     touchType,
+    zoomEnabled,
+    setZoomEnabled,
     setColor,
     setDrawType,
     startDrawing,
@@ -128,6 +130,7 @@ export default function PdfEngine({
         (window as unknown as webviewType).AndroidInterface.getBase64(data);
       };
       (window as unknown as webviewType).getPathData = async () => {
+        console.log(JSON.stringify(paths.current));
         return JSON.stringify(paths.current);
       };
       (window as unknown as webviewType).newPage = async () => {
@@ -187,7 +190,7 @@ export default function PdfEngine({
         >
           <PinchZoomLayout
             isFullScreen={isFullScreen}
-            disabled={canDraw && touchType === "touch"}
+            disabled={canDraw}
             scale={scale}
             scaleRef={scaleRef}
             pinchZoomRef={ref}
@@ -266,6 +269,8 @@ export default function PdfEngine({
           strokeStep={strokeStep}
           totalPage={totalPage}
           touchType={touchType}
+          zoomEnabled={zoomEnabled}
+          setZoomEnabled={setZoomEnabled}
           setTouchType={setTouchType}
           setCanDraw={setCanDraw}
           setColor={setColor}

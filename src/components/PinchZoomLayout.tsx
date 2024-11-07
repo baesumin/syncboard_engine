@@ -31,6 +31,7 @@ export default function PinchZoomLayout({
       maxScale={3}
       minScale={1}
       disablePadding
+      doubleClick={{ disabled: true }}
       onPinchingStop={(ref) => {
         scale.current = ref.state.scale;
         // 1 ~3
