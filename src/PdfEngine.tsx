@@ -250,9 +250,6 @@ export default function PdfEngine({
                   zIndex: 1000,
                   touchAction: "none",
                 }}
-                // onTouchStart={startDrawing}
-                // onTouchMove={draw}
-                // onTouchEnd={stopDrawing}
                 onPointerDown={startDrawing}
                 onPointerMove={draw}
                 onPointerUp={stopDrawing}

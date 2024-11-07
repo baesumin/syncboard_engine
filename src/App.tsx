@@ -8,6 +8,7 @@ import { webviewApiType } from "./types/json";
 import { webviewType } from "./types/common";
 import { emptyPageBase64 } from "./mock/emptyPageBase64";
 import { isDesktop } from "react-device-detect";
+import { base64 } from "./mock/base64";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -42,16 +43,16 @@ function App() {
         setIsLoading(false);
       };
     } else {
-      // setFile({
-      //   base64: base64.base64,
-      //   paths: {},
-      //   isNew: false,
-      // });
       setFile({
-        base64: emptyPageBase64,
+        base64: base64.base64,
         paths: "",
-        isNew: true,
+        isNew: false,
       });
+      // setFile({
+      //   base64: emptyPageBase64,
+      //   paths: "",
+      //   isNew: true,
+      // });
       setIsLoading(false);
     }
   }, []);
