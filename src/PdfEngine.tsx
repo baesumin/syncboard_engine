@@ -129,8 +129,7 @@ export default function PdfEngine({
         const data = await getModifiedPDFBase64(paths.current, file.base64);
         (window as unknown as webviewType).AndroidInterface.getBase64(data);
       };
-      (window as unknown as webviewType).getPathData = async () => {
-        console.log(JSON.stringify(paths.current));
+      (window as unknown as webviewType).getPathData = () => {
         return JSON.stringify(paths.current);
       };
       (window as unknown as webviewType).newPage = async () => {
