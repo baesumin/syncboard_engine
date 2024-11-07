@@ -22,6 +22,7 @@ export type webviewType = {
   getBase64: () => void;
   newPage: () => void;
   getPathData: () => void;
+  endSearch: () => void;
   AndroidInterface: {
     getBase64: (data: string) => void;
     getSearchTextPageList: (data: string) => void;

@@ -73,11 +73,11 @@ export const usePdfTextSearch = (file: string, searchString: string) => {
             matches: pageMatches,
           });
         }
-
         return results;
       }, []);
     } catch (error) {
       console.error("검색 에러:", error);
+
       return [];
     }
   }, [pages, searchString]);
@@ -98,6 +98,38 @@ export const usePdfTextSearch = (file: string, searchString: string) => {
     [resultsList]
   );
 
+  const getSearchResult = (searchText: string) => {
+    try {
+      const regex = new RegExp(searchText, "gi");
+      let globalIndex = 0;
+
+      return pages.reduce<SearchResult[]>((results, text, pageIndex) => {
+        const matches = Array.from(text.matchAll(regex));
+
+        if (matches.length) {
+          const pageMatches = matches.map((match) => ({
+            index: match.index!,
+            text: match[0],
+          }));
+
+          const indices = matches.map(() => globalIndex++);
+
+          results.push({
+            pageNumber: pageIndex + 1,
+            indices,
+            text,
+            matches: pageMatches,
+          });
+        }
+        return results;
+      }, []);
+    } catch (error) {
+      console.error("검색 에러:", error);
+
+      return [];
+    }
+  };
+
   // 총 검색 결과 수 계산 최적화
   const totalLength = useMemo(
     () => resultsList.reduce((total, page) => total + page.indices.length, 0),
@@ -107,6 +139,7 @@ export const usePdfTextSearch = (file: string, searchString: string) => {
   return {
     resultsList,
     totalLength,
+    getSearchResult,
     findPageByIndex, // 인덱스로 페이지를 찾는 함수 추가
   };
 };

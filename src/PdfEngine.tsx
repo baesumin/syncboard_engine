@@ -24,6 +24,7 @@ import {
   highlightPattern,
   __DEV__,
   createOrMergePdf,
+  nativeLog,
 } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
@@ -53,9 +54,11 @@ export default function PdfEngine({
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [searchText, setSearchText] = useState("asd");
   const [isRendering, setIsRendering] = useState(false);
-  const { resultsList } = usePdfTextSearch(file.base64, searchText);
+  const { getSearchResult } = usePdfTextSearch(file.base64, searchText);
+
   const {
     canvas,
     canDraw,
@@ -132,6 +135,10 @@ export default function PdfEngine({
       (window as unknown as webviewType).getPathData = () => {
         return JSON.stringify(paths.current);
       };
+      (window as unknown as webviewType).endSearch = () => {
+        setIsSearchMode(false);
+        setSearchText("");
+      };
       (window as unknown as webviewType).newPage = async () => {
         const newBase64 = await createOrMergePdf(file.base64);
         setFile({
@@ -142,6 +149,7 @@ export default function PdfEngine({
       (window as unknown as webviewType).getSearchText = async (
         data: string
       ) => {
+        setIsSearchMode(true);
         setSearchText(data);
       };
       (window as unknown as webviewType).getPageNumber = async (
@@ -155,12 +163,15 @@ export default function PdfEngine({
   }, [file, paths, setFile]);
 
   useEffect(() => {
-    if (resultsList.length > 0 && !__DEV__) {
+    if (isSearchMode) {
+      const resultsList = getSearchResult(searchText);
+
       (window as unknown as webviewType).AndroidInterface.getSearchTextPageList(
         JSON.stringify(resultsList.map((result) => result.pageNumber))
       );
+      setIsSearchMode(false);
     }
-  }, [resultsList]);
+  }, [getSearchResult, isSearchMode, searchText]);
 
   useEffect(() => {
     if (paths.current && file.paths) {
