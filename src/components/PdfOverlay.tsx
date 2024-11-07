@@ -317,7 +317,7 @@ const PdfOverlay = ({
                 onClick={() => {
                   setTouchType((prev) => {
                     setDrawType("pen");
-                    setCanDraw(true);
+                    setCanDraw(false);
                     if (prev === "touch") {
                       setZoomEnabled(false);
                     }

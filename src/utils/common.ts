@@ -8,7 +8,7 @@ export const __DEV__ = import.meta.env.MODE === "development";
 
 export const nativeLog = (text: unknown) => {
   //@ts-ignore
-  window.ReactNativeWebView.postMessage(
+  window.ReactNativeWebView?.postMessage(
     JSON.stringify({
       type: "log",
       value: JSON.stringify(text),

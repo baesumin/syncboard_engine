@@ -50,7 +50,6 @@ export default function useCanvas({
   const startDrawing = useCallback(
     (e: canvasEventType) => {
       touchPoints.current += 1;
-      // nativeLog(e.pointerType);
       e.persist();
       if (
         !canDraw ||
@@ -61,7 +60,7 @@ export default function useCanvas({
         return;
       }
       isDrawing.current = true;
-      // const context = canvas.current.getContext("2d")!;
+      const context = canvas.current.getContext("2d")!;
       const lineWidth =
         (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
       const { x, y } = getDrawingPosition(
@@ -71,20 +70,20 @@ export default function useCanvas({
         scale.current
       );
 
-      // if (drawType === "eraser") {
-      //   drawDashedLine(context, x, y, x, y);
-      // } else {
-      //   drawSmoothLine(
-      //     context,
-      //     x,
-      //     y,
-      //     x,
-      //     y,
-      //     color,
-      //     strokeStep * (drawType === "highlight" ? 2 : 1),
-      //     drawType === "highlight" ? 0.4 : 1
-      //   );
-      // }
+      if (drawType === "eraser") {
+        drawDashedLine(context, x, y, x, y);
+      } else {
+        drawSmoothLine(
+          context,
+          x,
+          y,
+          x,
+          y,
+          color,
+          strokeStep * (drawType === "highlight" ? 2 : 1),
+          drawType === "highlight" ? 0.4 : 1
+        );
+      }
 
       pathsRef.current.push({
         x: x / pageSize.width,
@@ -167,32 +166,43 @@ export default function useCanvas({
         const context = canvas.current.getContext("2d")!;
 
         const points = paths.current[pageNumber];
+
         if (points) {
           // 점을 그룹으로 나누기
           let currentGroup: PathsType[] = [];
 
-          for (let i = 1; i < points.length; i++) {
-            // 단일 점 처리
-            // if (
-            //   points[i].lastX !== points[i - 1].x ||
-            //   points[i].lastY !== points[i - 1].y
-            // ) {
-            //   drawSmoothLine(
-            //     context,
-            //     points[i].x * pageWidth,
-            //     points[i].y * pageHeight,
-            //     points[i].x * pageWidth,
-            //     points[i].y * pageHeight,
-            //     points[i].color,
-            //     points[i].lineWidth * pageWidth
-            //   );
-            //   continue;
-            // }
+          // 첫 번째 점 처리 (단일 점일 수 있음)
+          if (points.length === 1) {
+            drawSmoothLine(
+              context,
+              points[0].x * pageWidth,
+              points[0].y * pageHeight,
+              points[0].x * pageWidth,
+              points[0].y * pageHeight,
+              points[0].color,
+              points[0].lineWidth * pageWidth,
+              points[0].alpha
+            );
+          }
 
+          for (let i = 1; i < points.length; i++) {
             if (
               points[i].lastX !== points[i - 1].x ||
               points[i].lastY !== points[i - 1].y
             ) {
+              if (i === 1) {
+                // 단일점일때 조건필요
+                drawSmoothLine(
+                  context,
+                  points[0].x * pageWidth,
+                  points[0].y * pageHeight,
+                  points[0].x * pageWidth,
+                  points[0].y * pageHeight,
+                  points[0].color,
+                  points[0].lineWidth * pageWidth,
+                  points[0].alpha
+                );
+              }
               // 선이 띄워진 경우
               // 새로운 그룹 시작
               if (currentGroup.length > 1) {
@@ -210,6 +220,18 @@ export default function useCanvas({
                   );
                 }
               }
+
+              // 단일 점 처리
+              drawSmoothLine(
+                context,
+                points[i].x * pageWidth,
+                points[i].y * pageHeight,
+                points[i].x * pageWidth,
+                points[i].y * pageHeight,
+                points[i].color,
+                points[i].lineWidth * pageWidth,
+                points[i].alpha
+              );
 
               currentGroup = [points[i]]; // 새로운 그룹 초기화
             } else {

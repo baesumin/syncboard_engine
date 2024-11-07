@@ -1,7 +1,6 @@
 import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
 import "react-pdf/dist/esm/Page/TextLayer.css";
-import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import { useEffect, useState } from "react";
 import { __DEV__ } from "./utils/common";
 // import { base64 } from "./mock/base64";
@@ -22,7 +21,6 @@ function App() {
     isNew: false,
   });
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     if (!__DEV__) {
       if (isDesktop) {
