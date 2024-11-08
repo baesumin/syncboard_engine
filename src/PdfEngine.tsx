@@ -42,6 +42,7 @@ export default function PdfEngine({
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
   const [isToolBarOpen, setIsToolBarOpen] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
+  console.log(pageNumber);
   const [renderedPageNumber, setRenderedPageNumber] = useState<number>(0);
   const [pageSize, setPageSize] = useState({
     width: 0,
