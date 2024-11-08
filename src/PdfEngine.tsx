@@ -57,8 +57,7 @@ export default function PdfEngine({
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [isRendering, setIsRendering] = useState(false);
-  const { getSearchResult } = usePdfTextSearch(file.base64, searchText);
-
+  const { getSearchResult } = usePdfTextSearch(file.base64);
   const {
     canvas,
     canDraw,
@@ -132,7 +131,8 @@ export default function PdfEngine({
       setPageNumber(totalPage + 1);
       setTotalPage(totalPage + 1);
     }
-  }, [isNewPage, totalPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNewPage]);
 
   useEffect(() => {
     if (isRendering) {
@@ -148,10 +148,6 @@ export default function PdfEngine({
       };
       (window as unknown as webviewType).getPathData = () => {
         return JSON.stringify(paths.current);
-      };
-      (window as unknown as webviewType).endSearch = () => {
-        setIsSearchMode(false);
-        setSearchText("");
       };
       (window as unknown as webviewType).newPage = async () => {
         if (!isNewPage) {
@@ -176,8 +172,13 @@ export default function PdfEngine({
           setPageNumber(Number(data));
         }
       };
+      (window as unknown as webviewType).endSearch = () => {
+        setIsSearchMode(false);
+        setSearchText("");
+      };
     }
-  }, [file, isNewPage, paths, setFile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file, isNewPage, setFile]);
 
   useEffect(() => {
     if (isSearchMode) {
@@ -192,10 +193,11 @@ export default function PdfEngine({
   }, [getSearchResult, isSearchMode, searchText]);
 
   useEffect(() => {
-    if (paths.current && file.paths) {
+    if (file.paths) {
       paths.current = JSON.parse(file.paths);
     }
-  }, [file.paths, paths]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { pdfjs } from "react-pdf";
 
 interface SearchResult {
@@ -12,9 +12,8 @@ interface SearchResult {
   }>;
 }
 
-export const usePdfTextSearch = (file: string, searchString: string) => {
+export const usePdfTextSearch = (file: string) => {
   const [pages, setPages] = useState<string[]>([]);
-  const [resultsList, setResultsList] = useState<SearchResult[]>([]);
 
   // PDF 로딩 최적화
   const loadPdfPages = useCallback(async (file: string) => {
@@ -45,59 +44,6 @@ export const usePdfTextSearch = (file: string, searchString: string) => {
     }
   }, [file, loadPdfPages]);
 
-  // 검색 로직 최적화
-  const searchResults = useMemo(() => {
-    if (!searchString?.trim() || !pages.length) {
-      return [];
-    }
-
-    try {
-      const regex = new RegExp(searchString, "gi");
-      let globalIndex = 0;
-
-      return pages.reduce<SearchResult[]>((results, text, pageIndex) => {
-        const matches = Array.from(text.matchAll(regex));
-
-        if (matches.length) {
-          const pageMatches = matches.map((match) => ({
-            index: match.index!,
-            text: match[0],
-          }));
-
-          const indices = matches.map(() => globalIndex++);
-
-          results.push({
-            pageNumber: pageIndex + 1,
-            indices,
-            text,
-            matches: pageMatches,
-          });
-        }
-        return results;
-      }, []);
-    } catch (error) {
-      console.error("검색 에러:", error);
-
-      return [];
-    }
-  }, [pages, searchString]);
-
-  // 결과 업데이트
-  useEffect(() => {
-    setResultsList(searchResults);
-  }, [searchResults]);
-
-  // 페이지 찾기 함수 최적화
-  const findPageByIndex = useCallback(
-    (searchIndex: number) => {
-      const result = resultsList.find((result) =>
-        result.indices.includes(searchIndex)
-      );
-      return result?.pageNumber ?? 1;
-    },
-    [resultsList]
-  );
-
   const getSearchResult = (searchText: string) => {
     try {
       const regex = new RegExp(searchText, "gi");
@@ -125,21 +71,11 @@ export const usePdfTextSearch = (file: string, searchString: string) => {
       }, []);
     } catch (error) {
       console.error("검색 에러:", error);
-
       return [];
     }
   };
 
-  // 총 검색 결과 수 계산 최적화
-  const totalLength = useMemo(
-    () => resultsList.reduce((total, page) => total + page.indices.length, 0),
-    [resultsList]
-  );
-
   return {
-    resultsList,
-    totalLength,
     getSearchResult,
-    findPageByIndex, // 인덱스로 페이지를 찾는 함수 추가
   };
 };

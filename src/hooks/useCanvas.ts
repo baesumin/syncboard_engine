@@ -40,8 +40,8 @@ export default function useCanvas({
   const touchPoints = useRef(0);
   const pathsRef = useRef<PathsType[]>([]);
   const paths = useRef<{ [pageNumber: number]: PathsType[] }>({});
+  const drawOrder = useRef(0);
   const [canDraw, setCanDraw] = useState(false);
-  const [drawOrder, setDrawOrder] = useState(0);
   const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
   const [touchType, setTouchType] = useState<TouchType>("pen");
   const [drawType, setDrawType] = useState<DrawType>("pen");
@@ -49,16 +49,16 @@ export default function useCanvas({
 
   const startDrawing = useCallback(
     (e: canvasEventType) => {
-      touchPoints.current += 1;
-      e.persist();
+      if (!canvas.current) return;
       if (
         !canDraw ||
-        !canvas.current ||
         e.pointerType !== touchType ||
         touchPoints.current === 2
       ) {
         return;
       }
+
+      touchPoints.current += 1;
       isDrawing.current = true;
       const context = canvas.current.getContext("2d")!;
       const lineWidth =
@@ -92,7 +92,7 @@ export default function useCanvas({
         lastY: y / pageSize.height,
         lineWidth,
         color,
-        drawOrder,
+        drawOrder: drawOrder.current,
         alpha: drawType === "highlight" ? 0.4 : 1,
       });
       lastXRef.current = x;
@@ -112,9 +112,9 @@ export default function useCanvas({
   );
 
   const draw = (e: canvasEventType) => {
-    e.persist();
-    if (!canvas.current || !isDrawing.current || touchPoints.current === 2)
-      return;
+    if (!canvas.current) return;
+    if (!isDrawing.current || touchPoints.current === 2) return;
+
     const context = canvas.current.getContext("2d")!;
     const { x, y } = getDrawingPosition(
       canvas,
@@ -151,7 +151,7 @@ export default function useCanvas({
         lastY: lastYRef.current / pageSize.height,
         lineWidth,
         color,
-        drawOrder,
+        drawOrder: drawOrder.current,
         alpha: drawType === "highlight" ? 0.4 : 1,
       });
 
@@ -162,126 +162,123 @@ export default function useCanvas({
 
   const redrawPaths = useCallback(
     (pageWidth: number, pageHeight: number) => {
-      if (canvas.current) {
-        const context = canvas.current.getContext("2d")!;
+      if (!canvas.current) return;
 
-        const points = paths.current[pageNumber];
+      const context = canvas.current.getContext("2d")!;
+      const points = paths.current[pageNumber];
 
-        if (points) {
-          // 점을 그룹으로 나누기
-          let currentGroup: PathsType[] = [];
+      if (points) {
+        // 점을 그룹으로 나누기
+        let currentGroup: PathsType[] = [];
 
-          // 첫 번째 점 처리 (단일 점일 수 있음)
-          if (points.length === 1) {
-            drawSmoothLine(
-              context,
-              points[0].x * pageWidth,
-              points[0].y * pageHeight,
-              points[0].x * pageWidth,
-              points[0].y * pageHeight,
-              points[0].color,
-              points[0].lineWidth * pageWidth,
-              points[0].alpha
-            );
-          }
-
-          for (let i = 1; i < points.length; i++) {
-            if (
-              points[i].lastX !== points[i - 1].x ||
-              points[i].lastY !== points[i - 1].y
-            ) {
-              if (i === 1) {
-                // 단일점일때 조건필요
-                drawSmoothLine(
-                  context,
-                  points[0].x * pageWidth,
-                  points[0].y * pageHeight,
-                  points[0].x * pageWidth,
-                  points[0].y * pageHeight,
-                  points[0].color,
-                  points[0].lineWidth * pageWidth,
-                  points[0].alpha
-                );
-              }
-              // 선이 띄워진 경우
-              // 새로운 그룹 시작
-              if (currentGroup.length > 1) {
-                // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
-                for (let j = 1; j < currentGroup.length; j++) {
-                  drawSmoothLine(
-                    context,
-                    currentGroup[j - 1].x * pageWidth,
-                    currentGroup[j - 1].y * pageHeight,
-                    currentGroup[j].x * pageWidth,
-                    currentGroup[j].y * pageHeight,
-                    currentGroup[j].color,
-                    currentGroup[j].lineWidth * pageWidth,
-                    currentGroup[j].alpha
-                  );
-                }
-              }
-
-              // 단일 점 처리
-              drawSmoothLine(
-                context,
-                points[i].x * pageWidth,
-                points[i].y * pageHeight,
-                points[i].x * pageWidth,
-                points[i].y * pageHeight,
-                points[i].color,
-                points[i].lineWidth * pageWidth,
-                points[i].alpha
-              );
-
-              currentGroup = [points[i]]; // 새로운 그룹 초기화
-            } else {
-              if (i === 1) {
-                drawSmoothLine(
-                  context,
-                  points[0].x * pageWidth,
-                  points[0].y * pageHeight,
-                  points[1].x * pageWidth,
-                  points[1].y * pageHeight,
-                  points[1].color,
-                  points[1].lineWidth * pageWidth,
-                  points[1].alpha
-                );
-              }
-              // 선이 이어진 경우
-              currentGroup.push(points[i]); // 현재 그룹에 점 추가
-            }
-          }
-          // 마지막 그룹 처리
-          if (currentGroup.length > 1) {
-            for (let j = 1; j < currentGroup.length; j++) {
-              drawSmoothLine(
-                context,
-                currentGroup[j - 1].x * pageWidth,
-                currentGroup[j - 1].y * pageHeight,
-                currentGroup[j].x * pageWidth,
-                currentGroup[j].y * pageHeight,
-                currentGroup[j].color,
-                currentGroup[j].lineWidth * pageWidth,
-                currentGroup[j].alpha
-              );
-            }
-          }
+        // 첫 번째 점 처리 (단일 점일 수 있음)
+        if (points.length === 1) {
+          drawSmoothLine(
+            context,
+            points[0].x * pageWidth,
+            points[0].y * pageHeight,
+            points[0].x * pageWidth,
+            points[0].y * pageHeight,
+            points[0].color,
+            points[0].lineWidth * pageWidth,
+            points[0].alpha
+          );
         }
 
-        setIsRendering(false);
+        for (let i = 1; i < points.length; i++) {
+          if (
+            points[i].lastX !== points[i - 1].x ||
+            points[i].lastY !== points[i - 1].y
+          ) {
+            if (i === 1) {
+              // 단일점일때 조건필요
+              drawSmoothLine(
+                context,
+                points[0].x * pageWidth,
+                points[0].y * pageHeight,
+                points[0].x * pageWidth,
+                points[0].y * pageHeight,
+                points[0].color,
+                points[0].lineWidth * pageWidth,
+                points[0].alpha
+              );
+            }
+            // 선이 띄워진 경우
+            // 새로운 그룹 시작
+            if (currentGroup.length > 1) {
+              // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
+              for (let j = 1; j < currentGroup.length; j++) {
+                drawSmoothLine(
+                  context,
+                  currentGroup[j - 1].x * pageWidth,
+                  currentGroup[j - 1].y * pageHeight,
+                  currentGroup[j].x * pageWidth,
+                  currentGroup[j].y * pageHeight,
+                  currentGroup[j].color,
+                  currentGroup[j].lineWidth * pageWidth,
+                  currentGroup[j].alpha
+                );
+              }
+            }
+
+            // 단일 점 처리
+            drawSmoothLine(
+              context,
+              points[i].x * pageWidth,
+              points[i].y * pageHeight,
+              points[i].x * pageWidth,
+              points[i].y * pageHeight,
+              points[i].color,
+              points[i].lineWidth * pageWidth,
+              points[i].alpha
+            );
+
+            currentGroup = [points[i]]; // 새로운 그룹 초기화
+          } else {
+            if (i === 1) {
+              drawSmoothLine(
+                context,
+                points[0].x * pageWidth,
+                points[0].y * pageHeight,
+                points[1].x * pageWidth,
+                points[1].y * pageHeight,
+                points[1].color,
+                points[1].lineWidth * pageWidth,
+                points[1].alpha
+              );
+            }
+            // 선이 이어진 경우
+            currentGroup.push(points[i]); // 현재 그룹에 점 추가
+          }
+        }
+        // 마지막 그룹 처리
+        if (currentGroup.length > 1) {
+          for (let j = 1; j < currentGroup.length; j++) {
+            drawSmoothLine(
+              context,
+              currentGroup[j - 1].x * pageWidth,
+              currentGroup[j - 1].y * pageHeight,
+              currentGroup[j].x * pageWidth,
+              currentGroup[j].y * pageHeight,
+              currentGroup[j].color,
+              currentGroup[j].lineWidth * pageWidth,
+              currentGroup[j].alpha
+            );
+          }
+        }
       }
+
+      setIsRendering(false);
     },
     [pageNumber, setIsRendering]
   );
 
   const stopDrawing = useCallback(async () => {
+    if (!canvas.current || pathsRef.current.length === 0) return;
+
     isDrawing.current = false;
     touchPoints.current = 0;
-    if (
-      drawType === "eraser" &&
-      pathsRef.current.length > 0 &&
-      canvas.current
-    ) {
+    if (drawType === "eraser") {
       const currentPaths = paths.current[pageNumber] || [];
       const erasePaths = pathsRef.current;
 
@@ -342,25 +339,21 @@ export default function useCanvas({
         [pageNumber]: newPaths,
       };
 
-      // pathsRef 초기화
-      pathsRef.current = [];
       // 점선도 지우기
-      const context = canvas.current.getContext("2d")!;
-
-      context.clearRect(0, 0, canvas.current.width, canvas.current.height); // 전체 캔버스 지우기
+      canvas.current
+        .getContext("2d")!
+        .clearRect(0, 0, canvas.current.width, canvas.current.height); // 전체 캔버스 지우기
       redrawPaths(pageSize.width, pageSize.height);
-    }
-
-    if (pathsRef.current.length > 0 && drawType !== "eraser") {
+    } else {
       const newValue = pathsRef.current;
-      setDrawOrder((prev) => prev + 1);
+      drawOrder.current += 1;
       paths.current = {
         ...paths.current,
         [pageNumber]: [...(paths.current[pageNumber] || []), ...newValue],
       };
-      // pathsRef 초기화
-      pathsRef.current = [];
     }
+    // pathsRef 초기화
+    pathsRef.current = [];
   }, [drawType, pageNumber, pageSize, redrawPaths, strokeStep]);
 
   return {

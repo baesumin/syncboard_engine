@@ -120,7 +120,10 @@ export const highlightPattern = (text: string, pattern: string) => {
   return text.replace(
     pattern,
     (value) =>
-      `<span style="border-radius:10px;background-color:rgba(255, 255, 0, 0.4);">${value}</span>`
+      `<span style="
+        background-color: rgba(255, 255, 0, 0.4);
+        box-shadow: 0 0 200px rgba(255, 255, 0, 0.7);
+      ">${value}</span>`
   );
 };
 
