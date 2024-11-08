@@ -48,7 +48,7 @@ export default function PdfEngine({
     height: 0,
   });
   const [isListOpen, setIsListOpen] = useState(false);
-  const [totalPage, setTotalPage] = useState(0);
+  const [totalPage, setTotalPage] = useState(1);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isNewPage, setIsNewPage] = useState(false);
   const [strokeStep, setStrokeStep] = useState(12);
@@ -103,9 +103,14 @@ export default function PdfEngine({
     [pageNumber, setIsRendering]
   );
 
-  const onLoadSuccess: OnDocumentLoadSuccess = useCallback((pdf) => {
-    setTotalPage(pdf.numPages);
-  }, []);
+  const onLoadSuccess: OnDocumentLoadSuccess = useCallback(
+    (pdf) => {
+      if (!file.isNew) {
+        setTotalPage(pdf.numPages);
+      }
+    },
+    [file.isNew]
+  );
 
   const textRenderer: CustomTextRenderer = useCallback(
     (textItem) => highlightPattern(textItem.str, searchText),
