@@ -55,7 +55,7 @@ export default function PdfEngine({
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
   const [isSearchMode, setIsSearchMode] = useState(false);
-  const [searchText, setSearchText] = useState("asd");
+  const [searchText, setSearchText] = useState("");
   const [isRendering, setIsRendering] = useState(false);
   const { getSearchResult } = usePdfTextSearch(file.base64, searchText);
 
