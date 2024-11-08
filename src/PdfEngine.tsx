@@ -42,7 +42,6 @@ export default function PdfEngine({
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
   const [isToolBarOpen, setIsToolBarOpen] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
-  console.log(pageNumber);
   const [renderedPageNumber, setRenderedPageNumber] = useState<number>(0);
   const [pageSize, setPageSize] = useState({
     width: 0,
@@ -55,7 +54,7 @@ export default function PdfEngine({
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
-  const [isSearchMode, setIsSearchMode] = useState(true);
+  const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [isRendering, setIsRendering] = useState(false);
   const { getSearchResult } = usePdfTextSearch(file.base64, searchText);
