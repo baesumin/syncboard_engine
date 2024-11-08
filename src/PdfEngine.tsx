@@ -54,7 +54,7 @@ export default function PdfEngine({
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
-  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [isSearchMode, setIsSearchMode] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [isRendering, setIsRendering] = useState(false);
   const { getSearchResult } = usePdfTextSearch(file.base64, searchText);
@@ -177,8 +177,9 @@ export default function PdfEngine({
   useEffect(() => {
     if (isSearchMode) {
       const resultsList = getSearchResult(searchText);
-
-      (window as unknown as webviewType).AndroidInterface.getSearchTextPageList(
+      (
+        window as unknown as webviewType
+      ).AndroidInterface?.getSearchTextPageList(
         JSON.stringify(resultsList.map((result) => result.pageNumber))
       );
       setIsSearchMode(false);
@@ -222,6 +223,7 @@ export default function PdfEngine({
                 width={orientation === "portrait" ? width : undefined}
                 height={height}
                 devicePixelRatio={devicePixelRatio}
+                customTextRenderer={textRenderer}
                 renderAnnotationLayer={false}
                 renderTextLayer={file.isNew ? false : true}
                 loading={<></>}

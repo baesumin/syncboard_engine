@@ -117,7 +117,11 @@ export const colorToRGB = (color: (typeof colorMap)[number]) => {
 };
 
 export const highlightPattern = (text: string, pattern: string) => {
-  return text.replace(pattern, (value) => `<mark>${value}</mark>`);
+  return text.replace(
+    pattern,
+    (value) =>
+      `<span style="border-radius:10px;background-color:rgba(255, 255, 0, 0.4);">${value}</span>`
+  );
 };
 
 export const getModifiedPDFBase64 = async (

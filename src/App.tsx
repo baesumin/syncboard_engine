@@ -1,9 +1,9 @@
+import "react-pdf/dist/esm/Page/TextLayer.css";
 import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
-import "react-pdf/dist/esm/Page/TextLayer.css";
 import { useEffect, useState } from "react";
 import { __DEV__ } from "./utils/common";
-// import { base64 } from "./mock/base64";
+import { base64 } from "./mock/base64";
 import { webviewApiType } from "./types/json";
 import { webviewType } from "./types/common";
 import { emptyPageBase64 } from "./mock/emptyPageBase64";
@@ -42,16 +42,16 @@ function App() {
         setIsLoading(false);
       };
     } else {
-      // setFile({
-      //   base64: base64.base64,
-      //   paths: "",
-      //   isNew: false,
-      // });
       setFile({
-        base64: emptyPageBase64,
+        base64: base64.base64,
         paths: "",
-        isNew: true,
+        isNew: false,
       });
+      // setFile({
+      //   base64: emptyPageBase64,
+      //   paths: "",
+      //   isNew: true,
+      // });
       setIsLoading(false);
     }
   }, []);
