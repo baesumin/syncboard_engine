@@ -315,12 +315,12 @@ const PdfOverlay = ({
               <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
               <button
                 onClick={() => {
+                  setCanDraw(zoomEnabled ? false : true);
+                  // setDrawType("pen");
                   setTouchType((prev) => {
-                    setDrawType("pen");
-                    setCanDraw(zoomEnabled ? false : true);
-                    if (prev === "touch") {
-                      setZoomEnabled(false);
-                    }
+                    // if (prev === "touch") {
+                    //   setZoomEnabled(false);
+                    // }
                     return prev === "pen" ? "touch" : "pen";
                   });
                 }}

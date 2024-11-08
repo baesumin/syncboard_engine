@@ -50,6 +50,7 @@ export default function PdfEngine({
   const [isListOpen, setIsListOpen] = useState(false);
   const [totalPage, setTotalPage] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isNewPage, setIsNewPage] = useState(false);
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
@@ -113,11 +114,19 @@ export default function PdfEngine({
 
   const onNewPageClick = useCallback(async () => {
     const newBase64 = await createOrMergePdf(file.base64);
+    setIsNewPage(true);
     setFile({
       ...file,
       base64: newBase64,
     });
   }, [file, setFile]);
+
+  useEffect(() => {
+    if (isNewPage) {
+      setIsNewPage(false);
+      setPageNumber((prev) => prev + 1);
+    }
+  }, [isNewPage]);
 
   useEffect(() => {
     if (isRendering) {
@@ -139,11 +148,14 @@ export default function PdfEngine({
         setSearchText("");
       };
       (window as unknown as webviewType).newPage = async () => {
-        const newBase64 = await createOrMergePdf(file.base64);
-        setFile({
-          ...file,
-          base64: newBase64,
-        });
+        if (!isNewPage) {
+          const newBase64 = await createOrMergePdf(file.base64);
+          setIsNewPage(true);
+          setFile({
+            ...file,
+            base64: newBase64,
+          });
+        }
       };
       (window as unknown as webviewType).getSearchText = async (
         data: string
@@ -159,7 +171,7 @@ export default function PdfEngine({
         }
       };
     }
-  }, [file, paths, setFile]);
+  }, [file, isNewPage, paths, setFile]);
 
   useEffect(() => {
     if (isSearchMode) {
@@ -234,6 +246,7 @@ export default function PdfEngine({
               customTextRenderer={textRenderer}
               renderAnnotationLayer={false}
               renderTextLayer={file.isNew ? false : true}
+              // scale={scale.current}
               loading={<></>}
               noData={<></>}
             />
