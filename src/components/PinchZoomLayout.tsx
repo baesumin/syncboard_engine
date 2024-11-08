@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { MutableRefObject, ReactNode, RefObject } from "react";
 import { OnRefChangeType } from "react-resize-detector/build/types/types";
 import {
@@ -42,13 +43,10 @@ export default function PinchZoomLayout({
       <TransformComponent>
         <div
           ref={pinchZoomRef}
-          className="w-dvw h-dvh flex-center"
-          style={{
-            paddingLeft: isFullScreen ? 0 : 100,
-            paddingRight: isFullScreen ? 0 : 100,
-            paddingTop: isFullScreen ? 0 : 40,
-            paddingBottom: isFullScreen ? 0 : 40,
-          }}
+          className={clsx(
+            "w-dvw h-dvh flex-center",
+            isFullScreen ? "" : "px-[100px] py-[40px]"
+          )}
         >
           {children}
         </div>

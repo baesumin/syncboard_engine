@@ -29,6 +29,7 @@ import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
 import { webviewType } from "./types/common";
 import { webviewApiDataType } from "./types/json";
+import clsx from "clsx";
 
 export default function PdfEngine({
   file,
@@ -260,10 +261,11 @@ export default function PdfEngine({
                 style={{
                   width: `${pageSize.width}px`,
                   height: `${pageSize.height}px`,
-                  pointerEvents: canDraw ? "auto" : "none",
-                  zIndex: 1000,
-                  touchAction: "none",
                 }}
+                className={clsx(
+                  "touch-none z-[1000]",
+                  canDraw ? "pointer-events-auto" : "pointer-events-none"
+                )}
                 onPointerDown={startDrawing}
                 onPointerMove={draw}
                 onPointerUp={stopDrawing}
