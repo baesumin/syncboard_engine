@@ -124,9 +124,10 @@ export default function PdfEngine({
   useEffect(() => {
     if (isNewPage) {
       setIsNewPage(false);
-      setPageNumber((prev) => prev + 1);
+      setPageNumber(totalPage + 1);
+      setTotalPage(totalPage + 1);
     }
-  }, [isNewPage]);
+  }, [isNewPage, totalPage]);
 
   useEffect(() => {
     if (isRendering) {
@@ -193,23 +194,15 @@ export default function PdfEngine({
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {/* {file.isNew && (
-          <div className="absolute">
-            <Document
-              file={`data:application/pdf;base64,${emptyPageBase64}`}
-              loading={<></>}
-              noData={<></>}
-            >
-              <Thumbnail
-                pageNumber={1}
-                width={orientation === "portrait" ? width : undefined}
-                height={height}
-                loading={<></>}
-                noData={<></>}
-              />
-            </Document>
-          </div>
-        )} */}
+        {isRenderLoading && (
+          <div
+            className="absolute bg-white"
+            style={{
+              width: pageSize.width,
+              height: pageSize.height,
+            }}
+          />
+        )}
         <Document
           file={`data:application/pdf;base64,${file.base64}`}
           onLoadSuccess={onLoadSuccess}
@@ -246,7 +239,6 @@ export default function PdfEngine({
               customTextRenderer={textRenderer}
               renderAnnotationLayer={false}
               renderTextLayer={file.isNew ? false : true}
-              // scale={scale.current}
               loading={<></>}
               noData={<></>}
             />
