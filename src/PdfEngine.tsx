@@ -86,6 +86,7 @@ export default function PdfEngine({
     isRendering,
     setIsRendering,
   });
+  const [shouldRenderThumbnail, setShouldRenderThumbnail] = useState(false);
 
   const isRenderLoading = useMemo(
     () => renderedPageNumber !== pageNumber,
@@ -126,6 +127,13 @@ export default function PdfEngine({
       base64: newBase64,
     });
   }, [file, setFile]);
+
+  // 다른 컴포넌트들이 모두 로딩된 후 ThumbnailOverlay를 렌더링
+  useEffect(() => {
+    if (!isRenderLoading && !shouldRenderThumbnail) {
+      setShouldRenderThumbnail(true);
+    }
+  }, [isRenderLoading, shouldRenderThumbnail]);
 
   useEffect(() => {
     if (isNewPage) {
@@ -288,14 +296,16 @@ export default function PdfEngine({
               />
             </div>
           </PinchZoomLayout>
-          {isListOpen && (
-            <ThumbnailOvelay
-              scaleRef={scaleRef}
-              pageNumber={pageNumber}
-              setIsListOpen={setIsListOpen}
-              setPageNumber={setPageNumber}
-              totalPage={totalPage}
-            />
+          {shouldRenderThumbnail && (
+            <div className={isListOpen ? "" : "hidden"}>
+              <ThumbnailOvelay
+                scaleRef={scaleRef}
+                pageNumber={pageNumber}
+                setIsListOpen={setIsListOpen}
+                setPageNumber={setPageNumber}
+                totalPage={totalPage}
+              />
+            </div>
           )}
         </Document>
       </div>
