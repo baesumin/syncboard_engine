@@ -242,7 +242,7 @@ export default function PdfEngine({
         >
           <PinchZoomLayout
             isFullScreen={isFullScreen}
-            disabled={canDraw}
+            disabled={touchType === "touch" && canDraw}
             scale={scale}
             scaleRef={scaleRef}
             pinchZoomRef={ref}
