@@ -111,54 +111,57 @@ export default function useCanvas({
     ]
   );
 
-  const draw = (e: canvasEventType) => {
-    if (!canvas.current) return;
-    if (!isDrawing.current || touchPoints.current === 2) return;
+  const draw = useCallback(
+    (e: canvasEventType) => {
+      if (!canvas.current) return;
+      if (!isDrawing.current || touchPoints.current === 2) return;
 
-    const context = canvas.current.getContext("2d")!;
-    const { x, y } = getDrawingPosition(
-      canvas,
-      e,
-      devicePixelRatio,
-      scale.current
-    );
+      const context = canvas.current.getContext("2d")!;
+      const { x, y } = getDrawingPosition(
+        canvas,
+        e,
+        devicePixelRatio,
+        scale.current
+      );
 
-    const distance = Math.hypot(x - lastXRef.current, y - lastYRef.current);
-    const DISTANCE_THRESHOLD = 20;
-    const lineWidth =
-      (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
+      const distance = Math.hypot(x - lastXRef.current, y - lastYRef.current);
+      const DISTANCE_THRESHOLD = 20;
+      const lineWidth =
+        (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
 
-    if (distance >= DISTANCE_THRESHOLD) {
-      if (drawType === "eraser") {
-        drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
-      } else {
-        drawSmoothLine(
-          context,
-          lastXRef.current,
-          lastYRef.current,
-          x,
-          y,
+      if (distance >= DISTANCE_THRESHOLD) {
+        if (drawType === "eraser") {
+          drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
+        } else {
+          drawSmoothLine(
+            context,
+            lastXRef.current,
+            lastYRef.current,
+            x,
+            y,
+            color,
+            strokeStep * (drawType === "highlight" ? 2 : 1),
+            drawType === "highlight" ? 0.4 : 1
+          );
+        }
+
+        pathsRef.current.push({
+          x: x / pageSize.width,
+          y: y / pageSize.height,
+          lastX: lastXRef.current / pageSize.width,
+          lastY: lastYRef.current / pageSize.height,
+          lineWidth,
           color,
-          strokeStep * (drawType === "highlight" ? 2 : 1),
-          drawType === "highlight" ? 0.4 : 1
-        );
+          drawOrder: drawOrder.current,
+          alpha: drawType === "highlight" ? 0.4 : 1,
+        });
+
+        lastXRef.current = x;
+        lastYRef.current = y;
       }
-
-      pathsRef.current.push({
-        x: x / pageSize.width,
-        y: y / pageSize.height,
-        lastX: lastXRef.current / pageSize.width,
-        lastY: lastYRef.current / pageSize.height,
-        lineWidth,
-        color,
-        drawOrder: drawOrder.current,
-        alpha: drawType === "highlight" ? 0.4 : 1,
-      });
-
-      lastXRef.current = x;
-      lastYRef.current = y;
-    }
-  };
+    },
+    [color, devicePixelRatio, drawType, pageSize, strokeStep]
+  );
 
   const redrawPaths = useCallback(
     (pageWidth: number, pageHeight: number) => {
@@ -251,6 +254,7 @@ export default function useCanvas({
             currentGroup.push(points[i]); // 현재 그룹에 점 추가
           }
         }
+
         // 마지막 그룹 처리
         if (currentGroup.length > 1) {
           for (let j = 1; j < currentGroup.length; j++) {
@@ -278,6 +282,7 @@ export default function useCanvas({
 
     isDrawing.current = false;
     touchPoints.current = 0;
+
     if (drawType === "eraser") {
       const currentPaths = paths.current[pageNumber] || [];
       const erasePaths = pathsRef.current;
@@ -303,12 +308,9 @@ export default function useCanvas({
           }
 
           // 선이 지나간 경우도 처리
-          const pathLength = Math.sqrt(
-            Math.pow(path.lastX * pageSize.width - path.x * pageSize.width, 2) +
-              Math.pow(
-                path.lastY * pageSize.height - path.y * pageSize.height,
-                2
-              )
+          const pathLength = Math.hypot(
+            path.lastX * pageSize.width - path.x * pageSize.width,
+            path.lastY * pageSize.height - path.y * pageSize.height
           );
 
           // 선의 중간 점들에 대해 거리 체크
@@ -328,6 +330,7 @@ export default function useCanvas({
           }
         });
       });
+
       // drawOrder가 포함되지 않은 경로만 남기기
       const newPaths = currentPaths.filter((path) => {
         return !drawOrdersToDelete.has(path.drawOrder);
@@ -352,6 +355,7 @@ export default function useCanvas({
         [pageNumber]: [...(paths.current[pageNumber] || []), ...newValue],
       };
     }
+
     // pathsRef 초기화
     pathsRef.current = [];
   }, [drawType, pageNumber, pageSize, redrawPaths, strokeStep]);
@@ -360,6 +364,7 @@ export default function useCanvas({
     canvas,
     canDraw,
     paths,
+    drawOrder,
     scale,
     isRendering,
     drawType,

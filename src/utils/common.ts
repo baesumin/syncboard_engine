@@ -116,6 +116,8 @@ export const colorToRGB = (color: (typeof colorMap)[number]) => {
   return colors[color as keyof typeof colors];
 };
 
+export const isEmptyObject = (obj: object) => Object.keys(obj).length === 0;
+
 export const highlightPattern = (text: string, pattern: string) => {
   return text.replace(
     pattern,

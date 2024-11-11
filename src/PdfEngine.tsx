@@ -27,7 +27,7 @@ import {
 } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
-import { webviewType } from "./types/common";
+import { PathsType, webviewType } from "./types/common";
 import { webviewApiDataType } from "./types/json";
 import clsx from "clsx";
 
@@ -64,6 +64,7 @@ export default function PdfEngine({
     canDraw,
     setCanDraw,
     paths,
+    drawOrder,
     scale,
     drawType,
     color,
@@ -195,7 +196,22 @@ export default function PdfEngine({
 
   useEffect(() => {
     if (file.paths) {
-      paths.current = JSON.parse(file.paths);
+      const savedPaths: { [pageNumber: number]: PathsType[] } = JSON.parse(
+        file.paths
+      );
+
+      const maxDrawOrderItem = Object.values(savedPaths)
+        .flat()
+        .reduce(
+          (maxItem, currentItem) => {
+            return currentItem.drawOrder > maxItem.drawOrder
+              ? currentItem
+              : maxItem;
+          },
+          { drawOrder: 0 }
+        );
+      paths.current = savedPaths;
+      drawOrder.current = maxDrawOrderItem.drawOrder;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
