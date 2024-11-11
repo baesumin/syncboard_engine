@@ -93,9 +93,9 @@ export const drawSmoothLine = (
   lineWidth: number,
   alpha: number
 ) => {
-  // const offset = alpha === 1 ? 0 : 10000;
+  const offset = alpha === 1 ? 0 : 10000;
   context.beginPath();
-  // context.translate(-offset, 0);
+  context.translate(-offset, 0);
   context.globalAlpha = alpha;
   context.strokeStyle = color;
   context.lineWidth = lineWidth;
@@ -103,12 +103,12 @@ export const drawSmoothLine = (
   context.lineJoin = "round";
   context.moveTo(lastX, lastY);
   context.lineTo(x, y);
-  // context.shadowOffsetX = offset;
-  // context.shadowColor = alpha === 1 ? "transparent" : color;
-  // context.shadowBlur = alpha === 1 ? 0 : lineWidth;
+  context.shadowOffsetX = offset;
+  context.shadowColor = alpha === 1 ? "transparent" : color;
+  context.shadowBlur = alpha === 1 ? 0 : lineWidth;
 
   context.stroke();
-  // context.translate(offset, 0);
+  context.translate(offset, 0);
   context.closePath();
 };
 
