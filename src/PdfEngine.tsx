@@ -86,7 +86,7 @@ export default function PdfEngine({
     isRendering,
     setIsRendering,
   });
-  const [shouldRenderThumbnail, setShouldRenderThumbnail] = useState(false);
+  const [canRenderThumbnail, setCanRenderThumbnail] = useState(false);
 
   const isRenderLoading = useMemo(
     () => renderedPageNumber !== pageNumber,
@@ -128,12 +128,11 @@ export default function PdfEngine({
     });
   }, [file, setFile]);
 
-  // 다른 컴포넌트들이 모두 로딩된 후 ThumbnailOverlay를 렌더링
   useEffect(() => {
-    if (!isRenderLoading && !shouldRenderThumbnail) {
-      setShouldRenderThumbnail(true);
+    if (!isRenderLoading && !canRenderThumbnail) {
+      setCanRenderThumbnail(true);
     }
-  }, [isRenderLoading, shouldRenderThumbnail]);
+  }, [isRenderLoading, canRenderThumbnail]);
 
   useEffect(() => {
     if (isNewPage) {
@@ -296,7 +295,7 @@ export default function PdfEngine({
               />
             </div>
           </PinchZoomLayout>
-          {shouldRenderThumbnail && (
+          {canRenderThumbnail && (
             <div className={isListOpen ? "" : "hidden"}>
               <ThumbnailOvelay
                 scaleRef={scaleRef}
@@ -309,34 +308,36 @@ export default function PdfEngine({
           )}
         </Document>
       </div>
-      {!isListOpen && (
-        <PdfOverlay
-          scaleRef={scaleRef}
-          color={color}
-          drawType={drawType}
-          file={file.base64}
-          isFullScreen={isFullScreen}
-          isStrokeOpen={isStrokeOpen}
-          isToolBarOpen={isToolBarOpen}
-          pageNumber={pageNumber}
-          paths={paths.current}
-          strokeStep={strokeStep}
-          totalPage={totalPage}
-          touchType={touchType}
-          zoomEnabled={zoomEnabled}
-          setZoomEnabled={setZoomEnabled}
-          setTouchType={setTouchType}
-          setCanDraw={setCanDraw}
-          setColor={setColor}
-          setDrawType={setDrawType}
-          setIsFullScreen={setIsFullScreen}
-          setIsListOpen={setIsListOpen}
-          setIsStrokeOpen={setIsStrokeOpen}
-          setIsToolBarOpen={setIsToolBarOpen}
-          setPageNumber={setPageNumber}
-          setStrokeStep={setStrokeStep}
-          onNewPageClick={onNewPageClick}
-        />
+      {canRenderThumbnail && (
+        <div className={isListOpen ? "hidden" : ""}>
+          <PdfOverlay
+            scaleRef={scaleRef}
+            color={color}
+            drawType={drawType}
+            file={file.base64}
+            isFullScreen={isFullScreen}
+            isStrokeOpen={isStrokeOpen}
+            isToolBarOpen={isToolBarOpen}
+            pageNumber={pageNumber}
+            paths={paths.current}
+            strokeStep={strokeStep}
+            totalPage={totalPage}
+            touchType={touchType}
+            zoomEnabled={zoomEnabled}
+            setZoomEnabled={setZoomEnabled}
+            setTouchType={setTouchType}
+            setCanDraw={setCanDraw}
+            setColor={setColor}
+            setDrawType={setDrawType}
+            setIsFullScreen={setIsFullScreen}
+            setIsListOpen={setIsListOpen}
+            setIsStrokeOpen={setIsStrokeOpen}
+            setIsToolBarOpen={setIsToolBarOpen}
+            setPageNumber={setPageNumber}
+            setStrokeStep={setStrokeStep}
+            onNewPageClick={onNewPageClick}
+          />
+        </div>
       )}
     </>
   );
