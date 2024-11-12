@@ -123,7 +123,7 @@ export const highlightPattern = (text: string, pattern: string) => {
     pattern,
     (value) =>
       `<span style="
-        background-color: rgba(255, 255, 0, 0.7);
+        background-color: rgba(255, 255, 0, 1);
         filter:blur(200px);
       ">${value}</span>`
   );
