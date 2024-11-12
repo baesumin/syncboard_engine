@@ -51,11 +51,9 @@ export default function PdfEngine({
   const [isListOpen, setIsListOpen] = useState(false);
   const [totalPage, setTotalPage] = useState(1);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [isNewPage, setIsNewPage] = useState(false);
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
-  const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [isRendering, setIsRendering] = useState(false);
   const { getSearchResult } = usePdfTextSearch(file.base64);
@@ -121,27 +119,19 @@ export default function PdfEngine({
 
   const onNewPageClick = useCallback(async () => {
     const newBase64 = await createOrMergePdf(file.base64);
-    setIsNewPage(true);
+    setPageNumber(totalPage + 1);
+    setTotalPage(totalPage + 1);
     setFile({
       ...file,
       base64: newBase64,
     });
-  }, [file, setFile]);
+  }, [file, setFile, totalPage]);
 
   useEffect(() => {
     if (!isRenderLoading && !canRenderThumbnail) {
       setCanRenderThumbnail(true);
     }
   }, [isRenderLoading, canRenderThumbnail]);
-
-  useEffect(() => {
-    if (isNewPage) {
-      setIsNewPage(false);
-      setPageNumber(totalPage + 1);
-      setTotalPage(totalPage + 1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNewPage]);
 
   useEffect(() => {
     if (isRendering) {
@@ -159,47 +149,34 @@ export default function PdfEngine({
         return JSON.stringify(paths.current);
       };
       (window as unknown as webviewType).newPage = async () => {
-        if (!isNewPage) {
-          const newBase64 = await createOrMergePdf(file.base64);
-          setIsNewPage(true);
-          setFile({
-            ...file,
-            base64: newBase64,
-          });
-        }
+        const newBase64 = await createOrMergePdf(file.base64);
+        setPageNumber(totalPage + 1);
+        setTotalPage(totalPage + 1);
+        setFile({
+          ...file,
+          base64: newBase64,
+        });
       };
-      (window as unknown as webviewType).getSearchText = async (
-        data: string
-      ) => {
-        setIsSearchMode(true);
+      (window as unknown as webviewType).getSearchText = (data: string) => {
+        const resultsList = getSearchResult(searchText);
+        (
+          window as unknown as webviewType
+        ).AndroidInterface?.getSearchTextPageList(
+          JSON.stringify(resultsList.map((result) => result.pageNumber))
+        );
         setSearchText(data);
       };
-      (window as unknown as webviewType).getPageNumber = async (
-        data: string
-      ) => {
+      (window as unknown as webviewType).getPageNumber = (data: string) => {
         if (!isNaN(Number(data))) {
           setPageNumber(Number(data));
         }
       };
       (window as unknown as webviewType).endSearch = () => {
-        setIsSearchMode(false);
         setSearchText("");
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [file, isNewPage, setFile]);
-
-  useEffect(() => {
-    if (isSearchMode) {
-      const resultsList = getSearchResult(searchText);
-      (
-        window as unknown as webviewType
-      ).AndroidInterface?.getSearchTextPageList(
-        JSON.stringify(resultsList.map((result) => result.pageNumber))
-      );
-      setIsSearchMode(false);
-    }
-  }, [getSearchResult, isSearchMode, searchText]);
+  }, [file, setFile]);
 
   useEffect(() => {
     if (file.paths) {
