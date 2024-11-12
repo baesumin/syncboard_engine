@@ -81,7 +81,6 @@ export default function PdfEngine({
     pageSize,
     strokeStep,
     pageNumber,
-    isRendering,
     setIsRendering,
   });
   const [canRenderThumbnail, setCanRenderThumbnail] = useState(false);

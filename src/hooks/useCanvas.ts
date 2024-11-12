@@ -20,7 +20,6 @@ interface Props {
   };
   strokeStep: number;
   pageNumber: number;
-  isRendering: boolean;
   setIsRendering: Dispatch<SetStateAction<boolean>>;
 }
 
@@ -29,7 +28,6 @@ export default function useCanvas({
   pageSize,
   strokeStep,
   pageNumber,
-  isRendering,
   setIsRendering,
 }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -381,7 +379,6 @@ export default function useCanvas({
     paths,
     drawOrder,
     scale,
-    isRendering,
     drawType,
     color,
     touchType,
