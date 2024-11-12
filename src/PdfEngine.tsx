@@ -55,7 +55,6 @@ export default function PdfEngine({
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [isRendering, setIsRendering] = useState(false);
   const { getSearchResult } = usePdfTextSearch(file.base64);
   const {
     canvas,
@@ -81,7 +80,6 @@ export default function PdfEngine({
     pageSize,
     strokeStep,
     pageNumber,
-    setIsRendering,
   });
   const [canRenderThumbnail, setCanRenderThumbnail] = useState(false);
 
@@ -93,13 +91,14 @@ export default function PdfEngine({
   const onRenderSuccess: OnRenderSuccess = useCallback(
     (page) => {
       setRenderedPageNumber(pageNumber);
-      setIsRendering(true);
-      setPageSize({
-        width: page.width,
-        height: page.height,
-      });
+      setPageSize({ width: page.width, height: page.height });
+      if (canvas.current) {
+        canvas.current.width = page.width * devicePixelRatio;
+        canvas.current.height = page.height * devicePixelRatio;
+        redrawPaths(page.width, page.height);
+      }
     },
-    [pageNumber, setIsRendering]
+    [pageNumber, canvas, devicePixelRatio, redrawPaths]
   );
 
   const onLoadSuccess: OnDocumentLoadSuccess = useCallback(
@@ -131,12 +130,6 @@ export default function PdfEngine({
       setCanRenderThumbnail(true);
     }
   }, [isRenderLoading, canRenderThumbnail]);
-
-  useEffect(() => {
-    if (isRendering) {
-      redrawPaths(pageSize.width, pageSize.height);
-    }
-  }, [isRendering, pageSize, redrawPaths]);
 
   useEffect(() => {
     if (!__DEV__) {
@@ -255,8 +248,6 @@ export default function PdfEngine({
               <canvas
                 ref={canvas}
                 key={pageNumber}
-                width={pageSize.width * devicePixelRatio}
-                height={pageSize.height * devicePixelRatio}
                 style={{
                   width: `${pageSize.width}px`,
                   height: `${pageSize.height}px`,

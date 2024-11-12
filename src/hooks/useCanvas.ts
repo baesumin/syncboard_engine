@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   colorMap,
   drawDashedLine,
@@ -20,7 +20,6 @@ interface Props {
   };
   strokeStep: number;
   pageNumber: number;
-  setIsRendering: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function useCanvas({
@@ -28,7 +27,6 @@ export default function useCanvas({
   pageSize,
   strokeStep,
   pageNumber,
-  setIsRendering,
 }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const lastXRef = useRef(0);
@@ -253,10 +251,8 @@ export default function useCanvas({
           }
         }
       }
-
-      setIsRendering(false);
     },
-    [pageNumber, setIsRendering]
+    [pageNumber]
   );
 
   const stopDrawing = useCallback(
