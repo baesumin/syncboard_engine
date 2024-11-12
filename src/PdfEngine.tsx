@@ -54,7 +54,7 @@ export default function PdfEngine({
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState("Sample");
   const { getSearchResult } = usePdfTextSearch(file.base64);
   const {
     canvas,
