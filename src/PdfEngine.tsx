@@ -226,7 +226,7 @@ export default function PdfEngine({
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {isRenderLoading && (
+        {isRenderLoading && file.isNew && (
           <div
             className="absolute bg-white"
             style={{

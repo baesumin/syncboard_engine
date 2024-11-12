@@ -34,7 +34,6 @@ function App() {
       }
       (window as unknown as webviewType).webviewApi = (appData: string) => {
         const param: webviewApiType = JSON.parse(appData);
-        console.log(param?.data?.base64);
         setFile({
           base64: param?.data?.isNew ? emptyPageBase64 : param?.data?.base64,
           paths: param?.data?.paths,
