@@ -60,7 +60,6 @@ export default function useCanvas({
 
       touchPoints.current += 1;
       isDrawing.current = true;
-      const context = canvas.current.getContext("2d")!;
       const lineWidth =
         (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
       const { x, y } = getDrawingPosition(
@@ -69,21 +68,6 @@ export default function useCanvas({
         devicePixelRatio,
         scale.current
       );
-
-      if (drawType === "eraser") {
-        drawDashedLine(context, x, y, x, y);
-      } else {
-        drawSmoothLine(
-          context,
-          x,
-          y,
-          x,
-          y,
-          color,
-          strokeStep * (drawType === "highlight" ? 2 : 1),
-          drawType === "highlight" ? 0.4 : 1
-        );
-      }
 
       pathsRef.current.push({
         x: x / pageSize.width,
@@ -277,88 +261,119 @@ export default function useCanvas({
     [pageNumber, setIsRendering]
   );
 
-  const stopDrawing = useCallback(async () => {
-    if (!canvas.current || pathsRef.current.length === 0) return;
+  const stopDrawing = useCallback(
+    async (e: canvasEventType) => {
+      if (!canvas.current || pathsRef.current.length === 0) return;
 
-    isDrawing.current = false;
-    touchPoints.current = 0;
+      isDrawing.current = false;
+      touchPoints.current = 0;
 
-    if (drawType === "eraser") {
-      const currentPaths = paths.current[pageNumber] || [];
-      const erasePaths = pathsRef.current;
+      if (drawType === "eraser") {
+        const currentPaths = paths.current[pageNumber] || [];
+        const erasePaths = pathsRef.current;
 
-      // 지우기 모드에서 겹치는 drawOrder를 찾기
-      const drawOrdersToDelete = new Set();
+        // 지우기 모드에서 겹치는 drawOrder를 찾기
+        const drawOrdersToDelete = new Set();
 
-      // 모든 erasePath에 대해 반복
-      erasePaths.forEach((erasePath) => {
-        const eraseX = erasePath.x * pageSize.width;
-        const eraseY = erasePath.y * pageSize.height;
+        // 모든 erasePath에 대해 반복
+        erasePaths.forEach((erasePath) => {
+          const eraseX = erasePath.x * pageSize.width;
+          const eraseY = erasePath.y * pageSize.height;
 
-        // currentPaths를 반복하여 겹치는 경로를 찾기
-        currentPaths.forEach((path) => {
-          const distance = Math.hypot(
-            path.x * pageSize.width - eraseX,
-            path.y * pageSize.height - eraseY
-          );
+          // currentPaths를 반복하여 겹치는 경로를 찾기
+          currentPaths.forEach((path) => {
+            const distance = Math.hypot(
+              path.x * pageSize.width - eraseX,
+              path.y * pageSize.height - eraseY
+            );
 
-          // 겹치는 경로가 있으면 drawOrder를 추가
-          if (distance <= strokeStep) {
-            drawOrdersToDelete.add(path.drawOrder);
-          }
-
-          // 선이 지나간 경우도 처리
-          const pathLength = Math.hypot(
-            path.lastX * pageSize.width - path.x * pageSize.width,
-            path.lastY * pageSize.height - path.y * pageSize.height
-          );
-
-          // 선의 중간 점들에 대해 거리 체크
-          for (let i = 0; i <= pathLength; i += 1) {
-            const t = i / pathLength;
-            const midX =
-              (1 - t) * (path.x * pageSize.width) +
-              t * (path.lastX * pageSize.width);
-            const midY =
-              (1 - t) * (path.y * pageSize.height) +
-              t * (path.lastY * pageSize.height);
-            const midDistance = Math.hypot(midX - eraseX, midY - eraseY);
-            if (midDistance <= strokeStep) {
+            // 겹치는 경로가 있으면 drawOrder를 추가
+            if (distance <= strokeStep) {
               drawOrdersToDelete.add(path.drawOrder);
-              break; // 한 번이라도 겹치면 더 이상 체크할 필요 없음
             }
-          }
+
+            // 선이 지나간 경우도 처리
+            const pathLength = Math.hypot(
+              path.lastX * pageSize.width - path.x * pageSize.width,
+              path.lastY * pageSize.height - path.y * pageSize.height
+            );
+
+            // 선의 중간 점들에 대해 거리 체크
+            for (let i = 0; i <= pathLength; i += 1) {
+              const t = i / pathLength;
+              const midX =
+                (1 - t) * (path.x * pageSize.width) +
+                t * (path.lastX * pageSize.width);
+              const midY =
+                (1 - t) * (path.y * pageSize.height) +
+                t * (path.lastY * pageSize.height);
+              const midDistance = Math.hypot(midX - eraseX, midY - eraseY);
+              if (midDistance <= strokeStep) {
+                drawOrdersToDelete.add(path.drawOrder);
+                break; // 한 번이라도 겹치면 더 이상 체크할 필요 없음
+              }
+            }
+          });
         });
-      });
 
-      // drawOrder가 포함되지 않은 경로만 남기기
-      const newPaths = currentPaths.filter((path) => {
-        return !drawOrdersToDelete.has(path.drawOrder);
-      });
+        // drawOrder가 포함되지 않은 경로만 남기기
+        const newPaths = currentPaths.filter((path) => {
+          return !drawOrdersToDelete.has(path.drawOrder);
+        });
 
-      // paths 업데이트
-      paths.current = {
-        ...paths.current,
-        [pageNumber]: newPaths,
-      };
+        // paths 업데이트
+        paths.current = {
+          ...paths.current,
+          [pageNumber]: newPaths,
+        };
 
-      // 점선도 지우기
-      canvas.current
-        .getContext("2d")!
-        .clearRect(0, 0, canvas.current.width, canvas.current.height); // 전체 캔버스 지우기
-      redrawPaths(pageSize.width, pageSize.height);
-    } else {
-      const newValue = pathsRef.current;
-      drawOrder.current += 1;
-      paths.current = {
-        ...paths.current,
-        [pageNumber]: [...(paths.current[pageNumber] || []), ...newValue],
-      };
-    }
+        // 점선도 지우기
+        canvas.current
+          .getContext("2d")!
+          .clearRect(0, 0, canvas.current.width, canvas.current.height); // 전체 캔버스 지우기
+        redrawPaths(pageSize.width, pageSize.height);
+      } else {
+        const context = canvas.current.getContext("2d")!;
+        if (pathsRef.current.length === 1) {
+          const { x, y } = getDrawingPosition(
+            canvas,
+            e,
+            devicePixelRatio,
+            scale.current
+          );
+          drawSmoothLine(
+            context,
+            lastXRef.current,
+            lastYRef.current,
+            x,
+            y,
+            color,
+            strokeStep * (drawType === "highlight" ? 2 : 1),
+            drawType === "highlight" ? 0.4 : 1
+          );
+        }
 
-    // pathsRef 초기화
-    pathsRef.current = [];
-  }, [drawType, pageNumber, pageSize, redrawPaths, strokeStep]);
+        const newValue = pathsRef.current;
+        drawOrder.current += 1;
+        paths.current = {
+          ...paths.current,
+          [pageNumber]: [...(paths.current[pageNumber] || []), ...newValue],
+        };
+      }
+
+      // pathsRef 초기화
+      pathsRef.current = [];
+    },
+    [
+      color,
+      devicePixelRatio,
+      drawType,
+      pageNumber,
+      pageSize,
+      redrawPaths,
+      strokeStep,
+    ]
+  );
 
   return {
     canvas,
