@@ -4,12 +4,6 @@ import { pdfjs } from "react-pdf";
 
 interface SearchResult {
   pageNumber: number;
-  indices: number[]; // 검색된 단어의 인덱스 위치들
-  text: string; // 매칭된 텍스트
-  matches: Array<{
-    index: number;
-    text: string;
-  }>;
 }
 
 export const usePdfTextSearch = (file: string) => {
@@ -47,24 +41,13 @@ export const usePdfTextSearch = (file: string) => {
   const getSearchResult = (searchText: string) => {
     try {
       const regex = new RegExp(searchText, "gi");
-      let globalIndex = 0;
 
       return pages.reduce<SearchResult[]>((results, text, pageIndex) => {
         const matches = Array.from(text.matchAll(regex));
 
         if (matches.length) {
-          const pageMatches = matches.map((match) => ({
-            index: match.index!,
-            text: match[0],
-          }));
-
-          const indices = matches.map(() => globalIndex++);
-
           results.push({
             pageNumber: pageIndex + 1,
-            indices,
-            text,
-            matches: pageMatches,
           });
         }
         return results;
