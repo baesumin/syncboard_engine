@@ -88,10 +88,15 @@ export default function PdfEngine({
     () => renderedPageNumber !== pageNumber,
     [pageNumber, renderedPageNumber]
   );
+  const pdfWidth = useMemo(
+    () => (orientation === "portrait" ? width : undefined),
+    [orientation, width]
+  );
 
   const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
     (page) => {
       setPageSize({ width: page.width, height: page.height });
+      scaleRef.current?.resetTransform();
       if (canvas.current) {
         canvas.current.width = page.width * devicePixelRatio;
         canvas.current.height = page.height * devicePixelRatio;
@@ -224,7 +229,7 @@ export default function PdfEngine({
               <Page
                 key={renderedPageNumber}
                 pageNumber={renderedPageNumber}
-                width={orientation === "portrait" ? width : undefined}
+                width={pdfWidth}
                 height={height}
                 devicePixelRatio={devicePixelRatio}
                 customTextRenderer={textRenderer}
@@ -234,11 +239,12 @@ export default function PdfEngine({
                 noData={<></>}
               />
             )}
+
             <Page
               key={pageNumber}
               className={isRenderLoading ? "hidden" : ""}
               pageNumber={pageNumber}
-              width={orientation === "portrait" ? width : undefined}
+              width={pdfWidth}
               height={height}
               devicePixelRatio={devicePixelRatio}
               onLoadSuccess={OnPageLoadSuccess}
@@ -270,7 +276,6 @@ export default function PdfEngine({
           {canRenderThumbnail && (
             <div className={isListOpen ? "" : "hidden"}>
               <ThumbnailOvelay
-                scaleRef={scaleRef}
                 pageNumber={pageNumber}
                 setIsListOpen={setIsListOpen}
                 setPageNumber={setPageNumber}
@@ -283,7 +288,6 @@ export default function PdfEngine({
       {canRenderThumbnail && (
         <div className={isListOpen ? "hidden" : ""}>
           <PdfOverlay
-            scaleRef={scaleRef}
             color={color}
             drawType={drawType}
             file={file.base64}

@@ -20,13 +20,11 @@ import {
   TouchMode,
   Zoom,
 } from "../assets/icons";
-import { Dispatch, RefObject, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { __DEV__, colorMap, getModifiedPDFBase64 } from "../utils/common";
-import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { DrawType, PathsType, TouchType, webviewType } from "../types/common";
 
 interface Props {
-  scaleRef: RefObject<ReactZoomPanPinchContentRef>;
   pageNumber: number;
   isFullScreen: boolean;
   drawType: DrawType;
@@ -54,7 +52,6 @@ interface Props {
 }
 
 const PdfOverlay = ({
-  scaleRef,
   pageNumber,
   totalPage,
   isFullScreen,
@@ -113,7 +110,6 @@ const PdfOverlay = ({
             <button
               onClick={() => {
                 if (pageNumber !== 1) {
-                  scaleRef.current?.resetTransform(0);
                   setPageNumber((prev) => prev - 1);
                 }
               }}
@@ -124,7 +120,6 @@ const PdfOverlay = ({
             <button
               onClick={() => {
                 if (pageNumber !== totalPage) {
-                  scaleRef.current?.resetTransform(0);
                   setPageNumber((prev) => prev + 1);
                 }
               }}

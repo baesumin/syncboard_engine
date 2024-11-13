@@ -1,13 +1,11 @@
 import clsx from "clsx";
 import { Close } from "../assets/icons";
-import { Dispatch, RefObject, SetStateAction } from "react";
-import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
+import { Dispatch, SetStateAction } from "react";
 import { Thumbnail } from "react-pdf";
 
 interface Props {
   totalPage: number;
   pageNumber: number;
-  scaleRef: RefObject<ReactZoomPanPinchContentRef>;
   setIsListOpen: Dispatch<SetStateAction<boolean>>;
   setPageNumber: Dispatch<SetStateAction<number>>;
 }
@@ -15,7 +13,6 @@ interface Props {
 const ThumbnailOvelay = ({
   totalPage,
   pageNumber,
-  scaleRef,
   setIsListOpen,
   setPageNumber,
 }: Props) => {
@@ -55,7 +52,6 @@ const ThumbnailOvelay = ({
                   width={180}
                   devicePixelRatio={2}
                   onItemClick={({ pageNumber }) => {
-                    scaleRef.current?.resetTransform(0);
                     setPageNumber(pageNumber);
                     setIsListOpen(false);
                   }}

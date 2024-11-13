@@ -55,11 +55,8 @@ export default function PinchZoomLayout({
         minScale={1}
         disablePadding
         doubleClick={{ disabled: true }}
-        onPinchingStop={(ref) => {
+        onTransformed={(ref) => {
           scale.current = ref.state.scale;
-          // 1 ~3
-          // 1일때 0 3일때 1
-          // setDevicePixelRatio(2 + ref.state.scale * 0.33);
         }}
       >
         <TransformComponent>
