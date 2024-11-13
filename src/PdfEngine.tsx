@@ -13,6 +13,7 @@ import { useMobileOrientation } from "react-device-detect";
 import {
   CustomTextRenderer,
   OnDocumentLoadSuccess,
+  OnPageLoadSuccess,
   OnRenderSuccess,
 } from "react-pdf/src/shared/types.js";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
@@ -54,7 +55,7 @@ export default function PdfEngine({
   const [strokeStep, setStrokeStep] = useState(12);
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
-  const [searchText, setSearchText] = useState("Sample");
+  const [searchText, setSearchText] = useState("");
   const { getSearchResult } = usePdfTextSearch(file.base64);
   const {
     canvas,
@@ -88,9 +89,8 @@ export default function PdfEngine({
     [pageNumber, renderedPageNumber]
   );
 
-  const onRenderSuccess: OnRenderSuccess = useCallback(
+  const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
     (page) => {
-      setRenderedPageNumber(pageNumber);
       setPageSize({ width: page.width, height: page.height });
       if (canvas.current) {
         canvas.current.width = page.width * devicePixelRatio;
@@ -98,10 +98,14 @@ export default function PdfEngine({
         redrawPaths(page.width, page.height);
       }
     },
-    [pageNumber, canvas, devicePixelRatio, redrawPaths]
+    [canvas, devicePixelRatio, redrawPaths]
   );
 
-  const onLoadSuccess: OnDocumentLoadSuccess = useCallback(
+  const onRenderSuccess: OnRenderSuccess = useCallback(() => {
+    setRenderedPageNumber(pageNumber);
+  }, [pageNumber]);
+
+  const OnDocumentLoadSuccess: OnDocumentLoadSuccess = useCallback(
     (pdf) => {
       if (!file.isNew) {
         setTotalPage(pdf.numPages);
@@ -206,7 +210,7 @@ export default function PdfEngine({
         )}
         <Document
           file={`data:application/pdf;base64,${file.base64}`}
-          onLoadSuccess={onLoadSuccess}
+          onLoadSuccess={OnDocumentLoadSuccess}
           loading={<></>}
         >
           <PinchZoomLayout
@@ -237,6 +241,7 @@ export default function PdfEngine({
               width={orientation === "portrait" ? width : undefined}
               height={height}
               devicePixelRatio={devicePixelRatio}
+              onLoadSuccess={OnPageLoadSuccess}
               onRenderSuccess={onRenderSuccess}
               customTextRenderer={textRenderer}
               renderAnnotationLayer={false}
