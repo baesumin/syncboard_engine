@@ -54,8 +54,6 @@ export default function useCanvas({
         return;
       }
 
-      touchPoints.current += 1;
-      isDrawing.current = true;
       const lineWidth =
         (strokeStep * (drawType === "highlight" ? 2 : 1)) / pageSize.width;
       const { x, y } = getDrawingPosition(
@@ -75,6 +73,9 @@ export default function useCanvas({
         drawOrder: drawOrder.current,
         alpha: drawType === "highlight" ? 0.4 : 1,
       });
+
+      touchPoints.current += 1;
+      isDrawing.current = true;
       lastXRef.current = x;
       lastYRef.current = y;
     },
@@ -259,9 +260,6 @@ export default function useCanvas({
     async (e: canvasEventType) => {
       if (!canvas.current || pathsRef.current.length === 0) return;
 
-      isDrawing.current = false;
-      touchPoints.current = 0;
-
       if (drawType === "eraser") {
         const currentPaths = paths.current[pageNumber] || [];
         const erasePaths = pathsRef.current;
@@ -347,16 +345,19 @@ export default function useCanvas({
           );
         }
 
-        const newValue = pathsRef.current;
-        drawOrder.current += 1;
-        paths.current = {
-          ...paths.current,
-          [pageNumber]: [...(paths.current[pageNumber] || []), ...newValue],
-        };
+        if (touchPoints.current === 1) {
+          const newValue = pathsRef.current;
+          drawOrder.current += 1;
+          paths.current = {
+            ...paths.current,
+            [pageNumber]: [...(paths.current[pageNumber] || []), ...newValue],
+          };
+        }
       }
 
-      // pathsRef 초기화
+      isDrawing.current = false;
       pathsRef.current = [];
+      touchPoints.current = 0;
     },
     [
       color,
