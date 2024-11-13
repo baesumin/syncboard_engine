@@ -159,13 +159,9 @@ export default function PdfEngine({
         });
       };
       (window as unknown as webviewType).getSearchText = (data: string) => {
-        const resultsList = getSearchResult(searchText);
-        (
-          window as unknown as webviewType
-        ).AndroidInterface?.getSearchTextPageList(
-          JSON.stringify(resultsList.map((result) => result.pageNumber))
-        );
         setSearchText(data);
+        const resultsList = getSearchResult(searchText);
+        return JSON.stringify(resultsList.map((result) => result.pageNumber));
       };
       (window as unknown as webviewType).getPageNumber = (data: string) => {
         if (!isNaN(Number(data))) {
