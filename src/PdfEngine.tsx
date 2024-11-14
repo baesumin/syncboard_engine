@@ -161,7 +161,7 @@ export default function PdfEngine({
       (window as unknown as webviewType).getSearchText = (data: string) => {
         setSearchText(data);
         const resultsList = getSearchResult(data);
-        return JSON.stringify(resultsList.map((result) => result.pageNumber))
+        return JSON.stringify(resultsList.map((result) => result.pageNumber));
       };
       (window as unknown as webviewType).getPageNumber = (data: string) => {
         if (!isNaN(Number(data))) {
@@ -172,7 +172,6 @@ export default function PdfEngine({
         setSearchText("");
       };
     }
-
   }, [file, getSearchResult, paths, setFile, totalPage]);
 
   useEffect(() => {
@@ -199,10 +198,6 @@ export default function PdfEngine({
 
   return (
     <>
-    <button onClick={()=>{
-      const resultsList = getSearchResult('for');
-      console.log(resultsList)
-    }}>hi</button>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
         {isRenderLoading && file.isNew && (
           <div
