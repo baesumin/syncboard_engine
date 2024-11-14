@@ -43,6 +43,9 @@ export const usePdfTextSearch = (file: string) => {
       const regex = new RegExp(searchText, "gi");
 
       return pages.reduce<SearchResult[]>((results, text, pageIndex) => {
+        console.log(results)
+        console.log(text)
+        console.log(pageIndex)
         const matches = Array.from(text.matchAll(regex));
 
         if (matches.length) {
