@@ -159,9 +159,10 @@ export default function PdfEngine({
         });
       };
       (window as unknown as webviewType).getSearchText = (data: string) => {
-        setSearchText(data);
+        // setSearchText(data);
         const resultsList = getSearchResult(data);
-        return JSON.stringify(resultsList.map((result) => result.pageNumber));
+        console.log(JSON.stringify(resultsList.map((result) => result.pageNumber)))
+        return 'hi'
       };
       (window as unknown as webviewType).getPageNumber = (data: string) => {
         if (!isNaN(Number(data))) {
