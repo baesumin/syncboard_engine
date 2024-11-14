@@ -172,8 +172,8 @@ export default function PdfEngine({
         setSearchText("");
       };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [file, setFile]);
+
+  }, [file, getSearchResult, paths, setFile, totalPage]);
 
   useEffect(() => {
     if (file.paths) {
@@ -199,6 +199,10 @@ export default function PdfEngine({
 
   return (
     <>
+    <button onClick={()=>{
+      const resultsList = getSearchResult('for');
+      console.log(resultsList)
+    }}>hi</button>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
         {isRenderLoading && file.isNew && (
           <div
