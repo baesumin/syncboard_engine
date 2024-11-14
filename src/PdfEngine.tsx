@@ -161,6 +161,7 @@ export default function PdfEngine({
       (window as unknown as webviewType).getSearchText = (data: string) => {
         // setSearchText(data);
         const resultsList = getSearchResult(data);
+        console.log(resultsList)
         console.log(JSON.stringify(resultsList.map((result) => result.pageNumber)))
         return 'hi'
       };
