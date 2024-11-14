@@ -160,7 +160,7 @@ export default function PdfEngine({
       };
       (window as unknown as webviewType).getSearchText = (data: string) => {
         setSearchText(data);
-        const resultsList = getSearchResult(searchText);
+        const resultsList = getSearchResult(data);
         return JSON.stringify(resultsList.map((result) => result.pageNumber));
       };
       (window as unknown as webviewType).getPageNumber = (data: string) => {
