@@ -161,7 +161,7 @@ export default function PdfEngine({
       (window as unknown as webviewType).getSearchText = (data: string) => {
         setSearchText(data);
         const resultsList = getSearchResult(data);
-        return JSON.stringify(resultsList.map((result) => result.pageNumber));
+        return resultsList.map((result) => result.pageNumber);
       };
       (window as unknown as webviewType).getPageNumber = (data: string) => {
         if (!isNaN(Number(data))) {
