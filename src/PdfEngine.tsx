@@ -25,6 +25,7 @@ import {
   highlightPattern,
   __DEV__,
   createOrMergePdf,
+  removePathByPageNumber,
 } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
 import PinchZoomLayout from "./components/PinchZoomLayout";
@@ -133,6 +134,15 @@ export default function PdfEngine({
       base64: newBase64,
     });
   }, [file, setFile, totalPage]);
+
+  const onEraseAllClick = useCallback(() => {
+    if (confirm("변경 사항을 모두 삭제하시겠습니까?")) {
+      removePathByPageNumber(paths.current, pageNumber);
+      canvas.current
+        ?.getContext("2d")!
+        .clearRect(0, 0, canvas.current.width, canvas.current.height);
+    }
+  }, [paths, pageNumber, canvas]);
 
   useEffect(() => {
     if (!isRenderLoading && !canRenderThumbnail) {
@@ -306,6 +316,7 @@ export default function PdfEngine({
             setPageNumber={setPageNumber}
             setStrokeStep={setStrokeStep}
             onNewPageClick={onNewPageClick}
+            onEraseAllClick={onEraseAllClick}
           />
         </div>
       )}

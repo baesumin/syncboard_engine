@@ -131,6 +131,15 @@ export const highlightPattern = (text: string, pattern: string) => {
   );
 };
 
+export const removePathByPageNumber = (
+  paths: { [pageNumber: number]: PathsType[] },
+  pageNumber: number
+) => {
+  if (pageNumber in paths) {
+    delete paths[pageNumber];
+  }
+};
+
 export const getModifiedPDFBase64 = async (
   paths: {
     [pageNumber: number]: PathsType[];

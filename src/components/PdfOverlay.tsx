@@ -18,6 +18,7 @@ import {
   Stroke5Step,
   ThumbnailList,
   TouchMode,
+  Trash,
   Zoom,
 } from "../assets/icons";
 import { Dispatch, SetStateAction } from "react";
@@ -49,6 +50,7 @@ interface Props {
   setColor: Dispatch<SetStateAction<(typeof colorMap)[number]>>;
   setStrokeStep: Dispatch<SetStateAction<number>>;
   onNewPageClick: () => void;
+  onEraseAllClick: () => void;
 }
 
 const PdfOverlay = ({
@@ -76,6 +78,7 @@ const PdfOverlay = ({
   setColor,
   setStrokeStep,
   onNewPageClick,
+  onEraseAllClick,
 }: Props) => {
   return (
     <>
@@ -231,93 +234,99 @@ const PdfOverlay = ({
                 </button>
               </div>
               <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
-              <div className="flex flex-row w-[220px] justify-between">
-                {colorMap.map((item) => {
-                  return (
-                    <div
-                      key={item}
-                      className="pointer-events-auto size-[44px] flex-center"
-                      onClick={() => {
-                        setColor(item);
-                      }}
-                    >
-                      <div
-                        className="rounded-full size-[24px] flex-center"
-                        style={{ backgroundColor: item }}
-                      >
-                        {drawType !== "eraser" && item === color && (
-                          <Checked color={"white"} />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
-              <button
-                onClick={() => setIsStrokeOpen((prev) => !prev)}
-                className={clsx(
-                  "pointer-events-auto size-[44px] rounded-lg flex-center",
-                  isStrokeOpen ? "bg-[#EEEFF3]" : "#ffffff"
-                )}
-              >
-                <Stroke />
-                {isStrokeOpen && (
-                  <div className="bg-white w-[60px] h-[236px] absolute bottom-[90px] rounded-lg shadow-black shadow-sm flex flex-col justify-center items-center">
-                    <button
-                      onClick={() => setStrokeStep(20)}
-                      className={"pointer-events-auto size-[44px] flex-center"}
-                    >
-                      <Stroke5Step
-                        color={strokeStep === 20 ? color : "#BCC2CB"}
-                      />
-                    </button>
-                    <button
-                      onClick={() => setStrokeStep(16)}
-                      className="pointer-events-auto size-[44px] flex-center"
-                    >
-                      <Stroke4Step
-                        color={strokeStep === 16 ? color : "#BCC2CB"}
-                      />
-                    </button>
-                    <button
-                      onClick={() => setStrokeStep(12)}
-                      className="pointer-events-auto size-[44px] flex-center"
-                    >
-                      <Stroke3Step
-                        color={strokeStep === 12 ? color : "#BCC2CB"}
-                      />
-                    </button>
-                    <button
-                      onClick={() => setStrokeStep(8)}
-                      className="pointer-events-auto size-[44px] flex-center"
-                    >
-                      <Stroke2Step
-                        color={strokeStep === 8 ? color : "#BCC2CB"}
-                      />
-                    </button>
-                    <button
-                      onClick={() => setStrokeStep(4)}
-                      className="pointer-events-auto size-[44px] flex-center"
-                    >
-                      <Stroke1Step
-                        color={strokeStep === 4 ? color : "#BCC2CB"}
-                      />
-                    </button>
+              {drawType !== "eraser" ? (
+                <>
+                  <div className="flex flex-row w-[220px] justify-between">
+                    {colorMap.map((item) => {
+                      return (
+                        <div
+                          key={item}
+                          className="pointer-events-auto size-[44px] flex-center"
+                          onClick={() => {
+                            setColor(item);
+                          }}
+                        >
+                          <div
+                            className="rounded-full size-[24px] flex-center"
+                            style={{ backgroundColor: item }}
+                          >
+                            {item === color && <Checked color={"white"} />}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
-              </button>
+                  <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                  <button
+                    onClick={() => setIsStrokeOpen((prev) => !prev)}
+                    className={clsx(
+                      "pointer-events-auto size-[44px] rounded-lg flex-center",
+                      isStrokeOpen ? "bg-[#EEEFF3]" : "#ffffff"
+                    )}
+                  >
+                    <Stroke />
+                    {isStrokeOpen && (
+                      <div className="bg-white w-[60px] h-[236px] absolute bottom-[90px] rounded-lg shadow-black shadow-sm flex flex-col justify-center items-center">
+                        <button
+                          onClick={() => setStrokeStep(20)}
+                          className={
+                            "pointer-events-auto size-[44px] flex-center"
+                          }
+                        >
+                          <Stroke5Step
+                            color={strokeStep === 20 ? color : "#BCC2CB"}
+                          />
+                        </button>
+                        <button
+                          onClick={() => setStrokeStep(16)}
+                          className="pointer-events-auto size-[44px] flex-center"
+                        >
+                          <Stroke4Step
+                            color={strokeStep === 16 ? color : "#BCC2CB"}
+                          />
+                        </button>
+                        <button
+                          onClick={() => setStrokeStep(12)}
+                          className="pointer-events-auto size-[44px] flex-center"
+                        >
+                          <Stroke3Step
+                            color={strokeStep === 12 ? color : "#BCC2CB"}
+                          />
+                        </button>
+                        <button
+                          onClick={() => setStrokeStep(8)}
+                          className="pointer-events-auto size-[44px] flex-center"
+                        >
+                          <Stroke2Step
+                            color={strokeStep === 8 ? color : "#BCC2CB"}
+                          />
+                        </button>
+                        <button
+                          onClick={() => setStrokeStep(4)}
+                          className="pointer-events-auto size-[44px] flex-center"
+                        >
+                          <Stroke1Step
+                            color={strokeStep === 4 ? color : "#BCC2CB"}
+                          />
+                        </button>
+                      </div>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={onEraseAllClick}
+                  className="pointer-events-auto flex gap-x-2 px-[10px]"
+                >
+                  <Trash />
+                  <span className="text-[#353B45]">모두 지우기</span>
+                </button>
+              )}
               <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
               <button
                 onClick={() => {
                   setCanDraw(zoomEnabled ? false : true);
-                  // setDrawType("pen");
-                  setTouchType((prev) => {
-                    // if (prev === "touch") {
-                    //   setZoomEnabled(false);
-                    // }
-                    return prev === "pen" ? "touch" : "pen";
-                  });
+                  setTouchType((prev) => (prev === "pen" ? "touch" : "pen"));
                 }}
                 className="pointer-events-auto w-[78px] h-[44px] rounded-lg bg-[#EEEFF3] flex items-center px-[4px]"
               >
