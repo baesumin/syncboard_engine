@@ -93,6 +93,10 @@ export default function PdfEngine({
     () => (orientation === "portrait" ? width : undefined),
     [orientation, width]
   );
+  const pdfFile = useMemo(
+    () => `data:application/pdf;base64,${file.base64}`,
+    [file.base64]
+  );
 
   const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
     (page) => {
@@ -219,7 +223,7 @@ export default function PdfEngine({
           />
         )}
         <Document
-          file={`data:application/pdf;base64,${file.base64}`}
+          file={pdfFile}
           onLoadSuccess={OnDocumentLoadSuccess}
           loading={<></>}
         >
