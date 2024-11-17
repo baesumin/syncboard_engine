@@ -21,17 +21,16 @@ import useCanvas from "./hooks/useCanvas";
 import PdfOverlay from "./components/PdfOverlay";
 import ThumbnailOvelay from "./components/ThumbnailOvelay";
 import {
-  getModifiedPDFBase64,
   highlightPattern,
-  __DEV__,
   createOrMergePdf,
   removePathByPageNumber,
 } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch";
 import PinchZoomLayout from "./components/PinchZoomLayout";
-import { PathsType, webviewType } from "./types/common";
+import { PathsType } from "./types/common";
 import { webviewApiDataType } from "./types/json";
 import clsx from "clsx";
+import { useWebviewInterface } from "./hooks/useWebviewInterface";
 
 export default function PdfEngine({
   file,
@@ -58,6 +57,7 @@ export default function PdfEngine({
     strokeStep: 12,
     devicePixelRatio: 2,
   });
+  const [canRenderThumbnail, setCanRenderThumbnail] = useState(false);
   const {
     canvas,
     canDraw,
@@ -83,7 +83,6 @@ export default function PdfEngine({
     strokeStep: pdfConfig.strokeStep,
     pageNumber: pdfState.pageNumber,
   });
-  const [canRenderThumbnail, setCanRenderThumbnail] = useState(false);
 
   const isRenderLoading = useMemo(
     () => pdfState.renderedPageNumber !== pdfState.pageNumber,
@@ -98,6 +97,15 @@ export default function PdfEngine({
     [file.base64]
   );
   const { getSearchResult } = usePdfTextSearch(pdfFile);
+  useWebviewInterface({
+    file,
+    paths,
+    pdfState,
+    setPdfState,
+    setFile,
+    setSearchText,
+    getSearchResult,
+  });
 
   const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
     (page) => {
@@ -166,46 +174,6 @@ export default function PdfEngine({
       setCanRenderThumbnail(true);
     }
   }, [isRenderLoading, canRenderThumbnail]);
-
-  useEffect(() => {
-    if (!__DEV__) {
-      (window as unknown as webviewType).getBase64 = async () => {
-        const data = await getModifiedPDFBase64(paths.current, file.base64);
-        (window as unknown as webviewType).AndroidInterface.getBase64(data);
-      };
-      (window as unknown as webviewType).getPathData = () => {
-        return JSON.stringify(paths.current);
-      };
-      (window as unknown as webviewType).newPage = async () => {
-        const newBase64 = await createOrMergePdf(file.base64);
-        setPdfState({
-          ...pdfState,
-          pageNumber: pdfState.totalPage + 1,
-          totalPage: pdfState.totalPage + 1,
-        });
-        setFile({
-          ...file,
-          base64: newBase64,
-        });
-      };
-      (window as unknown as webviewType).getSearchText = (data: string) => {
-        setSearchText(data);
-        const resultsList = getSearchResult(data);
-        return resultsList.map((result) => result.pageNumber);
-      };
-      (window as unknown as webviewType).getPageNumber = (data: string) => {
-        if (!isNaN(Number(data))) {
-          setPdfState({
-            ...pdfState,
-            pageNumber: Number(data),
-          });
-        }
-      };
-      (window as unknown as webviewType).endSearch = () => {
-        setSearchText("");
-      };
-    }
-  }, [file, getSearchResult, paths, pdfState, setFile]);
 
   useEffect(() => {
     if (file.paths) {
