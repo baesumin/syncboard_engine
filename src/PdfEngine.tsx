@@ -27,7 +27,7 @@ import {
   createOrMergePdf,
   removePathByPageNumber,
 } from "./utils/common";
-import { usePdfTextSearch } from "./hooks/usePdfTextSearch ";
+import { usePdfTextSearch } from "./hooks/usePdfTextSearch";
 import PinchZoomLayout from "./components/PinchZoomLayout";
 import { PathsType, webviewType } from "./types/common";
 import { webviewApiDataType } from "./types/json";
@@ -57,7 +57,6 @@ export default function PdfEngine({
   const [devicePixelRatio] = useState(2);
   const [isStrokeOpen, setIsStrokeOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const { getSearchResult } = usePdfTextSearch(file.base64);
   const {
     canvas,
     canDraw,
@@ -97,6 +96,7 @@ export default function PdfEngine({
     () => `data:application/pdf;base64,${file.base64}`,
     [file.base64]
   );
+  const { getSearchResult } = usePdfTextSearch(pdfFile);
 
   const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
     (page) => {
