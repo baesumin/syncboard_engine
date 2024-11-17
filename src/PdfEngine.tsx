@@ -43,20 +43,21 @@ export default function PdfEngine({
   const { orientation } = useMobileOrientation();
   const { width, height, ref } = useResizeDetector();
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
-  const [isToolBarOpen, setIsToolBarOpen] = useState(false);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [renderedPageNumber, setRenderedPageNumber] = useState<number>(0);
-  const [pageSize, setPageSize] = useState({
-    width: 0,
-    height: 0,
-  });
-  const [isListOpen, setIsListOpen] = useState(false);
-  const [totalPage, setTotalPage] = useState(1);
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  const [strokeStep, setStrokeStep] = useState(12);
-  const [devicePixelRatio] = useState(2);
-  const [isStrokeOpen, setIsStrokeOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [pdfState, setPdfState] = useState({
+    isToolBarOpen: false,
+    isListOpen: false,
+    isFullScreen: false,
+    isStrokeOpen: false,
+    pageNumber: 1,
+    totalPage: 1,
+    renderedPageNumber: 0,
+  });
+  const [pdfConfig, setPdfConfig] = useState({
+    size: { width: 0, height: 0 },
+    strokeStep: 12,
+    devicePixelRatio: 2,
+  });
   const {
     canvas,
     canDraw,
@@ -77,16 +78,16 @@ export default function PdfEngine({
     stopDrawing,
     setTouchType,
   } = useCanvas({
-    devicePixelRatio,
-    pageSize,
-    strokeStep,
-    pageNumber,
+    devicePixelRatio: pdfConfig.devicePixelRatio,
+    pageSize: pdfConfig.size,
+    strokeStep: pdfConfig.strokeStep,
+    pageNumber: pdfState.pageNumber,
   });
   const [canRenderThumbnail, setCanRenderThumbnail] = useState(false);
 
   const isRenderLoading = useMemo(
-    () => renderedPageNumber !== pageNumber,
-    [pageNumber, renderedPageNumber]
+    () => pdfState.renderedPageNumber !== pdfState.pageNumber,
+    [pdfState.pageNumber, pdfState.renderedPageNumber]
   );
   const pdfWidth = useMemo(
     () => (orientation === "portrait" ? width : undefined),
@@ -100,28 +101,37 @@ export default function PdfEngine({
 
   const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
     (page) => {
-      setPageSize({ width: page.width, height: page.height });
+      setPdfConfig({
+        ...pdfConfig,
+        size: { width: page.width, height: page.height },
+      });
       scaleRef.current?.resetTransform();
       if (canvas.current) {
-        canvas.current.width = page.width * devicePixelRatio;
-        canvas.current.height = page.height * devicePixelRatio;
+        canvas.current.width = page.width * pdfConfig.devicePixelRatio;
+        canvas.current.height = page.height * pdfConfig.devicePixelRatio;
         redrawPaths(page.width, page.height);
       }
     },
-    [canvas, devicePixelRatio, redrawPaths]
+    [canvas, pdfConfig, redrawPaths]
   );
 
   const onRenderSuccess: OnRenderSuccess = useCallback(() => {
-    setRenderedPageNumber(pageNumber);
-  }, [pageNumber]);
+    setPdfState({
+      ...pdfState,
+      renderedPageNumber: pdfState.pageNumber,
+    });
+  }, [pdfState]);
 
   const OnDocumentLoadSuccess: OnDocumentLoadSuccess = useCallback(
     (pdf) => {
       if (!file.isNew) {
-        setTotalPage(pdf.numPages);
+        setPdfState({
+          ...pdfState,
+          totalPage: pdf.numPages,
+        });
       }
     },
-    [file.isNew]
+    [file.isNew, pdfState]
   );
 
   const textRenderer: CustomTextRenderer = useCallback(
@@ -131,22 +141,25 @@ export default function PdfEngine({
 
   const onNewPageClick = useCallback(async () => {
     const newBase64 = await createOrMergePdf(file.base64);
-    setPageNumber(totalPage + 1);
-    setTotalPage(totalPage + 1);
+    setPdfState({
+      ...pdfState,
+      pageNumber: pdfState.totalPage + 1,
+      totalPage: pdfState.totalPage + 1,
+    });
     setFile({
       ...file,
       base64: newBase64,
     });
-  }, [file, setFile, totalPage]);
+  }, [file, pdfState, setFile]);
 
   const onEraseAllClick = useCallback(() => {
     if (confirm("변경 사항을 모두 삭제하시겠습니까?")) {
-      removePathByPageNumber(paths.current, pageNumber);
+      removePathByPageNumber(paths.current, pdfState.pageNumber);
       canvas.current
         ?.getContext("2d")!
         .clearRect(0, 0, canvas.current.width, canvas.current.height);
     }
-  }, [paths, pageNumber, canvas]);
+  }, [paths, pdfState.pageNumber, canvas]);
 
   useEffect(() => {
     if (!isRenderLoading && !canRenderThumbnail) {
@@ -165,8 +178,11 @@ export default function PdfEngine({
       };
       (window as unknown as webviewType).newPage = async () => {
         const newBase64 = await createOrMergePdf(file.base64);
-        setPageNumber(totalPage + 1);
-        setTotalPage(totalPage + 1);
+        setPdfState({
+          ...pdfState,
+          pageNumber: pdfState.totalPage + 1,
+          totalPage: pdfState.totalPage + 1,
+        });
         setFile({
           ...file,
           base64: newBase64,
@@ -179,14 +195,17 @@ export default function PdfEngine({
       };
       (window as unknown as webviewType).getPageNumber = (data: string) => {
         if (!isNaN(Number(data))) {
-          setPageNumber(Number(data));
+          setPdfState({
+            ...pdfState,
+            pageNumber: Number(data),
+          });
         }
       };
       (window as unknown as webviewType).endSearch = () => {
         setSearchText("");
       };
     }
-  }, [file, getSearchResult, paths, setFile, totalPage]);
+  }, [file, getSearchResult, paths, pdfState, setFile]);
 
   useEffect(() => {
     if (file.paths) {
@@ -217,8 +236,8 @@ export default function PdfEngine({
           <div
             className="absolute bg-white"
             style={{
-              width: pageSize.width,
-              height: pageSize.height,
+              width: pdfConfig.size.width,
+              height: pdfConfig.size.height,
             }}
           />
         )}
@@ -228,7 +247,7 @@ export default function PdfEngine({
           loading={<></>}
         >
           <PinchZoomLayout
-            isFullScreen={isFullScreen}
+            isFullScreen={pdfState.isFullScreen}
             disabled={touchType === "touch" && canDraw}
             scale={scale}
             scaleRef={scaleRef}
@@ -236,11 +255,11 @@ export default function PdfEngine({
           >
             {isRenderLoading && (
               <Page
-                key={renderedPageNumber}
-                pageNumber={renderedPageNumber}
+                key={pdfState.renderedPageNumber}
+                pageNumber={pdfState.renderedPageNumber}
                 width={pdfWidth}
                 height={height}
-                devicePixelRatio={devicePixelRatio}
+                devicePixelRatio={pdfConfig.devicePixelRatio}
                 customTextRenderer={textRenderer}
                 renderAnnotationLayer={false}
                 renderTextLayer={file.isNew ? false : true}
@@ -249,12 +268,12 @@ export default function PdfEngine({
               />
             )}
             <Page
-              key={pageNumber}
+              key={pdfState.pageNumber}
               className={isRenderLoading ? "hidden" : ""}
-              pageNumber={pageNumber}
+              pageNumber={pdfState.pageNumber}
               width={pdfWidth}
               height={height}
-              devicePixelRatio={devicePixelRatio}
+              devicePixelRatio={pdfConfig.devicePixelRatio}
               onLoadSuccess={OnPageLoadSuccess}
               onRenderSuccess={onRenderSuccess}
               customTextRenderer={textRenderer}
@@ -266,10 +285,10 @@ export default function PdfEngine({
             <div className="absolute top-0 left-0 right-0 bottom-0 flex-center">
               <canvas
                 ref={canvas}
-                key={pageNumber}
+                key={pdfState.pageNumber}
                 style={{
-                  width: `${pageSize.width}px`,
-                  height: `${pageSize.height}px`,
+                  width: `${pdfConfig.size.width}px`,
+                  height: `${pdfConfig.size.height}px`,
                 }}
                 className={clsx(
                   "touch-none z-[1000]",
@@ -282,30 +301,19 @@ export default function PdfEngine({
             </div>
           </PinchZoomLayout>
           {canRenderThumbnail && (
-            <div className={isListOpen ? "" : "hidden"}>
-              <ThumbnailOvelay
-                pageNumber={pageNumber}
-                setIsListOpen={setIsListOpen}
-                setPageNumber={setPageNumber}
-                totalPage={totalPage}
-              />
+            <div className={pdfState.isListOpen ? "" : "hidden"}>
+              <ThumbnailOvelay pdfState={pdfState} setPdfState={setPdfState} />
             </div>
           )}
         </Document>
       </div>
       {canRenderThumbnail && (
-        <div className={isListOpen ? "hidden" : ""}>
+        <div className={pdfState.isListOpen ? "hidden" : ""}>
           <PdfOverlay
             color={color}
             drawType={drawType}
             file={file.base64}
-            isFullScreen={isFullScreen}
-            isStrokeOpen={isStrokeOpen}
-            isToolBarOpen={isToolBarOpen}
-            pageNumber={pageNumber}
             paths={paths.current}
-            strokeStep={strokeStep}
-            totalPage={totalPage}
             touchType={touchType}
             zoomEnabled={zoomEnabled}
             setZoomEnabled={setZoomEnabled}
@@ -313,14 +321,12 @@ export default function PdfEngine({
             setCanDraw={setCanDraw}
             setColor={setColor}
             setDrawType={setDrawType}
-            setIsFullScreen={setIsFullScreen}
-            setIsListOpen={setIsListOpen}
-            setIsStrokeOpen={setIsStrokeOpen}
-            setIsToolBarOpen={setIsToolBarOpen}
-            setPageNumber={setPageNumber}
-            setStrokeStep={setStrokeStep}
             onNewPageClick={onNewPageClick}
             onEraseAllClick={onEraseAllClick}
+            pdfState={pdfState}
+            setPdfState={setPdfState}
+            pdfConfig={pdfConfig}
+            setPdfConfig={setPdfConfig}
           />
         </div>
       )}
