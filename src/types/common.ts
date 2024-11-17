@@ -37,6 +37,7 @@ export type PdfStateType = {
   pageNumber: number;
   totalPage: number;
   renderedPageNumber: number;
+  canRenderThumbnail: boolean;
 };
 export type PdfConfigType = {
   size: { width: number; height: number };

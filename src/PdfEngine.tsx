@@ -51,13 +51,13 @@ export default function PdfEngine({
     pageNumber: 1,
     totalPage: 1,
     renderedPageNumber: 0,
+    canRenderThumbnail: false,
   });
   const [pdfConfig, setPdfConfig] = useState({
     size: { width: 0, height: 0 },
     strokeStep: 12,
     devicePixelRatio: 2,
   });
-  const [canRenderThumbnail, setCanRenderThumbnail] = useState(false);
   const {
     canvas,
     canDraw,
@@ -96,6 +96,14 @@ export default function PdfEngine({
     () => `data:application/pdf;base64,${file.base64}`,
     [file.base64]
   );
+  const pdfDimensions = useMemo(
+    () => ({
+      width: pdfConfig.size.width,
+      height: pdfConfig.size.height,
+    }),
+    [pdfConfig.size]
+  );
+
   const { getSearchResult } = usePdfTextSearch(pdfFile);
   useWebviewInterface({
     file,
@@ -170,10 +178,13 @@ export default function PdfEngine({
   }, [paths, pdfState.pageNumber, canvas]);
 
   useEffect(() => {
-    if (!isRenderLoading && !canRenderThumbnail) {
-      setCanRenderThumbnail(true);
+    if (!isRenderLoading && !pdfState.canRenderThumbnail) {
+      setPdfState({
+        ...pdfState,
+        canRenderThumbnail: true,
+      });
     }
-  }, [isRenderLoading, canRenderThumbnail]);
+  }, [isRenderLoading, pdfState]);
 
   useEffect(() => {
     if (file.paths) {
@@ -204,8 +215,8 @@ export default function PdfEngine({
           <div
             className="absolute bg-white"
             style={{
-              width: pdfConfig.size.width,
-              height: pdfConfig.size.height,
+              width: pdfDimensions.width,
+              height: pdfDimensions.height,
             }}
           />
         )}
@@ -255,8 +266,8 @@ export default function PdfEngine({
                 ref={canvas}
                 key={pdfState.pageNumber}
                 style={{
-                  width: `${pdfConfig.size.width}px`,
-                  height: `${pdfConfig.size.height}px`,
+                  width: `${pdfDimensions.width}px`,
+                  height: `${pdfDimensions.height}px`,
                 }}
                 className={clsx(
                   "touch-none z-[1000]",
@@ -268,35 +279,31 @@ export default function PdfEngine({
               />
             </div>
           </PinchZoomLayout>
-          {canRenderThumbnail && (
-            <div className={pdfState.isListOpen ? "" : "hidden"}>
-              <ThumbnailOvelay pdfState={pdfState} setPdfState={setPdfState} />
-            </div>
+          {pdfState.canRenderThumbnail && (
+            <ThumbnailOvelay pdfState={pdfState} setPdfState={setPdfState} />
           )}
         </Document>
       </div>
-      {canRenderThumbnail && (
-        <div className={pdfState.isListOpen ? "hidden" : ""}>
-          <PdfOverlay
-            color={color}
-            drawType={drawType}
-            file={file.base64}
-            paths={paths.current}
-            touchType={touchType}
-            zoomEnabled={zoomEnabled}
-            setZoomEnabled={setZoomEnabled}
-            setTouchType={setTouchType}
-            setCanDraw={setCanDraw}
-            setColor={setColor}
-            setDrawType={setDrawType}
-            onNewPageClick={onNewPageClick}
-            onEraseAllClick={onEraseAllClick}
-            pdfState={pdfState}
-            setPdfState={setPdfState}
-            pdfConfig={pdfConfig}
-            setPdfConfig={setPdfConfig}
-          />
-        </div>
+      {!pdfState.isListOpen && pdfState.canRenderThumbnail && (
+        <PdfOverlay
+          color={color}
+          drawType={drawType}
+          file={file.base64}
+          paths={paths.current}
+          touchType={touchType}
+          zoomEnabled={zoomEnabled}
+          setZoomEnabled={setZoomEnabled}
+          setTouchType={setTouchType}
+          setCanDraw={setCanDraw}
+          setColor={setColor}
+          setDrawType={setDrawType}
+          onNewPageClick={onNewPageClick}
+          onEraseAllClick={onEraseAllClick}
+          pdfState={pdfState}
+          setPdfState={setPdfState}
+          pdfConfig={pdfConfig}
+          setPdfConfig={setPdfConfig}
+        />
       )}
     </>
   );

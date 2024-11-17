@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { webviewType, PathsType } from "../types/common";
+import { webviewType, PathsType, PdfStateType } from "../types/common";
 import { webviewApiDataType } from "../types/json";
 import {
   getModifiedPDFBase64,
@@ -14,17 +14,7 @@ interface UseWebviewInterfaceProps {
     pageNumber: number;
     totalPage: number;
   };
-  setPdfState: React.Dispatch<
-    React.SetStateAction<{
-      isToolBarOpen: boolean;
-      isListOpen: boolean;
-      isFullScreen: boolean;
-      isStrokeOpen: boolean;
-      pageNumber: number;
-      totalPage: number;
-      renderedPageNumber: number;
-    }>
-  >;
+  setPdfState: React.Dispatch<React.SetStateAction<PdfStateType>>;
   setFile: (file: webviewApiDataType) => void;
   setSearchText: (text: string) => void;
   getSearchResult: (text: string) => any[];

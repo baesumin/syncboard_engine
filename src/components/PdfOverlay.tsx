@@ -31,6 +31,8 @@ import {
   TouchType,
   webviewType,
 } from "../types/common";
+import ColorButton from "./ColorButton";
+import ColorPicker from "./ColorPicker";
 
 interface Props {
   drawType: DrawType;
@@ -251,26 +253,7 @@ const PdfOverlay = ({
               <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
               {drawType !== "eraser" ? (
                 <>
-                  <div className="flex flex-row w-[220px] justify-between">
-                    {colorMap.map((item) => {
-                      return (
-                        <div
-                          key={item}
-                          className="pointer-events-auto size-[44px] flex-center"
-                          onClick={() => {
-                            setColor(item);
-                          }}
-                        >
-                          <div
-                            className="rounded-full size-[24px] flex-center"
-                            style={{ backgroundColor: item }}
-                          >
-                            {item === color && <Checked color={"white"} />}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <ColorPicker onColorSelect={setColor} selectedColor={color} />
                   <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
                   <button
                     onClick={() => {
