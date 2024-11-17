@@ -167,6 +167,7 @@ export default function useCanvas({
             points[0].lineWidth * pageWidth,
             points[0].alpha
           );
+          return;
         }
 
         for (let i = 1; i < points.length; i++) {

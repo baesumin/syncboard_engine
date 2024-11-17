@@ -1,7 +1,6 @@
 import clsx from "clsx";
 import {
   ArrowLeft,
-  Checked,
   Close,
   Drawing,
   Eraser,
@@ -31,7 +30,6 @@ import {
   TouchType,
   webviewType,
 } from "../types/common";
-import ColorButton from "./ColorButton";
 import ColorPicker from "./ColorPicker";
 
 interface Props {
