@@ -3,7 +3,6 @@ import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
 import { useEffect, useState } from "react";
 import { __DEV__ } from "./utils/common";
-import { base64 } from "./mock/base64";
 import { webviewApiType } from "./types/json";
 import { webviewType } from "./types/common";
 import { emptyPageBase64 } from "./mock/emptyPageBase64";
@@ -21,39 +20,44 @@ function App() {
     isNew: false,
   });
   const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    if (!__DEV__) {
-      if (isDesktop) {
-        setFile({
-          base64: base64.base64,
-          paths: "",
-          isNew: true,
-        });
+    const initializeFile = async () => {
+      if (!__DEV__) {
+        if (isDesktop) {
+          setFile({
+            base64: emptyPageBase64,
+            paths: "",
+            isNew: true,
+          });
+          setIsLoading(false);
+          return;
+        }
+        (window as unknown as webviewType).webviewApi = (appData: string) => {
+          const param: webviewApiType = JSON.parse(appData);
+          setFile({
+            base64: param?.data?.isNew ? emptyPageBase64 : param?.data?.base64,
+            paths: param?.data?.paths,
+            isNew: param?.data?.isNew,
+          });
+          setIsLoading(false);
+        };
+      } else {
+        try {
+          const { base64 } = await import("./mock/base64");
+          setFile({
+            base64: base64.base64,
+            paths: "",
+            isNew: false,
+          });
+        } catch (error) {
+          console.error("Failed to load base64:", error);
+        }
         setIsLoading(false);
-        return;
       }
-      (window as unknown as webviewType).webviewApi = (appData: string) => {
-        const param: webviewApiType = JSON.parse(appData);
-        setFile({
-          base64: param?.data?.isNew ? emptyPageBase64 : param?.data?.base64,
-          paths: param?.data?.paths,
-          isNew: param?.data?.isNew,
-        });
-        setIsLoading(false);
-      };
-    } else {
-      setFile({
-        base64: base64.base64,
-        paths: "",
-        isNew: false,
-      });
-      // setFile({
-      //   base64: emptyPageBase64,
-      //   paths: "",
-      //   isNew: true,
-      // });
-      setIsLoading(false);
-    }
+    };
+
+    initializeFile();
   }, []);
 
   return <>{!isLoading && <PdfEngine file={file} setFile={setFile} />}</>;

@@ -29,3 +29,18 @@ export type webviewType = {
     setFullMode: (data: boolean) => void;
   };
 };
+export type PdfStateType = {
+  isToolBarOpen: boolean;
+  isListOpen: boolean;
+  isFullScreen: boolean;
+  isStrokeOpen: boolean;
+  pageNumber: number;
+  totalPage: number;
+  renderedPageNumber: number;
+  canRenderThumbnail: boolean;
+};
+export type PdfConfigType = {
+  size: { width: number; height: number };
+  strokeStep: number;
+  devicePixelRatio: number;
+};

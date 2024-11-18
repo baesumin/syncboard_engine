@@ -2,29 +2,29 @@ import clsx from "clsx";
 import { Close } from "../assets/icons";
 import { Dispatch, SetStateAction } from "react";
 import { Thumbnail } from "react-pdf";
+import { PdfStateType } from "../types/common";
 
 interface Props {
-  totalPage: number;
-  pageNumber: number;
-  setIsListOpen: Dispatch<SetStateAction<boolean>>;
-  setPageNumber: Dispatch<SetStateAction<number>>;
+  pdfState: PdfStateType;
+  setPdfState: Dispatch<SetStateAction<PdfStateType>>;
 }
 
-const ThumbnailOvelay = ({
-  totalPage,
-  pageNumber,
-  setIsListOpen,
-  setPageNumber,
-}: Props) => {
+const ThumbnailOvelay = ({ pdfState, setPdfState }: Props) => {
   return (
     <div
       className={clsx(
-        "absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px] z-[9999]"
+        "absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px] z-[9999]",
+        pdfState.isListOpen ? "" : "hidden"
       )}
     >
       <div className="flex justify-end items-center">
         <button
-          onClick={() => setIsListOpen(false)}
+          onClick={() => {
+            setPdfState({
+              ...pdfState,
+              isListOpen: false,
+            });
+          }}
           className="bg-white size-[44px] flex-center rounded-xl"
         >
           <Close />
@@ -36,12 +36,12 @@ const ThumbnailOvelay = ({
           gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
         }}
       >
-        {[...new Array(totalPage)].map((_, index) => {
+        {[...new Array(pdfState.totalPage)].map((_, index) => {
           return (
             <div key={index} className="w-[180px]">
               <div
                 className={clsx(
-                  pageNumber === index + 1
+                  pdfState.pageNumber === index + 1
                     ? "border-[3px] border-[#FF9A51]"
                     : "",
                   "overflow-hidden"
@@ -52,8 +52,11 @@ const ThumbnailOvelay = ({
                   width={180}
                   devicePixelRatio={2}
                   onItemClick={({ pageNumber }) => {
-                    setPageNumber(pageNumber);
-                    setIsListOpen(false);
+                    setPdfState({
+                      ...pdfState,
+                      pageNumber: pageNumber,
+                      isListOpen: false,
+                    });
                   }}
                   loading={<></>}
                 />
@@ -61,12 +64,12 @@ const ThumbnailOvelay = ({
               <div className="h-[31px] flex justify-center items-center">
                 <span
                   className={
-                    pageNumber === index + 1
+                    pdfState.pageNumber === index + 1
                       ? "text-[#FF9A51] font-bold text-lg"
                       : "text-white"
                   }
                 >
-                  {index + 1}/{totalPage}
+                  {index + 1}/{pdfState.totalPage}
                 </span>
               </div>
             </div>
