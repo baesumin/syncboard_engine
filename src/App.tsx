@@ -25,8 +25,9 @@ function App() {
     const initializeFile = async () => {
       if (!__DEV__) {
         if (isDesktop) {
+          const { base64 } = await import("./mock/base64");
           setFile({
-            base64: emptyPageBase64,
+            base64: base64.base64,
             paths: "",
             isNew: true,
           });
