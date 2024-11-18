@@ -171,9 +171,7 @@ export default function PdfEngine({
   const onEraseAllClick = useCallback(() => {
     if (confirm("변경 사항을 모두 삭제하시겠습니까?")) {
       removePathByPageNumber(paths.current, pdfState.pageNumber);
-      canvas.current
-        ?.getContext("2d")!
-        .clearRect(0, 0, canvas.current.width, canvas.current.height);
+      canvas.current?.getContext("2d")!.reset();
     }
   }, [paths, pdfState.pageNumber, canvas]);
 
