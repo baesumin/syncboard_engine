@@ -29,7 +29,7 @@ function App() {
           setFile({
             base64: base64.base64,
             paths: "",
-            isNew: true,
+            isNew: false,
           });
           setIsLoading(false);
           return;
