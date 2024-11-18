@@ -25,7 +25,7 @@ function App() {
     if (!__DEV__) {
       if (isDesktop) {
         setFile({
-          base64: emptyPageBase64,
+          base64: base64.base64,
           paths: "",
           isNew: true,
         });
