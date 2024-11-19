@@ -3,7 +3,7 @@ import {
   colorMap,
   drawDashedLine,
   drawSinglePoint,
-  drawSmoothLine,
+  drawLine,
   getDrawingPosition,
 } from "../utils/common";
 import {
@@ -114,7 +114,7 @@ export default function useCanvas({
         if (drawType === "eraser") {
           drawDashedLine(context, lastXRef.current, lastYRef.current, x, y);
         } else {
-          drawSmoothLine(
+          drawLine(
             context,
             lastXRef.current,
             lastYRef.current,
@@ -151,12 +151,6 @@ export default function useCanvas({
       if (!points) return;
       const context = canvas.current.getContext("2d")!;
 
-      // 단일 점 처리
-      if (points.length === 1) {
-        drawSinglePoint(context, points[0], pageWidth, pageHeight);
-        return;
-      }
-
       // 점을 그룹으로 나누기
       let currentGroup: PathsType[] = [];
       // const currentStyle = {
@@ -165,57 +159,49 @@ export default function useCanvas({
       //   alpha: points[0].alpha,
       // };
 
+      if (points.length === 1) {
+        drawSinglePoint(context, points[0], pageWidth, pageHeight);
+        return;
+      }
       for (let i = 1; i < points.length; i++) {
+        // 선이 이어진 경우
         if (
-          points[i].lastX !== points[i - 1].x ||
-          points[i].lastY !== points[i - 1].y
+          points[i].lastX === points[i - 1].x &&
+          points[i].lastY === points[i - 1].y
         ) {
-          if (i === 1) {
-            drawSinglePoint(context, points[0], pageWidth, pageHeight);
-          }
-          // 선이 띄워진 경우
-          // 새로운 그룹 시작
-          if (currentGroup.length) {
-            // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
-            for (let j = 1; j < currentGroup.length; j++) {
-              drawSmoothLine(
-                context,
-                currentGroup[j - 1].x * pageWidth,
-                currentGroup[j - 1].y * pageHeight,
-                currentGroup[j].x * pageWidth,
-                currentGroup[j].y * pageHeight,
-                currentGroup[j].color,
-                currentGroup[j].lineWidth * pageWidth,
-                currentGroup[j].alpha
-              );
-            }
-          }
-
-          // 단일 점 처리
-          drawSinglePoint(context, points[i], pageWidth, pageHeight);
-          currentGroup = [points[i]]; // 새로운 그룹 초기화
-        } else {
-          // if (i === 1) {
-          //   drawSmoothLine(
-          //     context,
-          //     points[0].x * pageWidth,
-          //     points[0].y * pageHeight,
-          //     points[1].x * pageWidth,
-          //     points[1].y * pageHeight,
-          //     points[1].color,
-          //     points[1].lineWidth * pageWidth,
-          //     points[1].alpha
-          //   );
-          // }
-          // 선이 이어진 경우
           currentGroup.push(points[i]); // 현재 그룹에 점 추가
+          continue;
         }
+        // 선이 띄워진 경우
+        if (i === 1) {
+          drawSinglePoint(context, points[0], pageWidth, pageHeight);
+        }
+        if (currentGroup.length) {
+          // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
+          for (let j = 1; j < currentGroup.length; j++) {
+            drawLine(
+              context,
+              currentGroup[j - 1].x * pageWidth,
+              currentGroup[j - 1].y * pageHeight,
+              currentGroup[j].x * pageWidth,
+              currentGroup[j].y * pageHeight,
+              // {alpha:},
+              currentGroup[j].color,
+              currentGroup[j].lineWidth * pageWidth,
+              currentGroup[j].alpha
+            );
+          }
+        }
+
+        // 단일 점 처리
+        drawSinglePoint(context, points[i], pageWidth, pageHeight);
+        currentGroup = [points[i]]; // 새로운 그룹 초기화
       }
 
       // 마지막 그룹 처리
       if (currentGroup.length) {
         for (let j = 1; j < currentGroup.length; j++) {
-          drawSmoothLine(
+          drawLine(
             context,
             currentGroup[j - 1].x * pageWidth,
             currentGroup[j - 1].y * pageHeight,
@@ -306,7 +292,7 @@ export default function useCanvas({
             devicePixelRatio,
             scale.current
           );
-          drawSmoothLine(
+          drawLine(
             context,
             lastXRef.current,
             lastYRef.current,

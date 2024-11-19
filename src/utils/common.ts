@@ -103,12 +103,13 @@ export const drawSinglePoint = (
   context.stroke();
 };
 
-export const drawSmoothLine = (
+export const drawLine = (
   context: CanvasRenderingContext2D,
   lastX: number,
   lastY: number,
   x: number,
   y: number,
+  // style: { color: string; lineWidth: number; alpha: number },
   color: (typeof colorMap)[number],
   lineWidth: number,
   alpha: number

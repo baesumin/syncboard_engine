@@ -25,6 +25,7 @@ export type webviewType = {
   endSearch: () => void;
   AndroidInterface: {
     getBase64: (data: string) => void;
+    getPdfData: (data: string) => void;
     getSearchTextPageList: (data: string) => void;
     setFullMode: (data: boolean) => void;
   };
