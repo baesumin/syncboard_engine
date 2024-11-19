@@ -148,17 +148,22 @@ export default function useCanvas({
     (pageWidth: number, pageHeight: number) => {
       if (!canvas.current) return;
       const points = paths.current[pageNumber];
-      if (!points.length) return;
+      if (!points) return;
       const context = canvas.current.getContext("2d")!;
-
-      // 점을 그룹으로 나누기
-      let currentGroup: PathsType[] = [];
 
       // 단일 점 처리
       if (points.length === 1) {
         drawSinglePoint(context, points[0], pageWidth, pageHeight);
         return;
       }
+
+      // 점을 그룹으로 나누기
+      let currentGroup: PathsType[] = [];
+      // const currentStyle = {
+      //   color: points[0].color,
+      //   lineWidth: points[0].lineWidth,
+      //   alpha: points[0].alpha,
+      // };
 
       for (let i = 1; i < points.length; i++) {
         if (
@@ -170,7 +175,7 @@ export default function useCanvas({
           }
           // 선이 띄워진 경우
           // 새로운 그룹 시작
-          if (currentGroup.length > 1) {
+          if (currentGroup.length) {
             // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
             for (let j = 1; j < currentGroup.length; j++) {
               drawSmoothLine(
@@ -190,18 +195,18 @@ export default function useCanvas({
           drawSinglePoint(context, points[i], pageWidth, pageHeight);
           currentGroup = [points[i]]; // 새로운 그룹 초기화
         } else {
-          if (i === 1) {
-            drawSmoothLine(
-              context,
-              points[0].x * pageWidth,
-              points[0].y * pageHeight,
-              points[1].x * pageWidth,
-              points[1].y * pageHeight,
-              points[1].color,
-              points[1].lineWidth * pageWidth,
-              points[1].alpha
-            );
-          }
+          // if (i === 1) {
+          //   drawSmoothLine(
+          //     context,
+          //     points[0].x * pageWidth,
+          //     points[0].y * pageHeight,
+          //     points[1].x * pageWidth,
+          //     points[1].y * pageHeight,
+          //     points[1].color,
+          //     points[1].lineWidth * pageWidth,
+          //     points[1].alpha
+          //   );
+          // }
           // 선이 이어진 경우
           currentGroup.push(points[i]); // 현재 그룹에 점 추가
         }

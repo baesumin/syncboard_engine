@@ -42,6 +42,13 @@ export const useWebviewInterface = ({
         return JSON.stringify(paths.current);
       },
 
+      getPdfData: () => {
+        return JSON.stringify({
+          base64: file.base64,
+          paths: paths.current,
+        });
+      },
+
       newPage: async () => {
         const newBase64 = await createOrMergePdf(file.base64);
         setPdfState((prev) => ({
