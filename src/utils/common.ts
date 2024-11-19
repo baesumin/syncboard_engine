@@ -84,25 +84,6 @@ export const drawDashedLine = (
   context.setLineDash([]);
 };
 
-export const reDrawSinglePoint = (
-  context: CanvasRenderingContext2D,
-  point: PathsType,
-  pageWidth: number,
-  pageHeight: number
-) => {
-  const x = point.x * pageWidth;
-  const y = point.y * pageHeight;
-  context.globalAlpha = point.alpha;
-  context.strokeStyle = point.color;
-  context.lineWidth = point.lineWidth * pageWidth;
-  context.lineCap = point.alpha === 1 ? "round" : "butt";
-
-  context.beginPath();
-  context.moveTo(x, y);
-  context.lineTo(x, y);
-  context.stroke();
-};
-
 export const drawLine = (
   context: CanvasRenderingContext2D,
   lastX: number,
@@ -129,6 +110,25 @@ export const drawLine = (
   context.translate(offset, 0);
 };
 
+export const reDrawSinglePoint = (
+  context: CanvasRenderingContext2D,
+  point: PathsType,
+  pageWidth: number,
+  pageHeight: number
+) => {
+  const x = point.x * pageWidth;
+  const y = point.y * pageHeight;
+  context.globalAlpha = point.alpha;
+  context.strokeStyle = point.color;
+  context.lineWidth = point.lineWidth * pageWidth;
+  context.lineCap = point.alpha === 1 ? "round" : "butt";
+
+  context.beginPath();
+  context.moveTo(x, y);
+  context.lineTo(x, y);
+  context.stroke();
+};
+
 export const reDrawPathGroup = (
   context: CanvasRenderingContext2D,
   group: PathsType[],
@@ -148,6 +148,7 @@ export const reDrawPathGroup = (
 
   context.translate(-offset, 0);
   context.moveTo(group[0].x * pageWidth, group[0].y * pageHeight);
+  reDrawSinglePoint(context, group[0], pageWidth, pageHeight);
   for (let i = 1; i < group.length; i++) {
     context.lineTo(group[i].x * pageWidth, group[i].y * pageHeight);
   }

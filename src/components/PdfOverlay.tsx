@@ -164,9 +164,9 @@ const PdfOverlay = ({
               그리기
             </button>
           )}
-          {!pdfState.isToolBarOpen && (
-            <>
-              {import.meta.env.MODE === "development" && (
+          {!pdfState.isToolBarOpen &&
+            import.meta.env.MODE === "development" && (
+              <>
                 <button
                   onClick={async () => {
                     await getModifiedPDFBase64(paths, file);
@@ -175,15 +175,14 @@ const PdfOverlay = ({
                 >
                   저장
                 </button>
-              )}
-              <button
-                onClick={onNewPageClick}
-                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
-              >
-                페이지 추가
-              </button>
-            </>
-          )}
+                <button
+                  onClick={onNewPageClick}
+                  className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                >
+                  페이지 추가
+                </button>
+              </>
+            )}
           {pdfState.isToolBarOpen && (
             <div className="h-[56px] bg-white rounded-xl flex items-center px-[8px] shadow-black shadow-sm">
               <div className="w-[140px] flex justify-between">

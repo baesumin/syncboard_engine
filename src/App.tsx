@@ -44,16 +44,12 @@ function App() {
           setIsLoading(false);
         };
       } else {
-        try {
-          const { base64 } = await import("./mock/base64");
-          setFile({
-            base64: base64.base64,
-            paths: "",
-            isNew: false,
-          });
-        } catch (error) {
-          console.error("Failed to load base64:", error);
-        }
+        const { base64 } = await import("./mock/base64");
+        setFile({
+          base64: base64.base64,
+          paths: "",
+          isNew: false,
+        });
         setIsLoading(false);
       }
     };
