@@ -84,7 +84,7 @@ export const drawDashedLine = (
   context.setLineDash([]);
 };
 
-export const drawSinglePoint = (
+export const reDrawSinglePoint = (
   context: CanvasRenderingContext2D,
   point: PathsType,
   pageWidth: number,
@@ -109,20 +109,17 @@ export const drawLine = (
   lastY: number,
   x: number,
   y: number,
-  // style: { color: string; lineWidth: number; alpha: number },
-  color: (typeof colorMap)[number],
-  lineWidth: number,
-  alpha: number
+  style: { color: string; lineWidth: number; alpha: number }
 ) => {
-  const offset = alpha === 1 ? 0 : 10000;
-  context.globalAlpha = alpha;
-  context.strokeStyle = color;
-  context.lineWidth = lineWidth;
-  context.lineCap = alpha === 1 ? "round" : "butt";
+  const offset = style.alpha === 1 ? 0 : 10000;
+  context.globalAlpha = style.alpha;
+  context.strokeStyle = style.color;
+  context.lineWidth = style.lineWidth;
+  context.lineCap = style.alpha === 1 ? "round" : "butt";
   context.lineJoin = "round";
   context.shadowOffsetX = offset;
-  context.shadowColor = alpha === 1 ? "transparent" : color;
-  context.shadowBlur = alpha === 1 ? 0 : lineWidth;
+  context.shadowColor = style.alpha === 1 ? "transparent" : style.color;
+  context.shadowBlur = style.alpha === 1 ? 0 : style.lineWidth;
 
   context.beginPath();
   context.translate(-offset, 0);
@@ -132,7 +129,7 @@ export const drawLine = (
   context.translate(offset, 0);
 };
 
-export const drawPathGroup = (
+export const reDrawPathGroup = (
   context: CanvasRenderingContext2D,
   group: PathsType[],
   style: { color: string; lineWidth: number; alpha: number },

@@ -1,10 +1,11 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   colorMap,
   drawDashedLine,
-  drawSinglePoint,
+  reDrawSinglePoint,
   drawLine,
   getDrawingPosition,
+  reDrawPathGroup,
 } from "../utils/common";
 import {
   canvasEventType,
@@ -43,6 +44,15 @@ export default function useCanvas({
   const [touchType, setTouchType] = useState<TouchType>("pen");
   const [drawType, setDrawType] = useState<DrawType>("pen");
   const [zoomEnabled, setZoomEnabled] = useState(false);
+
+  const defaultDrawStyle = useMemo(
+    () => ({
+      alpha: drawType === "highlight" ? 0.4 : 1,
+      color,
+      lineWidth: strokeStep * (drawType === "highlight" ? 2 : 1),
+    }),
+    [color, drawType, strokeStep]
+  );
 
   const startDrawing = useCallback(
     (e: canvasEventType) => {
@@ -120,9 +130,7 @@ export default function useCanvas({
             lastYRef.current,
             x,
             y,
-            color,
-            strokeStep * (drawType === "highlight" ? 2 : 1),
-            drawType === "highlight" ? 0.4 : 1
+            defaultDrawStyle
           );
         }
 
@@ -141,7 +149,15 @@ export default function useCanvas({
         lastYRef.current = y;
       }
     },
-    [color, devicePixelRatio, drawType, pageSize, strokeStep]
+    [
+      color,
+      defaultDrawStyle,
+      devicePixelRatio,
+      drawType,
+      pageSize.height,
+      pageSize.width,
+      strokeStep,
+    ]
   );
 
   const redrawPaths = useCallback(
@@ -151,18 +167,19 @@ export default function useCanvas({
       if (!points) return;
       const context = canvas.current.getContext("2d")!;
 
-      // 점을 그룹으로 나누기
-      let currentGroup: PathsType[] = [];
-      // const currentStyle = {
-      //   color: points[0].color,
-      //   lineWidth: points[0].lineWidth,
-      //   alpha: points[0].alpha,
-      // };
-
       if (points.length === 1) {
-        drawSinglePoint(context, points[0], pageWidth, pageHeight);
+        reDrawSinglePoint(context, points[0], pageWidth, pageHeight);
         return;
       }
+
+      // 점을 그룹으로 나누기
+      let currentGroup: PathsType[] = [];
+      let currentStyle = {
+        color: points[1].color,
+        lineWidth: points[1].lineWidth,
+        alpha: points[1].alpha,
+      };
+
       for (let i = 1; i < points.length; i++) {
         // 선이 이어진 경우
         if (
@@ -174,44 +191,39 @@ export default function useCanvas({
         }
         // 선이 띄워진 경우
         if (i === 1) {
-          drawSinglePoint(context, points[0], pageWidth, pageHeight);
+          reDrawSinglePoint(context, points[0], pageWidth, pageHeight);
         }
         if (currentGroup.length) {
           // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
-          for (let j = 1; j < currentGroup.length; j++) {
-            drawLine(
-              context,
-              currentGroup[j - 1].x * pageWidth,
-              currentGroup[j - 1].y * pageHeight,
-              currentGroup[j].x * pageWidth,
-              currentGroup[j].y * pageHeight,
-              // {alpha:},
-              currentGroup[j].color,
-              currentGroup[j].lineWidth * pageWidth,
-              currentGroup[j].alpha
-            );
-          }
+          reDrawPathGroup(
+            context,
+            currentGroup,
+            currentStyle,
+            pageWidth,
+            pageHeight
+          );
         }
 
         // 단일 점 처리
-        drawSinglePoint(context, points[i], pageWidth, pageHeight);
+        reDrawSinglePoint(context, points[i], pageWidth, pageHeight);
         currentGroup = [points[i]]; // 새로운 그룹 초기화
+        currentStyle = {
+          color: points[i].color,
+          lineWidth: points[i].lineWidth,
+          alpha: points[i].alpha,
+        };
+        context.beginPath();
       }
 
       // 마지막 그룹 처리
       if (currentGroup.length) {
-        for (let j = 1; j < currentGroup.length; j++) {
-          drawLine(
-            context,
-            currentGroup[j - 1].x * pageWidth,
-            currentGroup[j - 1].y * pageHeight,
-            currentGroup[j].x * pageWidth,
-            currentGroup[j].y * pageHeight,
-            currentGroup[j].color,
-            currentGroup[j].lineWidth * pageWidth,
-            currentGroup[j].alpha
-          );
-        }
+        reDrawPathGroup(
+          context,
+          currentGroup,
+          currentStyle,
+          pageWidth,
+          pageHeight
+        );
       }
     },
     [pageNumber]
@@ -298,9 +310,7 @@ export default function useCanvas({
             lastYRef.current,
             x,
             y,
-            color,
-            strokeStep * (drawType === "highlight" ? 2 : 1),
-            drawType === "highlight" ? 0.4 : 1
+            defaultDrawStyle
           );
         }
 
@@ -319,11 +329,12 @@ export default function useCanvas({
       touchPoints.current = 0;
     },
     [
-      color,
+      defaultDrawStyle,
       devicePixelRatio,
       drawType,
       pageNumber,
-      pageSize,
+      pageSize.height,
+      pageSize.width,
       redrawPaths,
       strokeStep,
     ]
