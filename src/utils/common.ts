@@ -123,7 +123,6 @@ export const reDrawSinglePoint = (
   context.lineWidth = point.lineWidth * pageWidth;
   context.lineCap = point.alpha === 1 ? "round" : "butt";
 
-  context.beginPath();
   context.moveTo(x, y);
   context.lineTo(x, y);
   context.stroke();
@@ -148,7 +147,6 @@ export const reDrawPathGroup = (
 
   context.translate(-offset, 0);
   context.moveTo(group[0].x * pageWidth, group[0].y * pageHeight);
-  reDrawSinglePoint(context, group[0], pageWidth, pageHeight);
   for (let i = 1; i < group.length; i++) {
     context.lineTo(group[i].x * pageWidth, group[i].y * pageHeight);
   }

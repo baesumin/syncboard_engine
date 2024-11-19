@@ -185,26 +185,23 @@ export default function useCanvas({
         alpha: points[1].alpha,
       };
 
-      // reDrawPathGroup(
-      //   context,
-      //   [points[0], points[1]],
-      //   currentStyle,
-      //   pageWidth,
-      //   pageHeight
-      // );
-      // context.beginPath();
       for (let i = 1; i < points.length; i++) {
         // 선이 이어진 경우
         if (
           points[i].lastX === points[i - 1].x &&
           points[i].lastY === points[i - 1].y
         ) {
+          if (i === 1) {
+            currentGroup.push(points[0]);
+          }
           currentGroup.push(points[i]);
           continue;
         }
-
+        context.beginPath();
+        reDrawSinglePoint(context, points[i], pageWidth, pageHeight);
         // 선이 띄워진 경우
         if (currentGroup.length) {
+          context.beginPath();
           // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
           reDrawPathGroup(
             context,
@@ -223,9 +220,9 @@ export default function useCanvas({
           alpha: points[i].alpha,
         };
       }
-      // context.beginPath();
       // 마지막 그룹 처리
       if (currentGroup.length) {
+        context.beginPath();
         reDrawPathGroup(
           context,
           currentGroup,
