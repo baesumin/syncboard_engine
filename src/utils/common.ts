@@ -92,22 +92,16 @@ export const drawLine = (
   y: number,
   style: { color: string; lineWidth: number; alpha: number }
 ) => {
-  const offset = style.alpha === 1 ? 0 : 10000;
   context.globalAlpha = style.alpha;
   context.strokeStyle = style.color;
   context.lineWidth = style.lineWidth;
   context.lineCap = style.alpha === 1 ? "round" : "butt";
   context.lineJoin = "round";
-  context.shadowOffsetX = offset;
-  context.shadowColor = style.alpha === 1 ? "transparent" : style.color;
-  context.shadowBlur = style.alpha === 1 ? 0 : style.lineWidth;
 
   context.beginPath();
-  context.translate(-offset, 0);
   context.moveTo(lastX, lastY);
   context.lineTo(x, y);
   context.stroke();
-  context.translate(offset, 0);
 };
 
 export const reDrawSinglePoint = (
@@ -135,24 +129,18 @@ export const reDrawPathGroup = (
   pageWidth: number,
   pageHeight: number
 ) => {
-  const offset = style.alpha === 1 ? 0 : 10000;
   context.globalAlpha = style.alpha;
   context.strokeStyle = style.color;
   context.lineWidth = style.lineWidth * pageWidth;
   context.lineCap = style.alpha === 1 ? "round" : "butt";
   context.lineJoin = "round";
-  context.shadowOffsetX = offset;
-  context.shadowColor = style.alpha === 1 ? "transparent" : style.color;
-  context.shadowBlur = style.alpha === 1 ? 0 : style.lineWidth * pageWidth;
 
-  context.translate(-offset, 0);
   context.moveTo(group[0].x * pageWidth, group[0].y * pageHeight);
   for (let i = 1; i < group.length; i++) {
     context.lineTo(group[i].x * pageWidth, group[i].y * pageHeight);
   }
 
   context.stroke();
-  context.translate(offset, 0);
 };
 
 export const colorToRGB = (color: (typeof colorMap)[number]) => {
