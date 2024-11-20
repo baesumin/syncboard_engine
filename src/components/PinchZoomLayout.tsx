@@ -52,7 +52,7 @@ export default function PinchZoomLayout({
         disabled={disabled || isPenTouch}
         initialScale={1}
         maxScale={3}
-        minScale={1}
+        minScale={0.7}
         disablePadding
         doubleClick={{ disabled: true }}
         onTransformed={(ref) => {
