@@ -115,7 +115,7 @@ export const reDrawSinglePoint = (
   context.globalAlpha = point.alpha;
   context.strokeStyle = point.color;
   context.lineWidth = point.lineWidth * pageWidth;
-  context.lineCap = point.alpha === 1 ? "round" : "butt";
+  context.lineCap = point.alpha === 1 ? "round" : "round";
 
   context.moveTo(x, y);
   context.lineTo(x, y);
@@ -132,7 +132,7 @@ export const reDrawPathGroup = (
   context.globalAlpha = style.alpha;
   context.strokeStyle = style.color;
   context.lineWidth = style.lineWidth * pageWidth;
-  context.lineCap = style.alpha === 1 ? "round" : "butt";
+  context.lineCap = style.alpha === 1 ? "round" : "round";
   context.lineJoin = "round";
 
   context.moveTo(group[0].x * pageWidth, group[0].y * pageHeight);
