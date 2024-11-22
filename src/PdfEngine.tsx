@@ -55,7 +55,7 @@ export default function PdfEngine({
   });
   const [pdfConfig, setPdfConfig] = useState({
     size: { width: 0, height: 0 },
-    strokeStep: 12,
+    strokeStep: 16,
     devicePixelRatio: 2,
   });
   const {

@@ -272,7 +272,7 @@ const PdfOverlay = ({
                           onClick={() => {
                             setPdfConfig({
                               ...pdfConfig,
-                              strokeStep: 20,
+                              strokeStep: 28,
                             });
                           }}
                           className={
@@ -281,7 +281,22 @@ const PdfOverlay = ({
                         >
                           <Stroke5Step
                             color={
-                              pdfConfig.strokeStep === 20 ? color : "#BCC2CB"
+                              pdfConfig.strokeStep === 28 ? color : "#BCC2CB"
+                            }
+                          />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setPdfConfig({
+                              ...pdfConfig,
+                              strokeStep: 22,
+                            });
+                          }}
+                          className="pointer-events-auto size-[44px] flex-center"
+                        >
+                          <Stroke4Step
+                            color={
+                              pdfConfig.strokeStep === 22 ? color : "#BCC2CB"
                             }
                           />
                         </button>
@@ -294,7 +309,7 @@ const PdfOverlay = ({
                           }}
                           className="pointer-events-auto size-[44px] flex-center"
                         >
-                          <Stroke4Step
+                          <Stroke3Step
                             color={
                               pdfConfig.strokeStep === 16 ? color : "#BCC2CB"
                             }
@@ -304,29 +319,14 @@ const PdfOverlay = ({
                           onClick={() => {
                             setPdfConfig({
                               ...pdfConfig,
-                              strokeStep: 12,
-                            });
-                          }}
-                          className="pointer-events-auto size-[44px] flex-center"
-                        >
-                          <Stroke3Step
-                            color={
-                              pdfConfig.strokeStep === 12 ? color : "#BCC2CB"
-                            }
-                          />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setPdfConfig({
-                              ...pdfConfig,
-                              strokeStep: 8,
+                              strokeStep: 10,
                             });
                           }}
                           className="pointer-events-auto size-[44px] flex-center"
                         >
                           <Stroke2Step
                             color={
-                              pdfConfig.strokeStep === 8 ? color : "#BCC2CB"
+                              pdfConfig.strokeStep === 10 ? color : "#BCC2CB"
                             }
                           />
                         </button>
