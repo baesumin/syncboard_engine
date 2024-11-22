@@ -5,6 +5,7 @@ import {
   ReactNode,
   RefObject,
   useCallback,
+  useRef,
   useState,
 } from "react";
 import { OnRefChangeType } from "react-resize-detector/build/types/types";
@@ -32,24 +33,35 @@ export default function PinchZoomLayout({
   pinchZoomRef,
 }: Props) {
   const [isPenTouch, setIsPenTouch] = useState(false);
+  const isTouchPanning = useRef(false);
 
   const handlePointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === "pen") {
+    if (e.pointerType === "touch") {
+      isTouchPanning.current = true;
+    }
+    if (e.pointerType === "pen" && !isTouchPanning.current) {
       setIsPenTouch(true);
     }
   }, []);
 
   const handlePointerUp = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "touch") {
+      isTouchPanning.current = false;
+    }
     if (e.pointerType === "pen") {
       setIsPenTouch(false);
     }
   }, []);
 
   return (
-    <div onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
+    <div
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+    >
       <TransformWrapper
         ref={scaleRef}
-        disabled={disabled || isPenTouch}
+        disabled={disabled || (isPenTouch && !isTouchPanning.current)}
         initialScale={1}
         maxScale={3}
         minScale={0.7}
