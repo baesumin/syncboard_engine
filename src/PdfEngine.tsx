@@ -68,8 +68,6 @@ export default function PdfEngine({
     drawType,
     color,
     touchType,
-    zoomEnabled,
-    setZoomEnabled,
     setColor,
     setDrawType,
     startDrawing,
@@ -289,8 +287,6 @@ export default function PdfEngine({
           file={file.base64}
           paths={paths.current}
           touchType={touchType}
-          zoomEnabled={zoomEnabled}
-          setZoomEnabled={setZoomEnabled}
           setTouchType={setTouchType}
           setCanDraw={setCanDraw}
           setColor={setColor}

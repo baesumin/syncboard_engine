@@ -20,7 +20,7 @@ import {
   Trash,
   Zoom,
 } from "../assets/icons";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { __DEV__, colorMap, getModifiedPDFBase64 } from "../utils/common";
 import {
   DrawType,
@@ -38,8 +38,6 @@ interface Props {
   file: string;
   paths: { [pageNumber: number]: PathsType[] };
   touchType: TouchType;
-  zoomEnabled: boolean;
-  setZoomEnabled: Dispatch<SetStateAction<boolean>>;
   setTouchType: Dispatch<SetStateAction<TouchType>>;
   setCanDraw: Dispatch<SetStateAction<boolean>>;
   setDrawType: Dispatch<SetStateAction<DrawType>>;
@@ -58,8 +56,6 @@ const PdfOverlay = ({
   file,
   paths,
   touchType,
-  zoomEnabled,
-  setZoomEnabled,
   setTouchType,
   setCanDraw,
   setDrawType,
@@ -71,6 +67,7 @@ const PdfOverlay = ({
   pdfConfig,
   setPdfConfig,
 }: Props) => {
+  const [zoomEnabled, setZoomEnabled] = useState(false);
   return (
     <>
       <div className="absolute left-0 right-0 top-0 bottom-0 flex flex-col justify-between px-[20px] py-[20px] pointer-events-none">
@@ -378,10 +375,8 @@ const PdfOverlay = ({
               {touchType === "touch" && (
                 <button
                   onClick={() => {
-                    setZoomEnabled((prev) => {
-                      setCanDraw(prev);
-                      return !prev;
-                    });
+                    setCanDraw(zoomEnabled ? true : false);
+                    setZoomEnabled((prev) => !prev);
                   }}
                   className={clsx(
                     "pointer-events-auto size-[44px] rounded-lg flex-center ml-[8px]",
