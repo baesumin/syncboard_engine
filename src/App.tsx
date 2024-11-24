@@ -7,6 +7,8 @@ import { webviewApiType } from "./types/json";
 import { webviewType } from "./types/common";
 import { emptyPageBase64 } from "./mock/emptyPageBase64";
 import { isDesktop } from "react-device-detect";
+import { useSetAtom } from "jotai";
+import { fileAtom } from "./store/pdf";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -14,11 +16,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 function App() {
-  const [file, setFile] = useState({
-    base64: "",
-    paths: "",
-    isNew: false,
-  });
+  const setFile = useSetAtom(fileAtom);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -55,9 +53,10 @@ function App() {
     };
 
     initializeFile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <>{!isLoading && <PdfEngine file={file} setFile={setFile} />}</>;
+  return <>{!isLoading && <PdfEngine />}</>;
 }
 
 export default App;

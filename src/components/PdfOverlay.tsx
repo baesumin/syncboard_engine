@@ -21,53 +21,37 @@ import {
   Zoom,
 } from "../assets/icons";
 import { Dispatch, SetStateAction, useState } from "react";
-import { __DEV__, colorMap, getModifiedPDFBase64 } from "../utils/common";
-import {
-  DrawType,
-  PathsType,
-  PdfConfigType,
-  PdfStateType,
-  TouchType,
-  webviewType,
-} from "../types/common";
+import { __DEV__, colorMap } from "../utils/common";
+import { DrawType, TouchType, webviewType } from "../types/common";
 import ColorPicker from "./ColorPicker";
+import { useAtom } from "jotai";
+import { pdfConfigAtom, pdfStateAtom } from "../store/pdf";
 
 interface Props {
   drawType: DrawType;
   color: (typeof colorMap)[number];
-  file: string;
-  paths: { [pageNumber: number]: PathsType[] };
   touchType: TouchType;
   setTouchType: Dispatch<SetStateAction<TouchType>>;
   setCanDraw: Dispatch<SetStateAction<boolean>>;
   setDrawType: Dispatch<SetStateAction<DrawType>>;
   setColor: Dispatch<SetStateAction<(typeof colorMap)[number]>>;
-  onNewPageClick: () => void;
   onEraseAllClick: () => void;
-  pdfState: PdfStateType;
-  setPdfState: Dispatch<SetStateAction<PdfStateType>>;
-  pdfConfig: PdfConfigType;
-  setPdfConfig: Dispatch<SetStateAction<PdfConfigType>>;
 }
 
 const PdfOverlay = ({
   drawType,
   color,
-  file,
-  paths,
   touchType,
   setTouchType,
   setCanDraw,
   setDrawType,
   setColor,
-  onNewPageClick,
   onEraseAllClick,
-  pdfState,
-  setPdfState,
-  pdfConfig,
-  setPdfConfig,
 }: Props) => {
   const [zoomEnabled, setZoomEnabled] = useState(false);
+  const [pdfState, setPdfState] = useAtom(pdfStateAtom);
+  const [pdfConfig, setPdfConfig] = useAtom(pdfConfigAtom);
+
   return (
     <>
       <div className="absolute left-0 right-0 top-0 bottom-0 flex flex-col justify-between px-[20px] py-[20px] pointer-events-none">
@@ -161,25 +145,7 @@ const PdfOverlay = ({
               그리기
             </button>
           )}
-          {!pdfState.isToolBarOpen &&
-            import.meta.env.MODE === "development" && (
-              <>
-                <button
-                  onClick={async () => {
-                    await getModifiedPDFBase64(paths, file);
-                  }}
-                  className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
-                >
-                  저장
-                </button>
-                <button
-                  onClick={onNewPageClick}
-                  className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
-                >
-                  페이지 추가
-                </button>
-              </>
-            )}
+
           {pdfState.isToolBarOpen && (
             <div className="h-[56px] bg-white rounded-xl flex items-center px-[8px] shadow-black shadow-sm">
               <div className="w-[140px] flex justify-between">

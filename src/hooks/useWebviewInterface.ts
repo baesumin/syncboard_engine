@@ -1,34 +1,26 @@
 import { useEffect } from "react";
-import { webviewType, PathsType, PdfStateType } from "../types/common";
-import { webviewApiDataType } from "../types/json";
+import { webviewType, PathsType } from "../types/common";
 import {
   getModifiedPDFBase64,
   createOrMergePdf,
   __DEV__,
 } from "../utils/common";
+import { useAtom, useSetAtom } from "jotai";
+import { fileAtom, pdfStateAtom, searchTextAtom } from "../store/pdf";
 
 interface UseWebviewInterfaceProps {
-  file: webviewApiDataType;
   paths: React.MutableRefObject<{ [pageNumber: number]: PathsType[] }>;
-  pdfState: {
-    pageNumber: number;
-    totalPage: number;
-  };
-  setPdfState: React.Dispatch<React.SetStateAction<PdfStateType>>;
-  setFile: (file: webviewApiDataType) => void;
-  setSearchText: (text: string) => void;
   getSearchResult: (text: string) => any[];
 }
 
 export const useWebviewInterface = ({
-  file,
   paths,
-  pdfState,
-  setPdfState,
-  setFile,
-  setSearchText,
   getSearchResult,
 }: UseWebviewInterfaceProps) => {
+  const [file, setFile] = useAtom(fileAtom);
+  const [pdfState, setPdfState] = useAtom(pdfStateAtom);
+  const setSearchText = useSetAtom(searchTextAtom);
+
   useEffect(() => {
     if (__DEV__) return;
 

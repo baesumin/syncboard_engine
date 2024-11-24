@@ -1,15 +1,12 @@
 import clsx from "clsx";
 import { Close } from "../assets/icons";
-import { Dispatch, SetStateAction } from "react";
 import { Thumbnail } from "react-pdf";
-import { PdfStateType } from "../types/common";
+import { useAtom } from "jotai";
+import { pdfStateAtom } from "../store/pdf";
 
-interface Props {
-  pdfState: PdfStateType;
-  setPdfState: Dispatch<SetStateAction<PdfStateType>>;
-}
+const ThumbnailOvelay = () => {
+  const [pdfState, setPdfState] = useAtom(pdfStateAtom);
 
-const ThumbnailOvelay = ({ pdfState, setPdfState }: Props) => {
   return (
     <div
       className={clsx(

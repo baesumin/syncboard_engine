@@ -1,12 +1,4 @@
-import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Document, Page } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
 import { useMobileOrientation } from "react-device-detect";
@@ -20,44 +12,28 @@ import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import useCanvas from "./hooks/useCanvas";
 import PdfOverlay from "./components/PdfOverlay";
 import ThumbnailOvelay from "./components/ThumbnailOvelay";
-import {
-  highlightPattern,
-  createOrMergePdf,
-  removePathByPageNumber,
-} from "./utils/common";
+import { highlightPattern, removePathByPageNumber } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch";
 import PinchZoomLayout from "./components/PinchZoomLayout";
 import { PathsType } from "./types/common";
-import { webviewApiDataType } from "./types/json";
 import clsx from "clsx";
 import { useWebviewInterface } from "./hooks/useWebviewInterface";
+import { useAtom, useAtomValue } from "jotai";
+import {
+  fileAtom,
+  pdfConfigAtom,
+  pdfStateAtom,
+  searchTextAtom,
+} from "./store/pdf";
 
-export default function PdfEngine({
-  file,
-  setFile,
-}: {
-  file: webviewApiDataType;
-  setFile: Dispatch<SetStateAction<webviewApiDataType>>;
-}) {
+export default function PdfEngine() {
   const { orientation } = useMobileOrientation();
   const { width, height, ref } = useResizeDetector();
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
-  const [searchText, setSearchText] = useState("");
-  const [pdfState, setPdfState] = useState({
-    isToolBarOpen: false,
-    isListOpen: false,
-    isFullScreen: false,
-    isStrokeOpen: false,
-    pageNumber: 1,
-    totalPage: 1,
-    renderedPageNumber: 0,
-    canRenderThumbnail: false,
-  });
-  const [pdfConfig, setPdfConfig] = useState({
-    size: { width: 0, height: 0 },
-    strokeStep: 16,
-    devicePixelRatio: 2,
-  });
+  const searchText = useAtomValue(searchTextAtom);
+  const file = useAtomValue(fileAtom);
+  const [pdfState, setPdfState] = useAtom(pdfStateAtom);
+  const [pdfConfig, setPdfConfig] = useAtom(pdfConfigAtom);
   const {
     canvas,
     canDraw,
@@ -94,22 +70,11 @@ export default function PdfEngine({
     () => `data:application/pdf;base64,${file.base64}`,
     [file.base64]
   );
-  const pdfDimensions = useMemo(
-    () => ({
-      width: pdfConfig.size.width,
-      height: pdfConfig.size.height,
-    }),
-    [pdfConfig.size]
-  );
 
   const { getSearchResult } = usePdfTextSearch(pdfFile);
+
   useWebviewInterface({
-    file,
     paths,
-    pdfState,
-    setPdfState,
-    setFile,
-    setSearchText,
     getSearchResult,
   });
 
@@ -126,7 +91,7 @@ export default function PdfEngine({
         redrawPaths(page.width, page.height);
       }
     },
-    [canvas, pdfConfig, redrawPaths]
+    [canvas, pdfConfig, redrawPaths, setPdfConfig]
   );
 
   const onRenderSuccess: OnRenderSuccess = useCallback(() => {
@@ -134,7 +99,7 @@ export default function PdfEngine({
       ...pdfState,
       renderedPageNumber: pdfState.pageNumber,
     });
-  }, [pdfState]);
+  }, [pdfState, setPdfState]);
 
   const OnDocumentLoadSuccess: OnDocumentLoadSuccess = useCallback(
     (pdf) => {
@@ -145,26 +110,13 @@ export default function PdfEngine({
         });
       }
     },
-    [file.isNew, pdfState]
+    [file.isNew, pdfState, setPdfState]
   );
 
   const textRenderer: CustomTextRenderer = useCallback(
     (textItem) => highlightPattern(textItem.str, searchText),
     [searchText]
   );
-
-  const onNewPageClick = useCallback(async () => {
-    const newBase64 = await createOrMergePdf(file.base64);
-    setPdfState({
-      ...pdfState,
-      pageNumber: pdfState.totalPage + 1,
-      totalPage: pdfState.totalPage + 1,
-    });
-    setFile({
-      ...file,
-      base64: newBase64,
-    });
-  }, [file, pdfState, setFile]);
 
   const onEraseAllClick = useCallback(() => {
     if (confirm("변경 사항을 모두 삭제하시겠습니까?")) {
@@ -180,7 +132,7 @@ export default function PdfEngine({
         canRenderThumbnail: true,
       });
     }
-  }, [isRenderLoading, pdfState]);
+  }, [isRenderLoading, pdfState, setPdfState]);
 
   useEffect(() => {
     if (file.paths) {
@@ -211,8 +163,8 @@ export default function PdfEngine({
           <div
             className="absolute bg-white"
             style={{
-              width: pdfDimensions.width,
-              height: pdfDimensions.height,
+              width: pdfConfig.size.width,
+              height: pdfConfig.size.height,
             }}
           />
         )}
@@ -262,8 +214,8 @@ export default function PdfEngine({
                 ref={canvas}
                 key={pdfState.pageNumber}
                 style={{
-                  width: `${pdfDimensions.width}px`,
-                  height: `${pdfDimensions.height}px`,
+                  width: `${pdfConfig.size.width}px`,
+                  height: `${pdfConfig.size.height}px`,
                 }}
                 className={clsx(
                   "touch-none z-[1000]",
@@ -275,28 +227,19 @@ export default function PdfEngine({
               />
             </div>
           </PinchZoomLayout>
-          {pdfState.canRenderThumbnail && (
-            <ThumbnailOvelay pdfState={pdfState} setPdfState={setPdfState} />
-          )}
+          {pdfState.canRenderThumbnail && <ThumbnailOvelay />}
         </Document>
       </div>
       {!pdfState.isListOpen && pdfState.canRenderThumbnail && (
         <PdfOverlay
           color={color}
           drawType={drawType}
-          file={file.base64}
-          paths={paths.current}
           touchType={touchType}
           setTouchType={setTouchType}
           setCanDraw={setCanDraw}
           setColor={setColor}
           setDrawType={setDrawType}
-          onNewPageClick={onNewPageClick}
           onEraseAllClick={onEraseAllClick}
-          pdfState={pdfState}
-          setPdfState={setPdfState}
-          pdfConfig={pdfConfig}
-          setPdfConfig={setPdfConfig}
         />
       )}
     </>
