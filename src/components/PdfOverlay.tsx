@@ -26,6 +26,7 @@ import { DrawType, TouchType, webviewType } from "../types/common";
 import ColorPicker from "./ColorPicker";
 import { useAtom } from "jotai";
 import { pdfConfigAtom, pdfStateAtom } from "../store/pdf";
+import { isDesktop } from "react-device-detect";
 
 interface Props {
   drawType: DrawType;
@@ -76,7 +77,7 @@ const PdfOverlay = ({
                 ...pdfState,
                 isFullScreen: !prev.isFullScreen,
               }));
-              if (!__DEV__) {
+              if (!__DEV__ && !isDesktop) {
                 (window as unknown as webviewType).AndroidInterface.setFullMode(
                   !pdfState.isFullScreen
                 );

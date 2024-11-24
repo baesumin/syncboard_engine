@@ -129,18 +129,36 @@ export const reDrawPathGroup = (
   pageWidth: number,
   pageHeight: number
 ) => {
-  context.globalAlpha = style.alpha;
-  context.strokeStyle = style.color;
-  context.lineWidth = style.lineWidth * pageWidth;
-  context.lineCap = style.alpha === 1 ? "round" : "round";
-  context.lineJoin = "round";
+  // 현재 컨텍스트 상태 저장
+  context.save();
 
+  // 스타일 일괄 설정
+  const currentStyle = {
+    globalAlpha: style.alpha,
+    strokeStyle: style.color,
+    lineWidth: style.lineWidth * pageWidth,
+  };
+
+  // 이전 스타일과 비교하여 변경된 경우만 업데이트
+  if (context.globalAlpha !== currentStyle.globalAlpha) {
+    context.globalAlpha = currentStyle.globalAlpha;
+  }
+  if (context.strokeStyle !== currentStyle.strokeStyle) {
+    context.strokeStyle = currentStyle.strokeStyle;
+  }
+  if (context.lineWidth !== currentStyle.lineWidth) {
+    context.lineWidth = currentStyle.lineWidth;
+  }
+
+  // 패스 그리기
   context.moveTo(group[0].x * pageWidth, group[0].y * pageHeight);
   for (let i = 1; i < group.length; i++) {
     context.lineTo(group[i].x * pageWidth, group[i].y * pageHeight);
   }
-
   context.stroke();
+
+  // 컨텍스트 상태 복원
+  context.restore();
 };
 
 export const colorToRGB = (color: (typeof colorMap)[number]) => {

@@ -11,6 +11,7 @@ import {
   PathsType,
   TouchType,
 } from "../types/common";
+import throttle from "lodash.throttle";
 
 interface Props {
   devicePixelRatio: number;
@@ -66,8 +67,11 @@ export default function useCanvas({
       ) {
         return;
       }
-
-      // const lineWidth = defaultLineWidth;
+      canvas.current.getContext("2d")!.lineCap = "round";
+      canvas.current.getContext("2d")!.lineJoin = "round";
+      canvas.current.getContext("2d")!.globalAlpha = defaultDrawStyle.alpha;
+      canvas.current.getContext("2d")!.strokeStyle = defaultDrawStyle.color;
+      canvas.current.getContext("2d")!.lineWidth = defaultDrawStyle.lineWidth;
       const { x, y } = getDrawingPosition(
         canvas,
         e,
@@ -79,11 +83,19 @@ export default function useCanvas({
       isDrawing.current = true;
       prevPosRef.current = { x, y };
     },
-    [canDraw, devicePixelRatio, touchType]
+    [
+      canDraw,
+      defaultDrawStyle.alpha,
+      defaultDrawStyle.color,
+      defaultDrawStyle.lineWidth,
+      devicePixelRatio,
+      touchType,
+    ]
   );
 
   const redrawPaths = useCallback(
     (pageWidth: number, pageHeight: number) => {
+      console.log(paths.current);
       if (!canvas.current) return;
       const points = paths.current[pageNumber];
       if (!points || points.length === 0) return;
@@ -105,9 +117,7 @@ export default function useCanvas({
           points[i].lastX === points[i - 1].x &&
           points[i].lastY === points[i - 1].y
         ) {
-          if (i === 1) {
-            currentGroup.push(points[0]);
-          }
+          if (i === 1) currentGroup.push(points[0]);
           currentGroup.push(points[i]);
           continue;
         }
@@ -148,72 +158,53 @@ export default function useCanvas({
     [pageNumber]
   );
 
-  const draw = useCallback(
-    (e: canvasEventType) => {
-      if (!canvas.current) return;
-      if (!isDrawing.current || touchPoints.current === 2) return;
-      const context = canvas.current.getContext("2d")!;
-      const { x, y } = getDrawingPosition(
-        canvas,
-        e,
-        devicePixelRatio,
-        scale.current
-      );
-
-      const lineWidth = defaultLineWidth;
-
-      if (drawType === "eraser") {
-        drawDashedLine(
-          context,
-          prevPosRef.current.x,
-          prevPosRef.current.y,
-          x,
-          y
-        );
-        erasePathsRef.current.push({
-          x: x / pageSize.width,
-          y: y / pageSize.height,
-          lastX: prevPosRef.current.x / pageSize.width,
-          lastY: prevPosRef.current.y / pageSize.height,
-          lineWidth,
-          color,
-          drawOrder: drawOrder.current,
-          alpha: 1,
-        });
-      } else {
-        paths.current = {
-          ...paths.current,
-          [pageNumber]: [
-            ...(paths.current[pageNumber] || []),
-            {
-              x: x / pageSize.width,
-              y: y / pageSize.height,
-              lastX: prevPosRef.current.x / pageSize.width,
-              lastY: prevPosRef.current.y / pageSize.height,
-              lineWidth,
-              color: defaultDrawStyle.color,
-              drawOrder: drawOrder.current,
-              alpha: drawType === "highlight" ? 0.4 : 1,
-            },
-          ],
-        };
-        redrawPaths(pageSize.width, pageSize.height);
-      }
-
-      prevPosRef.current = { x, y };
-    },
-    [
-      color,
-      defaultDrawStyle.color,
-      defaultLineWidth,
+  const draw = throttle((e: canvasEventType) => {
+    if (!canvas.current) return;
+    if (!isDrawing.current || touchPoints.current === 2) return;
+    const context = canvas.current.getContext("2d")!;
+    const { x, y } = getDrawingPosition(
+      canvas,
+      e,
       devicePixelRatio,
-      drawType,
-      pageNumber,
-      pageSize.height,
-      pageSize.width,
-      redrawPaths,
-    ]
-  );
+      scale.current
+    );
+
+    const lineWidth = defaultLineWidth;
+
+    if (drawType === "eraser") {
+      drawDashedLine(context, prevPosRef.current.x, prevPosRef.current.y, x, y);
+      erasePathsRef.current.push({
+        x: x / pageSize.width,
+        y: y / pageSize.height,
+        lastX: prevPosRef.current.x / pageSize.width,
+        lastY: prevPosRef.current.y / pageSize.height,
+        lineWidth,
+        color,
+        drawOrder: drawOrder.current,
+        alpha: 1,
+      });
+    } else {
+      paths.current = {
+        ...paths.current,
+        [pageNumber]: [
+          ...(paths.current[pageNumber] || []),
+          {
+            x: x / pageSize.width,
+            y: y / pageSize.height,
+            lastX: prevPosRef.current.x / pageSize.width,
+            lastY: prevPosRef.current.y / pageSize.height,
+            lineWidth,
+            color: defaultDrawStyle.color,
+            drawOrder: drawOrder.current,
+            alpha: drawType === "highlight" ? 0.4 : 1,
+          },
+        ],
+      };
+      redrawPaths(pageSize.width, pageSize.height);
+    }
+
+    prevPosRef.current = { x, y };
+  }, 10);
 
   const stopDrawing = useCallback(async () => {
     if (!canvas.current) return;
