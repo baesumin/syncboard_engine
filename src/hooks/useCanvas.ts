@@ -204,7 +204,7 @@ export default function useCanvas({
     }
 
     prevPosRef.current = { x, y };
-  }, 10);
+  }, 8);
 
   const stopDrawing = useCallback(async () => {
     if (!canvas.current) return;
