@@ -95,7 +95,6 @@ export default function useCanvas({
 
   const redrawPaths = useCallback(
     (pageWidth: number, pageHeight: number) => {
-      console.log(paths.current);
       if (!canvas.current) return;
       const points = paths.current[pageNumber];
       if (!points || points.length === 0) return;
