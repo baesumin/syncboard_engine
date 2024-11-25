@@ -18,37 +18,27 @@ function App() {
 
   useEffect(() => {
     const initializeFile = async () => {
-      if (!__DEV__) {
-        if (window.webviewApi !== undefined) {
-          window.webviewApi = (appData: string) => {
-            const param = JSON.parse(appData);
-            setFile({
-              base64: param?.data?.isNew
-                ? emptyPageBase64
-                : param?.data?.base64,
-              paths: param?.data?.paths,
-              isNew: param?.data?.isNew,
-            });
-            setIsLoading(false);
-          };
-        } else {
-          const { base64 } = await import("./mock/base64");
+      if (__DEV__ || !window.webviewApi) {
+        import("./mock/base64").then(({ base64 }) => {
           setFile({
             base64: base64.base64,
             paths: "",
             isNew: false,
           });
           setIsLoading(false);
-        }
-      } else {
-        const { base64 } = await import("./mock/base64");
+        });
+        return;
+      }
+
+      window.webviewApi = (appData: string) => {
+        const param = JSON.parse(appData);
         setFile({
-          base64: base64.base64,
-          paths: "",
-          isNew: false,
+          base64: param?.data?.isNew ? emptyPageBase64 : param?.data?.base64,
+          paths: param?.data?.paths,
+          isNew: param?.data?.isNew,
         });
         setIsLoading(false);
-      }
+      };
     };
 
     initializeFile();

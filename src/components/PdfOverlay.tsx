@@ -21,12 +21,11 @@ import {
   Zoom,
 } from "../assets/icons";
 import { Dispatch, SetStateAction, useState } from "react";
-import { __DEV__, colorMap } from "../utils/common";
+import { colorMap } from "../utils/common";
 import { DrawType, TouchType } from "../types/common";
 import ColorPicker from "./ColorPicker";
 import { useAtom } from "jotai";
 import { pdfConfigAtom, pdfStateAtom } from "../store/pdf";
-import { isDesktop } from "react-device-detect";
 
 interface Props {
   drawType: DrawType;
@@ -77,7 +76,7 @@ const PdfOverlay = ({
                 ...pdfState,
                 isFullScreen: !prev.isFullScreen,
               }));
-              if (!__DEV__ && !isDesktop) {
+              if (window.AndroidInterface) {
                 window.AndroidInterface.setFullMode(!pdfState.isFullScreen);
               }
             }}
