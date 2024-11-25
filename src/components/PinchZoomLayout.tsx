@@ -11,6 +11,7 @@ import {
 import { OnRefChangeType } from "react-resize-detector/build/types/types";
 import {
   ReactZoomPanPinchContentRef,
+  ReactZoomPanPinchRef,
   TransformComponent,
   TransformWrapper,
 } from "react-zoom-pan-pinch";
@@ -53,6 +54,13 @@ export default function PinchZoomLayout({
     }
   }, []);
 
+  const onTransformed = useCallback(
+    (ref: ReactZoomPanPinchRef) => {
+      scale.current = ref.state.scale;
+    },
+    [scale]
+  );
+
   return (
     <div
       onPointerDown={handlePointerDown}
@@ -67,9 +75,7 @@ export default function PinchZoomLayout({
         minScale={0.7}
         disablePadding
         doubleClick={{ disabled: true }}
-        onTransformed={(ref) => {
-          scale.current = ref.state.scale;
-        }}
+        onTransformed={onTransformed}
       >
         <TransformComponent>
           <div
