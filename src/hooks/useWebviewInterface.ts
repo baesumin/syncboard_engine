@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { webviewType, PathsType } from "../types/common";
+import { PathsType } from "../types/common";
 import {
   getModifiedPDFBase64,
   createOrMergePdf,
@@ -27,7 +27,7 @@ export const useWebviewInterface = ({
     const webviewInterface = {
       getBase64: async () => {
         const data = await getModifiedPDFBase64(paths.current, file.base64);
-        (window as unknown as webviewType).AndroidInterface.getBase64(data);
+        window.AndroidInterface.getBase64(data);
       },
 
       getPathData: () => {
@@ -45,9 +45,7 @@ export const useWebviewInterface = ({
           ...file,
           base64: newBase64,
         });
-        (window as unknown as webviewType).AndroidInterface.getPdfData(
-          newBase64
-        );
+        window.AndroidInterface.getPdfData(newBase64);
       },
 
       getSearchText: (data: string) => {

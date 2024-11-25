@@ -22,7 +22,7 @@ import {
 } from "../assets/icons";
 import { Dispatch, SetStateAction, useState } from "react";
 import { __DEV__, colorMap } from "../utils/common";
-import { DrawType, TouchType, webviewType } from "../types/common";
+import { DrawType, TouchType } from "../types/common";
 import ColorPicker from "./ColorPicker";
 import { useAtom } from "jotai";
 import { pdfConfigAtom, pdfStateAtom } from "../store/pdf";
@@ -78,9 +78,7 @@ const PdfOverlay = ({
                 isFullScreen: !prev.isFullScreen,
               }));
               if (!__DEV__ && !isDesktop) {
-                (window as unknown as webviewType).AndroidInterface.setFullMode(
-                  !pdfState.isFullScreen
-                );
+                window.AndroidInterface.setFullMode(!pdfState.isFullScreen);
               }
             }}
             className="pointer-events-auto size-[44px] rounded-lg bg-white shadow-black shadow-sm flex-center"

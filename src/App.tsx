@@ -3,10 +3,7 @@ import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
 import { useEffect, useState } from "react";
 import { __DEV__ } from "./utils/common";
-import { webviewApiType } from "./types/json";
-import { webviewType } from "./types/common";
 import { emptyPageBase64 } from "./mock/emptyPageBase64";
-import { isDesktop } from "react-device-detect";
 import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
 
@@ -22,7 +19,19 @@ function App() {
   useEffect(() => {
     const initializeFile = async () => {
       if (!__DEV__) {
-        if (isDesktop) {
+        if (window.webviewApi !== undefined) {
+          window.webviewApi = (appData: string) => {
+            const param = JSON.parse(appData);
+            setFile({
+              base64: param?.data?.isNew
+                ? emptyPageBase64
+                : param?.data?.base64,
+              paths: param?.data?.paths,
+              isNew: param?.data?.isNew,
+            });
+            setIsLoading(false);
+          };
+        } else {
           const { base64 } = await import("./mock/base64");
           setFile({
             base64: base64.base64,
@@ -30,17 +39,7 @@ function App() {
             isNew: false,
           });
           setIsLoading(false);
-          return;
         }
-        (window as unknown as webviewType).webviewApi = (appData: string) => {
-          const param: webviewApiType = JSON.parse(appData);
-          setFile({
-            base64: param?.data?.isNew ? emptyPageBase64 : param?.data?.base64,
-            paths: param?.data?.paths,
-            isNew: param?.data?.isNew,
-          });
-          setIsLoading(false);
-        };
       } else {
         const { base64 } = await import("./mock/base64");
         setFile({
