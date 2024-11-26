@@ -130,8 +130,11 @@ export const reDrawPathGroup = (
   pageHeight: number
 ) => {
   // 현재 컨텍스트 상태 저장
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.strokeStyle = "#F34A47";
+  context.lineWidth = 16;
   context.save();
-
   // 스타일 일괄 설정
   const currentStyle = {
     globalAlpha: style.alpha,

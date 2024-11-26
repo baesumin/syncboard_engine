@@ -67,11 +67,7 @@ export default function useCanvas({
       ) {
         return;
       }
-      canvas.current.getContext("2d")!.lineCap = "round";
-      canvas.current.getContext("2d")!.lineJoin = "round";
-      canvas.current.getContext("2d")!.globalAlpha = defaultDrawStyle.alpha;
-      canvas.current.getContext("2d")!.strokeStyle = defaultDrawStyle.color;
-      canvas.current.getContext("2d")!.lineWidth = defaultDrawStyle.lineWidth;
+
       const { x, y } = getDrawingPosition(
         canvas,
         e,
@@ -83,14 +79,7 @@ export default function useCanvas({
       isDrawing.current = true;
       prevPosRef.current = { x, y };
     },
-    [
-      canDraw,
-      defaultDrawStyle.alpha,
-      defaultDrawStyle.color,
-      defaultDrawStyle.lineWidth,
-      devicePixelRatio,
-      touchType,
-    ]
+    [canDraw, devicePixelRatio, touchType]
   );
 
   const redrawPaths = useCallback(
@@ -124,6 +113,7 @@ export default function useCanvas({
         // 선이 띄워진 경우
         if (currentGroup.length) {
           context.beginPath();
+
           // 현재 그룹이 2개 이상의 점을 포함하면 선 그리기
           reDrawPathGroup(
             context,
@@ -145,6 +135,7 @@ export default function useCanvas({
       // 마지막 그룹 처리
       if (currentGroup.length) {
         context.beginPath();
+
         reDrawPathGroup(
           context,
           currentGroup,
@@ -168,8 +159,6 @@ export default function useCanvas({
       scale.current
     );
 
-    const lineWidth = defaultLineWidth;
-
     if (drawType === "eraser") {
       drawDashedLine(context, prevPosRef.current.x, prevPosRef.current.y, x, y);
       erasePathsRef.current.push({
@@ -177,7 +166,7 @@ export default function useCanvas({
         y: y / pageSize.height,
         lastX: prevPosRef.current.x / pageSize.width,
         lastY: prevPosRef.current.y / pageSize.height,
-        lineWidth,
+        lineWidth: defaultLineWidth,
         color,
         drawOrder: drawOrder.current,
         alpha: 1,
@@ -192,7 +181,7 @@ export default function useCanvas({
             y: y / pageSize.height,
             lastX: prevPosRef.current.x / pageSize.width,
             lastY: prevPosRef.current.y / pageSize.height,
-            lineWidth,
+            lineWidth: defaultLineWidth,
             color: defaultDrawStyle.color,
             drawOrder: drawOrder.current,
             alpha: drawType === "highlight" ? 0.4 : 1,
