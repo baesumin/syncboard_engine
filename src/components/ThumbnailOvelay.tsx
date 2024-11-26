@@ -163,7 +163,7 @@ const ThumbnailOvelay = ({
                     width: 180,
                     height: 232,
                   }}
-                  className="absolute"
+                  className="absolute pointer-events-none"
                 />
               </div>
               <div className="h-[31px] flex justify-center items-center">
