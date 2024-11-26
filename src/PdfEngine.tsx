@@ -227,7 +227,9 @@ export default function PdfEngine() {
               />
             </div>
           </PinchZoomLayout>
-          {pdfState.canRenderThumbnail && <ThumbnailOvelay />}
+          {pdfState.canRenderThumbnail && (
+            <ThumbnailOvelay paths={paths.current} />
+          )}
         </Document>
       </div>
       {!pdfState.isListOpen && pdfState.canRenderThumbnail && (
