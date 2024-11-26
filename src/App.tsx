@@ -6,6 +6,7 @@ import { __DEV__ } from "./utils/common";
 import { emptyPageBase64 } from "./mock/emptyPageBase64";
 import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
+import { isDesktop } from "react-device-detect";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -18,7 +19,7 @@ function App() {
 
   useEffect(() => {
     const initializeFile = async () => {
-      if (__DEV__ || !window.webviewApi) {
+      if (__DEV__ || isDesktop) {
         import("./mock/base64").then(({ base64 }) => {
           setFile({
             base64: base64.base64,
