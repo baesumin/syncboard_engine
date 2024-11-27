@@ -76,6 +76,13 @@ export default function PinchZoomLayout({
         disablePadding
         doubleClick={{ disabled: true }}
         onTransformed={onTransformed}
+        limitToBounds={true}
+        panning={{
+          velocityDisabled: true,
+        }}
+        alignmentAnimation={{
+          disabled: true,
+        }}
       >
         <TransformComponent>
           <div
