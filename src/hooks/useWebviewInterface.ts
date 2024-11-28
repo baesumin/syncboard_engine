@@ -40,6 +40,7 @@ export const useWebviewInterface = ({
           return;
         }
         const newBase64 = await createOrMergePdf(file.base64);
+        console.log(newBase64);
         setPdfState((prev) => ({
           ...prev,
           pageNumber: prev.totalPage + 1,
@@ -49,7 +50,7 @@ export const useWebviewInterface = ({
           ...file,
           base64: newBase64,
         });
-        // window.AndroidInterface.getPdfData(newBase64);
+        window.AndroidInterface.getPdfData(newBase64);
       },
 
       getSearchText: (data: string) => {

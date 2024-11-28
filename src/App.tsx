@@ -20,11 +20,11 @@ function App() {
   useEffect(() => {
     const initializeFile = async () => {
       if (__DEV__ || isDesktop) {
-        import("./mock/base64").then(() => {
+        import("./mock/base64").then(({ base64 }) => {
           setFile({
-            base64: emptyPageBase64,
+            base64: base64.base64,
             paths: "",
-            isNew: true,
+            isNew: false,
           });
           setIsLoading(false);
         });
