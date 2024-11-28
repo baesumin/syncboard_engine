@@ -40,7 +40,6 @@ export const useWebviewInterface = ({
           return;
         }
         const newBase64 = await createOrMergePdf(file.base64);
-        console.log(newBase64);
         setPdfState((prev) => ({
           ...prev,
           pageNumber: prev.totalPage + 1,
