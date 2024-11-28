@@ -3,7 +3,6 @@ import { LineCapStyle, PDFDocument, rgb } from "pdf-lib";
 import { canvasEventType, PageSize, PathsType } from "../types/common";
 import { isMobile } from "react-device-detect";
 import { pdfjs } from "react-pdf";
-import { emptyPageBase64 } from "../mock/emptyPageBase64";
 
 export const __DEV__ = import.meta.env.MODE === "development";
 
