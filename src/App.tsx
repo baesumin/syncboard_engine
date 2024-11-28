@@ -22,9 +22,9 @@ function App() {
       if (__DEV__ || isDesktop) {
         import("./mock/base64").then(({ base64 }) => {
           setFile({
-            base64: base64.base64,
+            base64: emptyPageBase64,
             paths: "",
-            isNew: false,
+            isNew: true,
           });
           setIsLoading(false);
         });

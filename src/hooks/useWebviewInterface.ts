@@ -49,7 +49,7 @@ export const useWebviewInterface = ({
           ...file,
           base64: newBase64,
         });
-        window.AndroidInterface.getPdfData(newBase64);
+        // window.AndroidInterface.getPdfData(newBase64);
       },
 
       getSearchText: (data: string) => {
