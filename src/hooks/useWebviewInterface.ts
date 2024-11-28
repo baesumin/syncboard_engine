@@ -40,11 +40,11 @@ export const useWebviewInterface = ({
           return;
         }
         const newBase64 = await createOrMergePdf(file.base64);
-        // setPdfState((prev) => ({
-        //   ...prev,
-        //   pageNumber: prev.totalPage + 1,
-        //   totalPage: prev.totalPage + 1,
-        // }));
+        setPdfState((prev) => ({
+          ...prev,
+          pageNumber: prev.totalPage + 1,
+          totalPage: prev.totalPage + 1,
+        }));
         setFile({
           ...file,
           base64: newBase64,

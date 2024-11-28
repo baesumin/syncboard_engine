@@ -135,6 +135,7 @@ export default function PdfEngine() {
   }, [isRenderLoading, pdfState, setPdfState]);
 
   useEffect(() => {
+    alert(JSON.stringify(file.isNew));
     if (file.paths) {
       const savedPaths: { [pageNumber: number]: PathsType[] } = JSON.parse(
         file.paths
