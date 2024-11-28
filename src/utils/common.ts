@@ -3,6 +3,7 @@ import { LineCapStyle, PDFDocument, rgb } from "pdf-lib";
 import { canvasEventType, PageSize, PathsType } from "../types/common";
 import { isMobile } from "react-device-detect";
 import { pdfjs } from "react-pdf";
+import { emptyPageBase64 } from "../mock/emptyPageBase64";
 
 export const __DEV__ = import.meta.env.MODE === "development";
 
@@ -389,7 +390,13 @@ export async function createOrMergePdf(base64String?: string) {
   }
 
   // 새로운 페이지 추가
-  pdfDoc.addPage([600, 842]); // A4(72 dpi) 사이즈 (px)
+  // pdfDoc.addPage([600, 842]); // A4(72 dpi) 사이즈 (px)
+  const pdfBytes = Uint8Array.from(atob(emptyPageBase64), (c) =>
+    c.charCodeAt(0)
+  );
+  const existingPdfDoc = await PDFDocument.load(pdfBytes);
+  const [firstPage] = await pdfDoc.copyPages(existingPdfDoc, [0]);
+  pdfDoc.addPage(firstPage);
 
   // 최종 PDF를 Base64 문자열로 변환하여 반환
   return pdfToBase64(pdfDoc);
