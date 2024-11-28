@@ -35,6 +35,10 @@ export const useWebviewInterface = ({
       },
 
       newPage: async () => {
+        if (pdfState.totalPage === 5) {
+          alert("최대 5페이지까지 추가 가능합니다.");
+          return;
+        }
         const newBase64 = await createOrMergePdf(file.base64);
         setPdfState((prev) => ({
           ...prev,

@@ -21,11 +21,11 @@ import {
   Zoom,
 } from "../assets/icons";
 import { Dispatch, SetStateAction, useState } from "react";
-import { colorMap } from "../utils/common";
+import { __DEV__, colorMap, createOrMergePdf } from "../utils/common";
 import { DrawType, TouchType } from "../types/common";
 import ColorPicker from "./ColorPicker";
 import { useAtom } from "jotai";
-import { pdfConfigAtom, pdfStateAtom } from "../store/pdf";
+import { fileAtom, pdfConfigAtom, pdfStateAtom } from "../store/pdf";
 
 interface Props {
   drawType: DrawType;
@@ -49,6 +49,7 @@ const PdfOverlay = ({
   onEraseAllClick,
 }: Props) => {
   const [zoomEnabled, setZoomEnabled] = useState(false);
+  const [file, setFile] = useAtom(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
   const [pdfConfig, setPdfConfig] = useAtom(pdfConfigAtom);
 
@@ -129,19 +130,45 @@ const PdfOverlay = ({
 
         <div className="flex h-[56px] justify-center">
           {!pdfState.isToolBarOpen && (
-            <button
-              onClick={() => {
-                setCanDraw((prev) => !prev);
-                setPdfState({
-                  ...pdfState,
-                  isToolBarOpen: true,
-                });
-              }}
-              className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
-            >
-              <Drawing />
-              그리기
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  setCanDraw((prev) => !prev);
+                  setPdfState({
+                    ...pdfState,
+                    isToolBarOpen: true,
+                  });
+                }}
+                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+              >
+                <Drawing />
+                그리기
+              </button>
+
+              {__DEV__ && (
+                <button
+                  onClick={async () => {
+                    if (pdfState.totalPage === 5) {
+                      alert("최대 5페이지까지 추가 가능합니다.");
+                      return;
+                    }
+                    const newBase64 = await createOrMergePdf(file.base64);
+                    setPdfState((prev) => ({
+                      ...prev,
+                      pageNumber: prev.totalPage + 1,
+                      totalPage: prev.totalPage + 1,
+                    }));
+                    setFile({
+                      ...file,
+                      base64: newBase64,
+                    });
+                  }}
+                  className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                >
+                  페이지 추가
+                </button>
+              )}
+            </>
           )}
 
           {pdfState.isToolBarOpen && (
