@@ -20,7 +20,7 @@ function App() {
   useEffect(() => {
     const initializeFile = async () => {
       if (__DEV__ || isDesktop) {
-        import("./mock/base64").then(({ base64 }) => {
+        import("./mock/base64").then(() => {
           setFile({
             base64: emptyPageBase64,
             paths: "",
