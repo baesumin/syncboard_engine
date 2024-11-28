@@ -180,7 +180,7 @@ export default function PdfEngine() {
             scaleRef={scaleRef}
             pinchZoomRef={ref}
           >
-            {isRenderLoading && (
+            {/* {isRenderLoading && (
               <Page
                 key={pdfState.renderedPageNumber}
                 pageNumber={pdfState.renderedPageNumber}
@@ -193,7 +193,7 @@ export default function PdfEngine() {
                 loading={<></>}
                 noData={<></>}
               />
-            )}
+            )} */}
             <Page
               key={pdfState.pageNumber}
               className={isRenderLoading ? "hidden" : ""}
