@@ -214,12 +214,7 @@ export default function PdfEngine() {
               loading={<></>}
               noData={<></>}
             />
-            <div
-              className={clsx(
-                "absolute flex-center",
-                isRenderLoading ? "hidden" : ""
-              )}
-            >
+            <div className="absolute flex-center">
               <canvas
                 ref={canvas}
                 key={pdfState.pageNumber}
@@ -229,7 +224,8 @@ export default function PdfEngine() {
                 }}
                 className={clsx(
                   "touch-none z-[1000]",
-                  canDraw ? "pointer-events-auto" : "pointer-events-none"
+                  canDraw ? "pointer-events-auto" : "pointer-events-none",
+                  isRenderLoading ? "hidden" : ""
                 )}
                 onPointerDown={startDrawing}
                 onPointerMove={draw}
