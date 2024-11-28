@@ -2,8 +2,7 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
 import { useEffect, useState } from "react";
-import { __DEV__ } from "./utils/common";
-import { emptyPageBase64 } from "./mock/emptyPageBase64";
+import { __DEV__, createOrMergePdf } from "./utils/common";
 import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
 import { isDesktop } from "react-device-detect";
@@ -31,10 +30,12 @@ function App() {
         return;
       }
 
-      window.webviewApi = (appData: string) => {
+      window.webviewApi = async (appData: string) => {
         const param = JSON.parse(appData);
         setFile({
-          base64: param?.data?.isNew ? emptyPageBase64 : param?.data?.base64,
+          base64: param?.data?.isNew
+            ? await createOrMergePdf()
+            : param?.data?.base64,
           paths: param?.data?.paths,
           isNew: param?.data?.isNew,
         });
