@@ -157,6 +157,7 @@ const PdfOverlay = ({
                       ...prev,
                       pageNumber: prev.totalPage + 1,
                       totalPage: prev.totalPage + 1,
+                      isDocumentLoading: true,
                     }));
                     setFile({
                       ...file,

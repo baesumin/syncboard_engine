@@ -108,6 +108,11 @@ export default function PdfEngine() {
           ...pdfState,
           totalPage: pdf.numPages,
         });
+      } else {
+        setPdfState({
+          ...pdfState,
+          isDocumentLoading: false,
+        });
       }
     },
     [file.isNew, pdfState, setPdfState]
@@ -159,7 +164,7 @@ export default function PdfEngine() {
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {isRenderLoading && file.isNew && (
+        {pdfState.isDocumentLoading && isRenderLoading && file.isNew && (
           <div
             className="absolute bg-white"
             style={{
@@ -180,7 +185,7 @@ export default function PdfEngine() {
             scaleRef={scaleRef}
             pinchZoomRef={ref}
           >
-            {/* {isRenderLoading && (
+            {isRenderLoading && (
               <Page
                 key={pdfState.renderedPageNumber}
                 pageNumber={pdfState.renderedPageNumber}
@@ -193,7 +198,7 @@ export default function PdfEngine() {
                 loading={<></>}
                 noData={<></>}
               />
-            )} */}
+            )}
             <Page
               key={pdfState.pageNumber}
               className={isRenderLoading ? "hidden" : ""}
@@ -209,7 +214,12 @@ export default function PdfEngine() {
               loading={<></>}
               noData={<></>}
             />
-            <div className="absolute flex-center">
+            <div
+              className={clsx(
+                "absolute flex-center",
+                isRenderLoading ? "hidden" : ""
+              )}
+            >
               <canvas
                 ref={canvas}
                 key={pdfState.pageNumber}
