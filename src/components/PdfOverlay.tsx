@@ -322,7 +322,8 @@ const PdfOverlay = ({
               <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
               <button
                 onClick={() => {
-                  setCanDraw(zoomEnabled ? false : true);
+                  setCanDraw(true);
+                  setZoomEnabled(false);
                   setTouchType((prev) => (prev === "pen" ? "touch" : "pen"));
                 }}
                 className="pointer-events-auto w-[78px] h-[44px] rounded-lg bg-[#EEEFF3] flex items-center px-[4px]"
@@ -336,20 +337,18 @@ const PdfOverlay = ({
                   {touchType === "pen" ? <PenMode /> : <TouchMode />}
                 </div>
               </button>
-              {touchType === "touch" && (
-                <button
-                  onClick={() => {
-                    setCanDraw(zoomEnabled ? true : false);
-                    setZoomEnabled((prev) => !prev);
-                  }}
-                  className={clsx(
-                    "pointer-events-auto size-[44px] rounded-lg flex-center ml-[8px]",
-                    zoomEnabled ? "bg-[#5865FA]" : "#ffffff"
-                  )}
-                >
-                  <Zoom color={zoomEnabled ? "#ffffff" : "#353B45"} />
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  setCanDraw(zoomEnabled ? true : false);
+                  setZoomEnabled((prev) => !prev);
+                }}
+                className={clsx(
+                  "pointer-events-auto size-[44px] rounded-lg flex-center ml-[8px]",
+                  zoomEnabled ? "bg-[#5865FA]" : "#ffffff"
+                )}
+              >
+                <Zoom color={zoomEnabled ? "#ffffff" : "#353B45"} />
+              </button>
               <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
               <button
                 onClick={() => {
