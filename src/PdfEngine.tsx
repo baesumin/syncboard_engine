@@ -119,7 +119,7 @@ export default function PdfEngine() {
   );
 
   const textRenderer: CustomTextRenderer = useCallback(
-    (textItem) => highlightPattern(textItem.str, searchText),
+    (textItem) => highlightPattern(textItem.str.trim(), searchText),
     [searchText]
   );
 
