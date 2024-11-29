@@ -4,6 +4,7 @@ export const fileAtom = atom({
   base64: "",
   paths: "",
   isNew: false,
+  type: "",
 });
 export const searchTextAtom = atom("");
 export const pdfStateAtom = atom({

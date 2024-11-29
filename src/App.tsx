@@ -24,6 +24,7 @@ function App() {
             base64: base64.base64,
             paths: "",
             isNew: false,
+            type: "",
           });
           setIsLoading(false);
         });
@@ -32,12 +33,14 @@ function App() {
 
       window.webviewApi = async (appData: string) => {
         const param = JSON.parse(appData);
+        console.log(param?.data);
         setFile({
           base64: param?.data?.isNew
             ? await createOrMergePdf()
             : param?.data?.base64,
           paths: param?.data?.paths,
           isNew: param?.data?.isNew,
+          type: "",
         });
         setIsLoading(false);
       };
