@@ -171,8 +171,9 @@ export const colorToRGB = (color: (typeof colorMap)[number]) => {
 export const isEmptyObject = (obj: object) => Object.keys(obj).length === 0;
 
 export const highlightPattern = (text: string, pattern: string) => {
+  const regex = new RegExp(pattern, "gi");
   return text.replace(
-    pattern,
+    regex,
     (value) =>
       `<span style="
         background-color: rgba(255, 255, 0, 0.4);
