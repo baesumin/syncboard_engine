@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { createOrMergePdf, createPDFFromImgBase64 } from "./utils/common";
 import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
+import { isTablet } from "react-device-detect";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -17,7 +18,7 @@ function App() {
 
   useEffect(() => {
     const initializeFile = async () => {
-      if (window.webviewApi === undefined) {
+      if (window.webviewApi === undefined && !isTablet) {
         import("./mock/base64").then(async ({ base64 }) => {
           setFile({
             base64: base64.base64,
