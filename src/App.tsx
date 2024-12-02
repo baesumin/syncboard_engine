@@ -22,7 +22,7 @@ function App() {
 
   useEffect(() => {
     const initializeFile = async () => {
-      if (__DEV__ || isDesktop) {
+      if (__DEV__ || !window.webviewApi) {
         import("./mock/base64").then(async ({ base64 }) => {
           setFile({
             base64: base64.base64,
