@@ -21,7 +21,7 @@ function App() {
 
   useEffect(() => {
     const initializeFile = async () => {
-      if (__DEV__ || !window.webviewApi) {
+      if (window.webviewApi === undefined) {
         import("./mock/base64").then(async ({ base64 }) => {
           setFile({
             base64: base64.base64,
