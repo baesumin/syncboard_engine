@@ -520,9 +520,11 @@ export async function createPDFFromImgBase64(
     case "gif":
     case "tif":
     case "ico":
-    case "svg":
-      // 지원하지 않는 형식은 Canvas를 통해 PNG로 변환
       embedPng = (await convertImageToPng(base64Image, imageType)) as string;
+      image = await pdfDoc.embedPng(embedPng);
+      break;
+    case "svg":
+      embedPng = (await convertImageToPng(base64Image, "svg+xml")) as string;
       image = await pdfDoc.embedPng(embedPng);
       break;
     default:
