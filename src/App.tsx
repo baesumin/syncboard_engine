@@ -24,11 +24,15 @@ function App() {
     const initializeFile = async () => {
       if (__DEV__ || !isTablet) {
         import("./mock/base64").then(async ({ base64 }) => {
+          // const base64 = await createPDFFromImgBase64(
+          //   pngbase64.base64,
+          //   pngbase64.type
+          // );
           setFile({
             base64: base64.base64,
             paths: "",
             isNew: false,
-            type: "",
+            type: base64.type,
           });
           setIsLoading(false);
         });
@@ -37,7 +41,6 @@ function App() {
 
       window.webviewApi = async (appData: string) => {
         const param = JSON.parse(appData);
-        console.log(param?.data);
         setFile({
           base64: param?.data?.isNew
             ? await createOrMergePdf()

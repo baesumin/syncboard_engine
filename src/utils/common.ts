@@ -504,6 +504,8 @@ export async function createPDFFromImgBase64(
 
   // base64 이미지를 PDF에 삽입
   let image;
+  let embedPng;
+  let newWidth, newHeight;
   // 이미지 타입에 따른 처리
   switch (imageType.toLowerCase()) {
     case "png":
@@ -520,7 +522,8 @@ export async function createPDFFromImgBase64(
     case "ico":
     case "svg":
       // 지원하지 않는 형식은 Canvas를 통해 PNG로 변환
-      image = await pdfDoc.embedPng(await imageToCanvas(base64Image));
+      embedPng = (await convertImageToPng(base64Image, imageType)) as string;
+      image = await pdfDoc.embedPng(embedPng);
       break;
     default:
       throw new Error("지원하지 않는 이미지 형식입니다.");
@@ -529,44 +532,51 @@ export async function createPDFFromImgBase64(
   // 이미지 크기 조정
   const scaledDims = image.scaleToFit(width, height);
 
+  // 가로가 A4 가로 길이를 초과하면 A4 가로 길이에 맞춰 비율 조정
+  if (scaledDims.width > scaledDims.height) {
+    newWidth = width;
+    newHeight = (scaledDims.height / scaledDims.width) * newWidth; // 비율에 맞춰 높이 조정
+  }
+  // 세로가 A4 세로 길이를 초과하면 A4 세로 길이에 맞춰 비율 조정
+  else if (scaledDims.height > scaledDims.width) {
+    newHeight = height;
+    newWidth = (scaledDims.width / scaledDims.height) * newHeight; // 비율에 맞춰 너비 조정
+  }
   // 이미지를 페이지 중앙에 배치
   page.drawImage(image, {
     x: width / 2 - scaledDims.width / 2,
     y: height / 2 - scaledDims.height / 2,
-    width: scaledDims.width,
-    height: scaledDims.height,
+    width: newWidth,
+    height: newHeight,
   });
-  // return pdfToBase64(pdfDoc);
   // PDF 저장 및 다운로드
   const pdfBytes = await pdfDoc.save();
   const pdfBase64 = await arrayBufferToBase64(pdfBytes);
   return pdfBase64;
 }
 
-async function imageToCanvas(imageData: string) {
+const convertImageToPng = async (imageBase64: string, imageType: string) => {
   const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  const img = new Image();
+  const ctx = canvas.getContext("2d")!;
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = `data:image/${imageType};base64,${imageBase64}`;
 
-  // 이미지 로딩을 Promise로 래핑
-  const loadImage = async (src: string) => {
-    return new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
-      img.src = src;
-    });
-  };
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
 
-  try {
-    await loadImage(imageData);
-    canvas.width = img.width;
-    canvas.height = img.height;
-    ctx?.drawImage(img, 0, 0);
-    return canvas.toDataURL("image/png");
-  } catch (error: unknown) {
-    throw new Error(JSON.stringify(error));
-  }
-}
+      // PNG로 변환
+      const pngBase64 = canvas.toDataURL("image/png");
+      resolve(pngBase64); // 변환된 PNG의 base64 문자열 반환
+    };
+
+    img.onerror = (error) => {
+      reject(error); // 이미지 로드 실패 시 에러 반환
+    };
+  });
+};
 
 function arrayBufferToBase64(buffer: Uint8Array) {
   let binary = "";
