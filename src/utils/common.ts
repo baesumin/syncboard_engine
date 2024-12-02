@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { LineCapStyle, PDFDocument, rgb } from "pdf-lib";
+import { LineCapStyle, PageSizes, PDFDocument, rgb } from "pdf-lib";
 import { canvasEventType, PageSize, PathsType } from "../types/common";
 import { isMobile } from "react-device-detect";
 import { pdfjs } from "react-pdf";
@@ -390,7 +390,7 @@ export async function createOrMergePdf(base64String?: string) {
   }
 
   // 새로운 페이지 추가
-  pdfDoc.addPage([595, 842]); // A4(72 dpi) 사이즈 (px)
+  pdfDoc.addPage(PageSizes.A4);
 
   // 최종 PDF를 Base64 문자열로 변환하여 반환
   return pdfToBase64(pdfDoc);
@@ -490,3 +490,92 @@ export async function pdfToBase64(pdfDoc: PDFDocument) {
 //     throw error;
 //   }
 // }
+
+export async function createPDFFromImgBase64(
+  base64Image: string,
+  imageType: string
+) {
+  // PDF 문서 생성
+  const pdfDoc = await PDFDocument.create();
+
+  // A4 크기의 페이지 추가
+  const page = pdfDoc.addPage(PageSizes.A4);
+  const { width, height } = page.getSize();
+
+  // base64 이미지를 PDF에 삽입
+  let image;
+  // 이미지 타입에 따른 처리
+  switch (imageType.toLowerCase()) {
+    case "png":
+      image = await pdfDoc.embedPng(base64Image);
+      break;
+    case "jpg":
+    case "jpeg":
+      image = await pdfDoc.embedJpg(base64Image);
+      break;
+    case "bmp":
+    case "wbmp":
+    case "gif":
+    case "tif":
+    case "ico":
+    case "svg":
+      // 지원하지 않는 형식은 Canvas를 통해 PNG로 변환
+      image = await pdfDoc.embedPng(await imageToCanvas(base64Image));
+      break;
+    default:
+      throw new Error("지원하지 않는 이미지 형식입니다.");
+  }
+
+  // 이미지 크기 조정
+  const scaledDims = image.scaleToFit(width, height);
+
+  // 이미지를 페이지 중앙에 배치
+  page.drawImage(image, {
+    x: width / 2 - scaledDims.width / 2,
+    y: height / 2 - scaledDims.height / 2,
+    width: scaledDims.width,
+    height: scaledDims.height,
+  });
+  // return pdfToBase64(pdfDoc);
+  // PDF 저장 및 다운로드
+  const pdfBytes = await pdfDoc.save();
+  const pdfBase64 = await arrayBufferToBase64(pdfBytes);
+  return pdfBase64;
+}
+
+async function imageToCanvas(imageData: string) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  const img = new Image();
+
+  // 이미지 로딩을 Promise로 래핑
+  const loadImage = async (src: string) => {
+    return new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = src;
+    });
+  };
+
+  try {
+    await loadImage(imageData);
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx?.drawImage(img, 0, 0);
+    return canvas.toDataURL("image/png");
+  } catch (error: unknown) {
+    throw new Error(JSON.stringify(error));
+  }
+}
+
+function arrayBufferToBase64(buffer: Uint8Array) {
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+
+  return window.btoa(binary);
+}
