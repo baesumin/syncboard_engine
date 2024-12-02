@@ -3,6 +3,7 @@ import { LineCapStyle, PageSizes, PDFDocument, rgb } from "pdf-lib";
 import { canvasEventType, PageSize, PathsType } from "../types/common";
 import { isMobile } from "react-device-detect";
 import { pdfjs } from "react-pdf";
+import UTIF from "utif";
 
 export const __DEV__ = import.meta.env.MODE === "development";
 
@@ -518,13 +519,17 @@ export async function createPDFFromImgBase64(
     case "bmp":
     case "wbmp":
     case "gif":
-    case "tif":
     case "ico":
       embedPng = (await convertImageToPng(base64Image, imageType)) as string;
       image = await pdfDoc.embedPng(embedPng);
       break;
     case "svg":
       embedPng = (await convertImageToPng(base64Image, "svg+xml")) as string;
+      image = await pdfDoc.embedPng(embedPng);
+      break;
+    case "tif":
+    case "tiff":
+      embedPng = (await convertTiffToPng(base64Image)) as string;
       image = await pdfDoc.embedPng(embedPng);
       break;
     default:
@@ -579,6 +584,38 @@ const convertImageToPng = async (imageBase64: string, imageType: string) => {
     };
   });
 };
+
+function convertTiffToPng(tiffBase64: string) {
+  // base64 문자열을 ArrayBuffer로 변환
+  const binaryString = atob(tiffBase64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  const buffer = bytes.buffer;
+
+  // TIFF 디코딩
+  const ifds = UTIF.decode(buffer);
+  const tiffData = ifds[0];
+  UTIF.decodeImage(buffer, tiffData);
+  const rgba = UTIF.toRGBA8(tiffData);
+
+  // Canvas 생성 및 이미지 그리기
+  const canvas = document.createElement("canvas");
+  canvas.width = tiffData.width;
+  canvas.height = tiffData.height;
+  const ctx = canvas.getContext("2d")!;
+
+  const imageData = new ImageData(
+    new Uint8ClampedArray(rgba),
+    tiffData.width,
+    tiffData.height
+  );
+  ctx.putImageData(imageData, 0, 0);
+
+  // PNG base64 문자열로 변환
+  return canvas.toDataURL("image/png");
+}
 
 function arrayBufferToBase64(buffer: Uint8Array) {
   let binary = "";

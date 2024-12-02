@@ -19,13 +19,15 @@
     "react-dom": "^18.3.1",
     "react-pdf": "^9.1.1",
     "react-resize-detector": "^11.0.1",
-    "react-zoom-pan-pinch": "3.6.0"
+    "react-zoom-pan-pinch": "3.6.0",
+    "utif": "^3.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
     "@types/lodash.throttle": "^4.1.9",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/utif": "^3.0.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.15.0",
