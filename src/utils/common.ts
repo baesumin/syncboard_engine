@@ -539,14 +539,11 @@ export async function createPDFFromImgBase64(
   // 이미지 크기 조정
   const scaledDims = image.scaleToFit(width, height);
 
-  // 가로가 A4 가로 길이를 초과하면 A4 가로 길이에 맞춰 비율 조정
   if (scaledDims.width > scaledDims.height) {
-    newWidth = width;
+    newWidth = Math.min(width, scaledDims.width);
     newHeight = (scaledDims.height / scaledDims.width) * newWidth; // 비율에 맞춰 높이 조정
-  }
-  // 세로가 A4 세로 길이를 초과하면 A4 세로 길이에 맞춰 비율 조정
-  else if (scaledDims.height > scaledDims.width) {
-    newHeight = height;
+  } else {
+    newHeight = Math.min(height, scaledDims.height);
     newWidth = (scaledDims.width / scaledDims.height) * newHeight; // 비율에 맞춰 너비 조정
   }
   // 이미지를 페이지 중앙에 배치
