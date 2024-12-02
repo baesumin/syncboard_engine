@@ -2,11 +2,7 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
 import { useEffect, useState } from "react";
-import {
-  __DEV__,
-  createOrMergePdf,
-  createPDFFromImgBase64,
-} from "./utils/common";
+import { createOrMergePdf, createPDFFromImgBase64 } from "./utils/common";
 import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
 
