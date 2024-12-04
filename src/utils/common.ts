@@ -290,7 +290,7 @@ export const getModifiedPDFBase64 = async (
             }, // y 좌표 반전
             color: colorToRGB(color), // 선 색상
             thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
-            lineCap: LineCapStyle.Projecting,
+            lineCap: alpha === 1 ? LineCapStyle.Round : LineCapStyle.Butt,
             opacity: alpha,
           });
         }
