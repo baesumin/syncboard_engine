@@ -82,10 +82,10 @@ export default function PdfEngine() {
   const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
     (page) => {
       if (page.width !== PageSizes.A4[0] || !file.isNew) {
-        setPdfConfig({
-          ...pdfConfig,
+        setPdfConfig((prev) => ({
+          ...prev,
           size: { width: page.width, height: page.height },
-        });
+        }));
       }
       scaleRef.current?.resetTransform();
       if (canvas.current) {

@@ -59,10 +59,10 @@ const PdfOverlay = ({
         <div className="flex h-[52px] justify-between items-center">
           <button
             onClick={() => {
-              setPdfState({
-                ...pdfState,
+              setPdfState((prev) => ({
+                ...prev,
                 isListOpen: true,
-              });
+              }));
             }}
             className="pointer-events-auto h-[48px] rounded-[10px] bg-[#202325]/70 flex items-center pl-[2px] pr-4 gap-3"
           >
@@ -74,7 +74,7 @@ const PdfOverlay = ({
           <button
             onClick={() => {
               setPdfState((prev) => ({
-                ...pdfState,
+                ...prev,
                 isFullScreen: !prev.isFullScreen,
               }));
               if (window.AndroidInterface) {
@@ -93,7 +93,7 @@ const PdfOverlay = ({
               onClick={() => {
                 if (pdfState.pageNumber !== 1) {
                   setPdfState((prev) => ({
-                    ...pdfState,
+                    ...prev,
                     pageNumber: prev.pageNumber - 1,
                   }));
                 }
@@ -108,7 +108,7 @@ const PdfOverlay = ({
               onClick={() => {
                 if (pdfState.pageNumber !== pdfState.totalPage) {
                   setPdfState((prev) => ({
-                    ...pdfState,
+                    ...prev,
                     pageNumber: prev.pageNumber + 1,
                   }));
                 }
@@ -134,10 +134,10 @@ const PdfOverlay = ({
               <button
                 onClick={() => {
                   setCanDraw((prev) => !prev);
-                  setPdfState({
-                    ...pdfState,
+                  setPdfState((prev) => ({
+                    ...prev,
                     isToolBarOpen: true,
-                  });
+                  }));
                 }}
                 className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
               >
@@ -159,10 +159,10 @@ const PdfOverlay = ({
                       totalPage: prev.totalPage + 1,
                       isDocumentLoading: true,
                     }));
-                    setFile({
-                      ...file,
+                    setFile((prev) => ({
+                      ...prev,
                       base64: newBase64,
-                    });
+                    }));
                   }}
                   className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
                 >
@@ -245,7 +245,7 @@ const PdfOverlay = ({
                   <button
                     onClick={() => {
                       setPdfState((prev) => ({
-                        ...pdfState,
+                        ...prev,
                         isStrokeOpen: !prev.isStrokeOpen,
                       }));
                     }}
@@ -259,10 +259,10 @@ const PdfOverlay = ({
                       <div className="bg-white w-[60px] h-[236px] absolute bottom-[90px] rounded-lg shadow-black shadow-sm flex flex-col justify-center items-center">
                         <button
                           onClick={() => {
-                            setPdfConfig({
-                              ...pdfConfig,
+                            setPdfConfig((prev) => ({
+                              ...prev,
                               strokeStep: 28,
-                            });
+                            }));
                           }}
                           className={
                             "pointer-events-auto size-[44px] flex-center"
@@ -276,10 +276,10 @@ const PdfOverlay = ({
                         </button>
                         <button
                           onClick={() => {
-                            setPdfConfig({
-                              ...pdfConfig,
+                            setPdfConfig((prev) => ({
+                              ...prev,
                               strokeStep: 22,
-                            });
+                            }));
                           }}
                           className="pointer-events-auto size-[44px] flex-center"
                         >
@@ -291,10 +291,10 @@ const PdfOverlay = ({
                         </button>
                         <button
                           onClick={() => {
-                            setPdfConfig({
-                              ...pdfConfig,
+                            setPdfConfig((prev) => ({
+                              ...prev,
                               strokeStep: 16,
-                            });
+                            }));
                           }}
                           className="pointer-events-auto size-[44px] flex-center"
                         >
@@ -306,10 +306,10 @@ const PdfOverlay = ({
                         </button>
                         <button
                           onClick={() => {
-                            setPdfConfig({
-                              ...pdfConfig,
+                            setPdfConfig((prev) => ({
+                              ...prev,
                               strokeStep: 10,
-                            });
+                            }));
                           }}
                           className="pointer-events-auto size-[44px] flex-center"
                         >
@@ -321,10 +321,10 @@ const PdfOverlay = ({
                         </button>
                         <button
                           onClick={() => {
-                            setPdfConfig({
-                              ...pdfConfig,
+                            setPdfConfig((prev) => ({
+                              ...prev,
                               strokeStep: 4,
-                            });
+                            }));
                           }}
                           className="pointer-events-auto size-[44px] flex-center"
                         >
@@ -381,10 +381,10 @@ const PdfOverlay = ({
               <button
                 onClick={() => {
                   setCanDraw(false);
-                  setPdfState({
-                    ...pdfState,
+                  setPdfState((prev) => ({
+                    ...prev,
                     isToolBarOpen: false,
-                  });
+                  }));
                   setDrawType("pen");
                 }}
                 className="pointer-events-auto size-[44px] flex-center"

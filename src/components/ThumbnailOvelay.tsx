@@ -40,13 +40,13 @@ const ThumbnailOvelay = ({
 
   const onItemClick = useCallback(
     (args: OnItemClickArgs) => {
-      setPdfState({
-        ...pdfState,
+      setPdfState((prev) => ({
+        ...prev,
         pageNumber: args.pageNumber,
         isListOpen: false,
-      });
+      }));
     },
-    [pdfState, setPdfState]
+    [setPdfState]
   );
 
   const redrawPaths = useCallback(
@@ -141,10 +141,10 @@ const ThumbnailOvelay = ({
       <div className="flex justify-end items-center">
         <button
           onClick={() => {
-            setPdfState({
-              ...pdfState,
+            setPdfState((prev) => ({
+              ...prev,
               isListOpen: false,
-            });
+            }));
           }}
           className="bg-white size-[44px] flex-center rounded-xl"
         >
