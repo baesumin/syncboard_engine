@@ -7,12 +7,17 @@ import UTIF from "utif";
 
 export const __DEV__ = import.meta.env.MODE === "development";
 
-export const nativeLog = (text: unknown) => {
+export const nativeLog = (...args: unknown[]) => {
+  const logValue = args.map((arg) =>
+    Array.isArray(arg)
+      ? JSON.stringify(arg.map((item) => JSON.stringify(item)))
+      : JSON.stringify(arg)
+  );
   //@ts-ignore
   window.ReactNativeWebView?.postMessage(
     JSON.stringify({
       type: "log",
-      value: JSON.stringify(text),
+      value: JSON.stringify(logValue),
     })
   );
 };

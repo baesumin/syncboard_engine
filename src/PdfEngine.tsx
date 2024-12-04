@@ -25,6 +25,7 @@ import {
   pdfStateAtom,
   searchTextAtom,
 } from "./store/pdf";
+import { PageSizes } from "pdf-lib";
 
 export default function PdfEngine() {
   const { orientation } = useMobileOrientation();
@@ -80,10 +81,12 @@ export default function PdfEngine() {
 
   const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
     (page) => {
-      setPdfConfig({
-        ...pdfConfig,
-        size: { width: page.width, height: page.height },
-      });
+      if (page.width !== PageSizes.A4[0] || !file.isNew) {
+        setPdfConfig({
+          ...pdfConfig,
+          size: { width: page.width, height: page.height },
+        });
+      }
       scaleRef.current?.resetTransform();
       if (canvas.current) {
         canvas.current.width = page.width * pdfConfig.devicePixelRatio;
@@ -91,31 +94,26 @@ export default function PdfEngine() {
         redrawPaths(page.width, page.height);
       }
     },
-    [canvas, pdfConfig, redrawPaths, setPdfConfig]
+    [canvas, file.isNew, pdfConfig, redrawPaths, setPdfConfig]
   );
 
   const onRenderSuccess: OnRenderSuccess = useCallback(() => {
-    setPdfState({
-      ...pdfState,
-      renderedPageNumber: pdfState.pageNumber,
-    });
-  }, [pdfState, setPdfState]);
+    setPdfState((prev) => ({
+      ...prev,
+      renderedPageNumber: prev.pageNumber,
+    }));
+  }, [setPdfState]);
 
   const OnDocumentLoadSuccess: OnDocumentLoadSuccess = useCallback(
     (pdf) => {
       if (!file.isNew) {
-        setPdfState({
-          ...pdfState,
+        setPdfState((prev) => ({
+          ...prev,
           totalPage: pdf.numPages,
-        });
-      } else {
-        setPdfState({
-          ...pdfState,
-          isDocumentLoading: false,
-        });
+        }));
       }
     },
-    [file.isNew, pdfState, setPdfState]
+    [file.isNew, setPdfState]
   );
 
   const textRenderer: CustomTextRenderer = useCallback(
@@ -132,12 +130,21 @@ export default function PdfEngine() {
 
   useEffect(() => {
     if (!isRenderLoading && !pdfState.canRenderThumbnail) {
-      setPdfState({
-        ...pdfState,
+      setPdfState((prev) => ({
+        ...prev,
         canRenderThumbnail: true,
-      });
+      }));
     }
   }, [isRenderLoading, pdfState, setPdfState]);
+
+  useEffect(() => {
+    if (file.isNew && !isRenderLoading && pdfState.isDocumentLoading) {
+      setPdfState((prev) => ({
+        ...prev,
+        isDocumentLoading: false,
+      }));
+    }
+  }, [file.isNew, isRenderLoading, pdfState, setPdfState]);
 
   useEffect(() => {
     if (file.paths) {
@@ -164,7 +171,7 @@ export default function PdfEngine() {
   return (
     <>
       <div className="w-dvw h-dvh bg-gray-400 flex-center">
-        {pdfState.isDocumentLoading && isRenderLoading && file.isNew && (
+        {pdfState.isDocumentLoading && file.isNew && (
           <div
             className="absolute bg-white"
             style={{
@@ -219,8 +226,8 @@ export default function PdfEngine() {
                 ref={canvas}
                 key={pdfState.pageNumber}
                 style={{
-                  width: `${pdfConfig.size.width}px`,
-                  height: `${pdfConfig.size.height}px`,
+                  width: pdfConfig.size.width,
+                  height: pdfConfig.size.height,
                 }}
                 className={clsx(
                   "touch-none z-[1000]",
