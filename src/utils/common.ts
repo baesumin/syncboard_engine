@@ -1,5 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { LineCapStyle, PageSizes, PDFDocument, rgb } from "pdf-lib";
+import {
+  BlendMode,
+  LineCapStyle,
+  PageSizes,
+  PDFDocument,
+  PDFPage,
+  rgb,
+} from "pdf-lib";
 import { canvasEventType, PageSize, PathsType } from "../types/common";
 import { isMobile } from "react-device-detect";
 import { pdfjs } from "react-pdf";
@@ -209,94 +216,55 @@ export const getModifiedPDFBase64 = async (
   const existingPdfBytes = base64Data;
   const pdfDoc = await PDFDocument.load(existingPdfBytes);
   for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-    const currentPaths = paths[i + 1]; // 현재 페이지의 경로 가져오기
-    if (currentPaths) {
-      const page = pdfDoc.getPage(i);
-      const { width: pageWidth, height: pageHeight } = page.getSize();
+    const points = paths[i + 1];
+    const page = pdfDoc.getPage(i);
+    const { width: pageWidth, height: pageHeight } = page.getSize();
 
-      // 기존 주석 배열 먼저 가져오기
-      // const existingAnnots = page.node.get(PDFName.of("Annots"));
-      // const annotations: PDFDict[] = [];
+    if (!points || points.length <= 1) continue;
+    let currentGroup: PathsType[] = [];
+    let currentStyle = {
+      color: points[1].color,
+      lineWidth: points[1].lineWidth,
+      alpha: points[1].alpha,
+    };
 
-      // currentPaths.forEach((path) => {
-      //   const lineWidth = (path.lineWidth * pageWidth) / devicePixelRatio; // 정수값으로 변환
-      //   // InkAnnotation 생성
-      //   const annotation: PDFDict = pdfDoc.context.obj({
-      //     Type: PDFName.of("Annot"),
-      //     Subtype: PDFName.of("Ink"),
-      //     F: 4, // 주석 플래그 (표시 필수)
-      //     Rect: [
-      //       (path.lastX * pageWidth) / devicePixelRatio,
-      //       pageHeight - (path.lastY * pageHeight) / devicePixelRatio,
-      //       (path.x * pageWidth) / devicePixelRatio,
-      //       pageHeight - (path.y * pageHeight) / devicePixelRatio,
-      //     ],
-      //     InkList: [
-      //       pdfDoc.context.obj([
-      //         (path.lastX * pageWidth) / devicePixelRatio,
-      //         pageHeight - (path.lastY * pageHeight) / devicePixelRatio,
-      //         (path.x * pageWidth) / devicePixelRatio,
-      //         pageHeight - (path.y * pageHeight) / devicePixelRatio,
-      //       ]),
-      //     ],
-      //     C: [
-      //       parseInt(path.color.slice(1, 3), 16) / 255,
-      //       parseInt(path.color.slice(3, 5), 16) / 255,
-      //       parseInt(path.color.slice(5, 7), 16) / 255,
-      //     ],
-      //     Border: [0, 0, lineWidth],
-      //     BS: {
-      //       // Border Style Dictionary 추가
-      //       Type: PDFName.of("Border"),
-      //       W: lineWidth, // 선 굵기
-      //       S: PDFName.of("S"), // Solid 스타일
-      //       LC: 1, // Line Cap Style: 1 = Round (0 = Butt, 2 = Square)
-      //     },
-      //     LE: [PDFName.of("Round"), PDFName.of("Round")], // Line Ending Styles
-      //     Opacity: path.alpha,
-      //     Contents: PDFString.of(
-      //       JSON.stringify({ drawOrder: path.drawOrder + 1000 })
-      //     ),
-      //     T: "Ink Annotation", // 주석 제목
-      //     CreationDate: new Date().toISOString(),
-      //     M: new Date().toISOString(), // 수정 날짜
-      //   });
+    for (let i = 1; i < points.length; i++) {
+      // 선이 이어진 경우
+      if (
+        points[i].lastX === points[i - 1].x &&
+        points[i].lastY === points[i - 1].y
+      ) {
+        if (i === 1) currentGroup.push(points[0]);
+        currentGroup.push(points[i]);
+        continue;
+      }
 
-      //   annotations.push(annotation);
-      // });
+      // 선이 띄워진 경우
+      if (currentGroup.length) {
+        drawPDFPathGroup(
+          page,
+          currentGroup,
+          currentStyle,
+          pageWidth,
+          pageHeight
+        );
+      }
 
-      // // 한 번에 모든 주석 추가
-      // if (existingAnnots instanceof PDFArray) {
-      //   const annotationsArray = pdfDoc.context.obj([
-      //     ...existingAnnots.array,
-      //     ...annotations,
-      //   ]);
-      //   page.node.set(PDFName.of("Annots"), annotationsArray);
-      // } else {
-      //   page.node.set(PDFName.of("Annots"), pdfDoc.context.obj(annotations));
-      // }
+      // 새로운 그룹 시작
+      currentGroup = [points[i]];
+      currentStyle = {
+        color: points[i].color,
+        lineWidth: points[i].lineWidth,
+        alpha: points[i].alpha,
+      };
+    }
 
-      //경로 그리기
-      currentPaths.forEach(
-        ({ x, y, lastX, lastY, color, lineWidth, alpha }) => {
-          page.drawLine({
-            start: {
-              x: (lastX * pageWidth) / devicePixelRatio,
-              y: pageHeight - (lastY * pageHeight) / devicePixelRatio,
-            }, // y 좌표 반전
-            end: {
-              x: (x * pageWidth) / devicePixelRatio,
-              y: pageHeight - (y * pageHeight) / devicePixelRatio,
-            }, // y 좌표 반전
-            color: colorToRGB(color), // 선 색상
-            thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
-            lineCap: alpha === 1 ? LineCapStyle.Round : LineCapStyle.Butt,
-            opacity: alpha,
-          });
-        }
-      );
+    // 마지막 그룹 처리
+    if (currentGroup.length) {
+      drawPDFPathGroup(page, currentGroup, currentStyle, pageWidth, pageHeight);
     }
   }
+
   if (!isMobile || __DEV__) {
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -311,6 +279,145 @@ export const getModifiedPDFBase64 = async (
   const base64DataUri = await pdfDoc.saveAsBase64();
   return base64DataUri;
 };
+
+const drawPDFPathGroup = (
+  page: PDFPage,
+  group: PathsType[],
+  style: { color: string; lineWidth: number; alpha: number },
+  pageWidth: number,
+  pageHeight: number
+) => {
+  for (let i = 1; i < group.length; i++) {
+    page.drawLine({
+      start: {
+        x: (group[i - 1].x * pageWidth) / devicePixelRatio,
+        y: pageHeight - (group[i - 1].y * pageHeight) / devicePixelRatio,
+      },
+      end: {
+        x: (group[i].x * pageWidth) / devicePixelRatio,
+        y: pageHeight - (group[i].y * pageHeight) / devicePixelRatio,
+      },
+      color: colorToRGB(style.color as (typeof colorMap)[number]),
+      thickness: (style.lineWidth * pageWidth) / devicePixelRatio,
+      lineCap: style.alpha === 1 ? LineCapStyle.Round : LineCapStyle.Butt,
+      opacity: style.alpha,
+      blendMode: BlendMode.Normal,
+    });
+  }
+};
+
+// export const getModifiedPDFBase64 = async (
+//   paths: {
+//     [pageNumber: number]: PathsType[];
+//   },
+//   base64Data: string
+// ) => {
+//   // 기존 PDF 로드
+//   const existingPdfBytes = base64Data;
+//   const pdfDoc = await PDFDocument.load(existingPdfBytes);
+//   for (let i = 0; i < pdfDoc.getPageCount(); i++) {
+//     const currentPaths = paths[i + 1]; // 현재 페이지의 경로 가져오기
+//     if (currentPaths) {
+//       const page = pdfDoc.getPage(i);
+//       const { width: pageWidth, height: pageHeight } = page.getSize();
+
+//       // 기존 주석 배열 먼저 가져오기
+//       // const existingAnnots = page.node.get(PDFName.of("Annots"));
+//       // const annotations: PDFDict[] = [];
+
+//       // currentPaths.forEach((path) => {
+//       //   const lineWidth = (path.lineWidth * pageWidth) / devicePixelRatio; // 정수값으로 변환
+//       //   // InkAnnotation 생성
+//       //   const annotation: PDFDict = pdfDoc.context.obj({
+//       //     Type: PDFName.of("Annot"),
+//       //     Subtype: PDFName.of("Ink"),
+//       //     F: 4, // 주석 플래그 (표시 필수)
+//       //     Rect: [
+//       //       (path.lastX * pageWidth) / devicePixelRatio,
+//       //       pageHeight - (path.lastY * pageHeight) / devicePixelRatio,
+//       //       (path.x * pageWidth) / devicePixelRatio,
+//       //       pageHeight - (path.y * pageHeight) / devicePixelRatio,
+//       //     ],
+//       //     InkList: [
+//       //       pdfDoc.context.obj([
+//       //         (path.lastX * pageWidth) / devicePixelRatio,
+//       //         pageHeight - (path.lastY * pageHeight) / devicePixelRatio,
+//       //         (path.x * pageWidth) / devicePixelRatio,
+//       //         pageHeight - (path.y * pageHeight) / devicePixelRatio,
+//       //       ]),
+//       //     ],
+//       //     C: [
+//       //       parseInt(path.color.slice(1, 3), 16) / 255,
+//       //       parseInt(path.color.slice(3, 5), 16) / 255,
+//       //       parseInt(path.color.slice(5, 7), 16) / 255,
+//       //     ],
+//       //     Border: [0, 0, lineWidth],
+//       //     BS: {
+//       //       // Border Style Dictionary 추가
+//       //       Type: PDFName.of("Border"),
+//       //       W: lineWidth, // 선 굵기
+//       //       S: PDFName.of("S"), // Solid 스타일
+//       //       LC: 1, // Line Cap Style: 1 = Round (0 = Butt, 2 = Square)
+//       //     },
+//       //     LE: [PDFName.of("Round"), PDFName.of("Round")], // Line Ending Styles
+//       //     Opacity: path.alpha,
+//       //     Contents: PDFString.of(
+//       //       JSON.stringify({ drawOrder: path.drawOrder + 1000 })
+//       //     ),
+//       //     T: "Ink Annotation", // 주석 제목
+//       //     CreationDate: new Date().toISOString(),
+//       //     M: new Date().toISOString(), // 수정 날짜
+//       //   });
+
+//       //   annotations.push(annotation);
+//       // });
+
+//       // // 한 번에 모든 주석 추가
+//       // if (existingAnnots instanceof PDFArray) {
+//       //   const annotationsArray = pdfDoc.context.obj([
+//       //     ...existingAnnots.array,
+//       //     ...annotations,
+//       //   ]);
+//       //   page.node.set(PDFName.of("Annots"), annotationsArray);
+//       // } else {
+//       //   page.node.set(PDFName.of("Annots"), pdfDoc.context.obj(annotations));
+//       // }
+
+//       //경로 그리기
+//       currentPaths.forEach(
+//         ({ x, y, lastX, lastY, color, lineWidth, alpha }) => {
+//           page.drawLine({
+//             start: {
+//               x: (lastX * pageWidth) / devicePixelRatio,
+//               y: pageHeight - (lastY * pageHeight) / devicePixelRatio,
+//             }, // y 좌표 반전
+//             end: {
+//               x: (x * pageWidth) / devicePixelRatio,
+//               y: pageHeight - (y * pageHeight) / devicePixelRatio,
+//             }, // y 좌표 반전
+//             color: colorToRGB(color), // 선 색상
+//             thickness: (lineWidth * pageWidth) / devicePixelRatio, // 선 두께
+//             lineCap: alpha === 1 ? LineCapStyle.Round : LineCapStyle.Butt,
+//             opacity: alpha,
+//           });
+//         }
+//       );
+//     }
+//   }
+//   if (!isMobile || __DEV__) {
+//     const pdfBytes = await pdfDoc.save();
+//     const blob = new Blob([pdfBytes], { type: "application/pdf" });
+//     const url = URL.createObjectURL(blob);
+//     const link = document.createElement("a");
+//     link.href = url;
+//     link.setAttribute("download", "modified.pdf");
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//   }
+//   const base64DataUri = await pdfDoc.saveAsBase64();
+//   return base64DataUri;
+// };
 
 export const convertAnnotationsToPaths = async (
   pdfBase64: string,
