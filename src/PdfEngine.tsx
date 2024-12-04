@@ -247,6 +247,7 @@ export default function PdfEngine() {
       </div>
       {!pdfState.isListOpen && pdfState.canRenderThumbnail && (
         <PdfOverlay
+          paths={paths}
           color={color}
           drawType={drawType}
           touchType={touchType}

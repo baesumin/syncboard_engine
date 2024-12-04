@@ -21,13 +21,19 @@ import {
   Zoom,
 } from "../assets/icons";
 import { Dispatch, SetStateAction, useState } from "react";
-import { __DEV__, colorMap, createOrMergePdf } from "../utils/common";
-import { DrawType, TouchType } from "../types/common";
+import {
+  __DEV__,
+  colorMap,
+  createOrMergePdf,
+  getModifiedPDFBase64,
+} from "../utils/common";
+import { DrawType, PathsType, TouchType } from "../types/common";
 import ColorPicker from "./ColorPicker";
 import { useAtom } from "jotai";
 import { fileAtom, pdfConfigAtom, pdfStateAtom } from "../store/pdf";
 
 interface Props {
+  paths: React.MutableRefObject<{ [pageNumber: number]: PathsType[] }>;
   drawType: DrawType;
   color: (typeof colorMap)[number];
   touchType: TouchType;
@@ -39,6 +45,7 @@ interface Props {
 }
 
 const PdfOverlay = ({
+  paths,
   drawType,
   color,
   touchType,
@@ -146,28 +153,38 @@ const PdfOverlay = ({
               </button>
 
               {__DEV__ && (
-                <button
-                  onClick={async () => {
-                    if (pdfState.totalPage === 5) {
-                      alert("최대 5페이지까지 추가 가능합니다.");
-                      return;
-                    }
-                    const newBase64 = await createOrMergePdf(file.base64);
-                    setPdfState((prev) => ({
-                      ...prev,
-                      pageNumber: prev.totalPage + 1,
-                      totalPage: prev.totalPage + 1,
-                      isDocumentLoading: true,
-                    }));
-                    setFile((prev) => ({
-                      ...prev,
-                      base64: newBase64,
-                    }));
-                  }}
-                  className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
-                >
-                  페이지 추가
-                </button>
+                <>
+                  <button
+                    onClick={async () => {
+                      if (pdfState.totalPage === 5) {
+                        alert("최대 5페이지까지 추가 가능합니다.");
+                        return;
+                      }
+                      const newBase64 = await createOrMergePdf(file.base64);
+                      setPdfState((prev) => ({
+                        ...prev,
+                        pageNumber: prev.totalPage + 1,
+                        totalPage: prev.totalPage + 1,
+                        isDocumentLoading: true,
+                      }));
+                      setFile((prev) => ({
+                        ...prev,
+                        base64: newBase64,
+                      }));
+                    }}
+                    className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                  >
+                    페이지 추가
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await getModifiedPDFBase64(paths.current, file.base64);
+                    }}
+                    className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                  >
+                    저장
+                  </button>
+                </>
               )}
             </>
           )}
