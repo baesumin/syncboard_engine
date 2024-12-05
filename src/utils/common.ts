@@ -611,14 +611,9 @@ export async function createPDFFromImgBase64(
   // PDF 문서 생성
   const pdfDoc = await PDFDocument.create();
 
-  // A4 크기의 페이지 추가
-  const page = pdfDoc.addPage(PageSizes.A4);
-  const { width, height } = page.getSize();
-
   // base64 이미지를 PDF에 삽입
   let image;
   let embedPng;
-  let newWidth, newHeight;
   // 이미지 타입에 따른 처리
   switch (imageType.toLowerCase()) {
     case "png":
@@ -648,23 +643,9 @@ export async function createPDFFromImgBase64(
       throw new Error("지원하지 않는 이미지 형식입니다.");
   }
 
-  // 이미지 크기 조정
-  const scaledDims = image.scaleToFit(width, height);
+  const page = pdfDoc.addPage([image.width, image.height]);
+  page.drawImage(image);
 
-  if (scaledDims.width > scaledDims.height) {
-    newWidth = Math.min(width, scaledDims.width);
-    newHeight = (scaledDims.height / scaledDims.width) * newWidth; // 비율에 맞춰 높이 조정
-  } else {
-    newHeight = Math.min(height, scaledDims.height);
-    newWidth = (scaledDims.width / scaledDims.height) * newHeight; // 비율에 맞춰 너비 조정
-  }
-  // 이미지를 페이지 중앙에 배치
-  page.drawImage(image, {
-    x: width / 2 - scaledDims.width / 2,
-    y: height / 2 - scaledDims.height / 2,
-    width: newWidth,
-    height: newHeight,
-  });
   // PDF 저장 및 다운로드
   const pdfBytes = await pdfDoc.save();
   const pdfBase64 = await arrayBufferToBase64(pdfBytes);

@@ -67,6 +67,10 @@ export default function PdfEngine() {
     () => (orientation === "portrait" ? width : undefined),
     [orientation, width]
   );
+  const pdfHeight = useMemo(() => {
+    if (!height || !pdfConfig.size.height) return undefined;
+    return Math.min(height, pdfConfig.size.height);
+  }, [height, pdfConfig.size.height]);
   const pdfFile = useMemo(
     () => `data:application/pdf;base64,${file.base64}`,
     [file.base64]
@@ -94,7 +98,7 @@ export default function PdfEngine() {
         redrawPaths(page.width, page.height);
       }
     },
-    [canvas, file.isNew, pdfConfig, redrawPaths, setPdfConfig]
+    [canvas, file.isNew, pdfConfig.devicePixelRatio, redrawPaths, setPdfConfig]
   );
 
   const onRenderSuccess: OnRenderSuccess = useCallback(() => {
@@ -197,7 +201,7 @@ export default function PdfEngine() {
                 key={pdfState.renderedPageNumber}
                 pageNumber={pdfState.renderedPageNumber}
                 width={pdfWidth}
-                height={height}
+                height={pdfHeight}
                 devicePixelRatio={pdfConfig.devicePixelRatio}
                 customTextRenderer={textRenderer}
                 renderAnnotationLayer={false}
@@ -211,7 +215,7 @@ export default function PdfEngine() {
               className={isRenderLoading ? "hidden" : ""}
               pageNumber={pdfState.pageNumber}
               width={pdfWidth}
-              height={height}
+              height={pdfHeight}
               devicePixelRatio={pdfConfig.devicePixelRatio}
               onLoadSuccess={OnPageLoadSuccess}
               onRenderSuccess={onRenderSuccess}
