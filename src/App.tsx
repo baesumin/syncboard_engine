@@ -52,7 +52,7 @@ function App() {
               ),
           paths: param?.data?.paths,
           isNew: param?.data?.isNew,
-          type: "",
+          type: param?.data?.type,
         });
         setIsLoading(false);
       };
