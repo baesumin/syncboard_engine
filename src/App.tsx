@@ -21,6 +21,16 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const now = new Date();
+    const minutes = now.getMinutes();
+    if (localStorage.getItem("key")) {
+      alert(localStorage.getItem("key"));
+    } else {
+      localStorage.setItem("key", JSON.stringify(minutes));
+    }
+  }, []);
+
+  useEffect(() => {
     const initializeFile = async () => {
       if (__DEV__ || !isTablet) {
         import("./mock/base64").then(async ({ base64 }) => {
