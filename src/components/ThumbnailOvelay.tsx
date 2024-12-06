@@ -159,7 +159,7 @@ const ThumbnailOvelay = ({
       >
         {[...new Array(pdfState.totalPage)].map((_, index) => {
           return (
-            <div key={index} className="w-[180px]">
+            <div key={index} className="w-[186px]">
               <div
                 className={clsx(
                   pdfState.pageNumber === index + 1
