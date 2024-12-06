@@ -369,7 +369,11 @@ const PdfOverlay = ({
                 onClick={() => {
                   setCanDraw(true);
                   setZoomEnabled(false);
-                  setTouchType((prev) => (prev === "pen" ? "touch" : "pen"));
+                  setTouchType((prev) => {
+                    const newTouchType = prev === "pen" ? "touch" : "pen";
+                    localStorage.setItem("TOUCH_TYPE", newTouchType);
+                    return newTouchType;
+                  });
                 }}
                 className="pointer-events-auto w-[78px] h-[44px] rounded-lg bg-[#EEEFF3] flex items-center px-[4px]"
               >

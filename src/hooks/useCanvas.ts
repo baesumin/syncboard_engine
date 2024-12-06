@@ -39,7 +39,9 @@ export default function useCanvas({
   const drawOrder = useRef(0);
   const [canDraw, setCanDraw] = useState(false);
   const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
-  const [touchType, setTouchType] = useState<TouchType>("pen");
+  const [touchType, setTouchType] = useState<TouchType>(
+    (localStorage.getItem("TOUCH_TYPE") as TouchType) ?? "pen"
+  );
   const [drawType, setDrawType] = useState<DrawType>("pen");
   const [zoomEnabled, setZoomEnabled] = useState(false);
 
