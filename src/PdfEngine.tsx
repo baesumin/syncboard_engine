@@ -224,8 +224,10 @@ export default function PdfEngine() {
                 return (
                   <div key={index + 1}>
                     <Page
-                      className={isRenderLoading ? "hidden" : ""}
-                      className="relative"
+                      className={clsx(
+                        "relative",
+                        isRenderLoading ? "hidden" : ""
+                      )}
                       pageNumber={index + 1}
                       width={pdfWidth}
                       height={pdfConfig.size.height}
