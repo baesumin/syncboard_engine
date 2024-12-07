@@ -79,6 +79,13 @@ export default function PdfEngine() {
     [file.base64]
   );
 
+  // const setRef = useCallback((node: HTMLCanvasElement) => {
+  //   if (node) {
+  //     const indexValue = Number(node.getAttribute("data-index"));
+  //     canvas.current[indexValue] = node;
+  //   }
+  // }, []);
+
   const { getSearchResult } = usePdfTextSearch(pdfFile);
 
   useWebviewInterface({
@@ -174,10 +181,10 @@ export default function PdfEngine() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
+  console.log(pdfWidth);
   return (
     <>
-      <div className="w-dvw h-dvh bg-gray-400 flex-center">
+      <div className="w-dvw min-h-dvh bg-gray-400">
         {pdfState.isDocumentLoading && file.isNew && (
           <div
             className="absolute bg-white"
@@ -194,12 +201,13 @@ export default function PdfEngine() {
         >
           <PinchZoomLayout
             isFullScreen={pdfState.isFullScreen}
-            disabled={canDraw}
+            // disabled={canDraw}
+            disabled={false}
             scale={scale}
             scaleRef={scaleRef}
             pinchZoomRef={ref}
           >
-            {isRenderLoading && (
+            {/* {isRenderLoading && (
               <Page
                 key={pdfState.renderedPageNumber}
                 pageNumber={pdfState.renderedPageNumber}
@@ -212,40 +220,44 @@ export default function PdfEngine() {
                 loading={<></>}
                 noData={<></>}
               />
-            )}
-            <Page
-              key={pdfState.pageNumber}
-              className={isRenderLoading ? "hidden" : ""}
-              pageNumber={pdfState.pageNumber}
-              width={pdfWidth}
-              height={pdfHeight}
-              devicePixelRatio={pdfConfig.devicePixelRatio}
-              onLoadSuccess={OnPageLoadSuccess}
-              onRenderSuccess={onRenderSuccess}
-              customTextRenderer={textRenderer}
-              renderAnnotationLayer={false}
-              renderTextLayer={file.isNew ? false : true}
-              loading={<></>}
-              noData={<></>}
-            />
-            <div className="absolute flex-center">
-              <canvas
-                ref={canvas}
-                key={pdfState.pageNumber}
-                style={{
-                  width: pdfConfig.size.width,
-                  height: pdfConfig.size.height,
-                }}
-                className={clsx(
-                  "touch-none z-[1000]",
-                  canDraw ? "pointer-events-auto" : "pointer-events-none",
-                  isRenderLoading ? "hidden" : ""
-                )}
-                onPointerDown={startDrawing}
-                onPointerMove={draw}
-                onPointerUp={stopDrawing}
-              />
-            </div>
+            )} */}
+            {[...new Array(1)].map((_, index) => {
+              return (
+                <div key={index}>
+                  <Page
+                    className={isRenderLoading ? "hidden" : ""}
+                    pageNumber={index + 1}
+                    width={pdfWidth}
+                    height={pdfHeight}
+                    devicePixelRatio={pdfConfig.devicePixelRatio}
+                    onLoadSuccess={OnPageLoadSuccess}
+                    onRenderSuccess={onRenderSuccess}
+                    customTextRenderer={textRenderer}
+                    renderAnnotationLayer={false}
+                    renderTextLayer={file.isNew ? false : true}
+                    loading={<></>}
+                    noData={<></>}
+                  />
+                  {/* <div className="absolute flex-center bg-pink-200/50">
+                    <canvas
+                      ref={canvas}
+                      style={{
+                        width: pdfWidth,
+                        height: pdfHeight,
+                      }}
+                      className={clsx(
+                        "touch-none z-[1000]",
+                        canDraw ? "pointer-events-auto" : "pointer-events-none",
+                        isRenderLoading ? "hidden" : ""
+                      )}
+                      onPointerDown={startDrawing}
+                      onPointerMove={draw}
+                      onPointerUp={stopDrawing}
+                    />
+                  </div> */}
+                </div>
+              );
+            })}
           </PinchZoomLayout>
           {pdfState.canRenderThumbnail && (
             <ThumbnailOvelay paths={paths.current} />

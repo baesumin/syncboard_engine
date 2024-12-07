@@ -1,6 +1,5 @@
 import clsx from "clsx";
 import {
-  ArrowLeft,
   Close,
   Drawing,
   Eraser,
@@ -62,7 +61,7 @@ const PdfOverlay = ({
 
   return (
     <>
-      <div className="absolute left-0 right-0 top-0 bottom-0 flex flex-col justify-between px-[20px] py-[20px] pointer-events-none">
+      <div className="fixed left-0 right-0 top-0 bottom-0 flex flex-col justify-between px-[20px] py-[20px] pointer-events-none">
         <div className="flex h-[52px] justify-between items-center">
           <button
             onClick={() => {
@@ -94,7 +93,7 @@ const PdfOverlay = ({
           </button>
         </div>
 
-        {pdfState.totalPage > 1 && (
+        {/* {pdfState.totalPage > 1 && (
           <div className="flex justify-between mx-[-20px]">
             <button
               onClick={() => {
@@ -133,7 +132,7 @@ const PdfOverlay = ({
               </div>
             </button>
           </div>
-        )}
+        )} */}
 
         <div className="flex h-[56px] justify-center">
           {!pdfState.isToolBarOpen && (

@@ -37,15 +37,12 @@ export default function PinchZoomLayout({
       disabled={disabled}
       initialScale={1}
       maxScale={3}
-      minScale={0.7}
+      minScale={!isFullScreen ? 0.9 : 1}
       disablePadding
       doubleClick={{ disabled: true }}
       onTransformed={onTransformed}
       limitToBounds={true}
       panning={{
-        velocityDisabled: true,
-      }}
-      alignmentAnimation={{
         disabled: true,
       }}
     >
@@ -53,7 +50,7 @@ export default function PinchZoomLayout({
         <div
           ref={pinchZoomRef}
           className={clsx(
-            "w-dvw h-dvh flex-center",
+            "w-dvw overflow-auto flex flex-col gap-y-[40px]",
             isFullScreen ? "" : "px-[100px] py-[40px]"
           )}
         >
