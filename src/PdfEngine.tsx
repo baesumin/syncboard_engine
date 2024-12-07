@@ -29,14 +29,14 @@ import { PageSizes } from "pdf-lib";
 
 export default function PdfEngine() {
   const { orientation } = useMobileOrientation();
-  const { width, height, ref } = useResizeDetector();
+  const { width, ref } = useResizeDetector();
+  const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
   const searchText = useAtomValue(searchTextAtom);
   const file = useAtomValue(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
   const [pdfConfig, setPdfConfig] = useAtom(pdfConfigAtom);
   const {
-    canvas,
     canDraw,
     setCanDraw,
     paths,
@@ -53,10 +53,10 @@ export default function PdfEngine() {
     stopDrawing,
     setTouchType,
   } = useCanvas({
+    canvasRefs,
     devicePixelRatio: pdfConfig.devicePixelRatio,
     pageSize: pdfConfig.size,
     strokeStep: pdfConfig.strokeStep,
-    pageNumber: pdfState.pageNumber,
   });
 
   const isRenderLoading = useMemo(
@@ -67,24 +67,18 @@ export default function PdfEngine() {
     () => (orientation === "portrait" ? width : undefined),
     [orientation, width]
   );
-  const pdfHeight = useMemo(() => {
-    if (!height || !pdfConfig.size.height) return undefined;
-    return Math.min(
-      height,
-      file.type === "pdf" ? height : pdfConfig.size.height
-    );
-  }, [file.type, height, pdfConfig.size.height]);
+
   const pdfFile = useMemo(
     () => `data:application/pdf;base64,${file.base64}`,
     [file.base64]
   );
 
-  // const setRef = useCallback((node: HTMLCanvasElement) => {
-  //   if (node) {
-  //     const indexValue = Number(node.getAttribute("data-index"));
-  //     canvas.current[indexValue] = node;
-  //   }
-  // }, []);
+  const setRef = useCallback((node: HTMLCanvasElement) => {
+    if (node) {
+      const indexValue = Number(node.getAttribute("data-index"));
+      canvasRefs.current[indexValue] = node;
+    }
+  }, []);
 
   const { getSearchResult } = usePdfTextSearch(pdfFile);
 
@@ -95,20 +89,18 @@ export default function PdfEngine() {
 
   const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
     (page) => {
-      if (page.width !== PageSizes.A4[0] || !file.isNew) {
+      if (!file.isNew || page.width !== PageSizes.A4[0]) {
         setPdfConfig((prev) => ({
           ...prev,
           size: { width: page.width, height: page.height },
         }));
       }
       scaleRef.current?.resetTransform();
-      if (canvas.current) {
-        canvas.current.width = page.width * pdfConfig.devicePixelRatio;
-        canvas.current.height = page.height * pdfConfig.devicePixelRatio;
-        redrawPaths(page.width, page.height);
-      }
+      // if (canvas.current) {
+      //   redrawPaths(page.width, page.height);
+      // }
     },
-    [canvas, file.isNew, pdfConfig.devicePixelRatio, redrawPaths, setPdfConfig]
+    [file.isNew, setPdfConfig]
   );
 
   const onRenderSuccess: OnRenderSuccess = useCallback(() => {
@@ -138,9 +130,10 @@ export default function PdfEngine() {
   const onEraseAllClick = useCallback(() => {
     if (confirm("해당 페이지의 변경사항을 모두 삭제할까요?")) {
       removePathByPageNumber(paths, pdfState.pageNumber);
-      canvas.current?.getContext("2d")!.reset();
+      // canvas.current?.getContext("2d")!.reset();
+      canvasRefs.current[pdfState.pageNumber]?.getContext("2d")!.reset();
     }
-  }, [paths, pdfState.pageNumber, canvas]);
+  }, [paths, pdfState.pageNumber]);
 
   useEffect(() => {
     if (!isRenderLoading && !pdfState.canRenderThumbnail) {
@@ -181,7 +174,7 @@ export default function PdfEngine() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  console.log(pdfWidth);
+
   return (
     <>
       <div className="w-dvw min-h-dvh bg-gray-400">
@@ -205,7 +198,6 @@ export default function PdfEngine() {
             disabled={false}
             scale={scale}
             scaleRef={scaleRef}
-            pinchZoomRef={ref}
           >
             {/* {isRenderLoading && (
               <Page
@@ -221,43 +213,55 @@ export default function PdfEngine() {
                 noData={<></>}
               />
             )} */}
-            {[...new Array(1)].map((_, index) => {
-              return (
-                <div key={index}>
-                  <Page
-                    className={isRenderLoading ? "hidden" : ""}
-                    pageNumber={index + 1}
-                    width={pdfWidth}
-                    height={pdfHeight}
-                    devicePixelRatio={pdfConfig.devicePixelRatio}
-                    onLoadSuccess={OnPageLoadSuccess}
-                    onRenderSuccess={onRenderSuccess}
-                    customTextRenderer={textRenderer}
-                    renderAnnotationLayer={false}
-                    renderTextLayer={file.isNew ? false : true}
-                    loading={<></>}
-                    noData={<></>}
-                  />
-                  {/* <div className="absolute flex-center bg-pink-200/50">
-                    <canvas
-                      ref={canvas}
-                      style={{
-                        width: pdfWidth,
-                        height: pdfHeight,
-                      }}
-                      className={clsx(
-                        "touch-none z-[1000]",
-                        canDraw ? "pointer-events-auto" : "pointer-events-none",
-                        isRenderLoading ? "hidden" : ""
-                      )}
-                      onPointerDown={startDrawing}
-                      onPointerMove={draw}
-                      onPointerUp={stopDrawing}
-                    />
-                  </div> */}
-                </div>
-              );
-            })}
+            <div
+              ref={ref}
+              className={clsx(
+                "w-dvw flex-center flex-col gap-y-[40px]",
+                pdfState.isFullScreen ? "" : "px-[100px] py-[40px]",
+                pdfState.totalPage === 1 ? "h-dvh" : ""
+              )}
+            >
+              {[...new Array(pdfState.totalPage)].map((_, index) => {
+                return (
+                  <div key={index + 1}>
+                    <Page
+                      // className={isRenderLoading ? "hidden" : ""}
+                      className="relative"
+                      pageNumber={index + 1}
+                      width={pdfWidth}
+                      height={pdfConfig.size.height}
+                      devicePixelRatio={pdfConfig.devicePixelRatio}
+                      onLoadSuccess={OnPageLoadSuccess}
+                      onRenderSuccess={onRenderSuccess}
+                      customTextRenderer={textRenderer}
+                      renderAnnotationLayer={false}
+                      renderTextLayer={file.isNew ? false : true}
+                      loading={<></>}
+                      noData={<></>}
+                    >
+                      <canvas
+                        ref={setRef}
+                        width={
+                          pdfConfig.size.width * pdfConfig.devicePixelRatio
+                        }
+                        height={
+                          pdfConfig.size.height * pdfConfig.devicePixelRatio
+                        }
+                        className={clsx(
+                          "absolute touch-none z-[1000] top-0 w-full h-full",
+                          canDraw ? "" : "pointer-events-none"
+                          // isRenderLoading ? "hidden" : ""
+                        )}
+                        onPointerDown={startDrawing}
+                        onPointerMove={draw}
+                        onPointerUp={stopDrawing}
+                        data-index={index + 1}
+                      />
+                    </Page>
+                  </div>
+                );
+              })}
+            </div>
           </PinchZoomLayout>
           {pdfState.canRenderThumbnail && (
             <ThumbnailOvelay paths={paths.current} />

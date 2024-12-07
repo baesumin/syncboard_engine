@@ -1,4 +1,10 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  MutableRefObject,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   colorMap,
   drawDashedLine,
@@ -14,23 +20,23 @@ import {
 import throttle from "lodash.throttle";
 
 interface Props {
+  canvasRefs: MutableRefObject<HTMLCanvasElement[]>;
   devicePixelRatio: number;
   pageSize: {
     width: number;
     height: number;
   };
   strokeStep: number;
-  pageNumber: number;
 }
 
 export default function useCanvas({
+  canvasRefs,
   devicePixelRatio,
   pageSize,
   strokeStep,
-  pageNumber,
 }: Props) {
-  const canvas = useRef<HTMLCanvasElement>(null);
   const prevPosRef = useRef({ x: 0, y: 0 });
+  const currentPage = useRef(0);
   const scale = useRef(1);
   const isDrawing = useRef(false);
   const touchPoints = useRef(0);
@@ -61,7 +67,8 @@ export default function useCanvas({
 
   const startDrawing = useCallback(
     (e: canvasEventType) => {
-      if (!canvas.current) return;
+      currentPage.current = Number((e.target as HTMLElement).dataset.index);
+      if (!canvasRefs.current.length) return;
       if (
         !canDraw ||
         e.pointerType !== touchType ||
@@ -71,7 +78,7 @@ export default function useCanvas({
       }
 
       const { x, y } = getDrawingPosition(
-        canvas,
+        canvasRefs.current[currentPage.current],
         e,
         devicePixelRatio,
         scale.current
@@ -81,16 +88,21 @@ export default function useCanvas({
       isDrawing.current = true;
       prevPosRef.current = { x, y };
     },
-    [canDraw, devicePixelRatio, touchType]
+    [canDraw, canvasRefs, devicePixelRatio, touchType]
   );
 
   const redrawPaths = useCallback(
     (pageWidth: number, pageHeight: number) => {
-      if (!canvas.current) return;
-      const points = paths.current[pageNumber];
+      if (!canvasRefs.current.length) return;
+      const points = paths.current[currentPage.current];
       if (!points || points.length === 0) return;
-      const context = canvas.current.getContext("2d")!;
-      context.clearRect(0, 0, canvas.current.width, canvas.current.height);
+      const context = canvasRefs.current[currentPage.current].getContext("2d")!;
+      context.clearRect(
+        0,
+        0,
+        canvasRefs.current[currentPage.current].width,
+        canvasRefs.current[currentPage.current].height
+      );
       let currentGroup: PathsType[] = [];
 
       if (points.length === 1) return;
@@ -147,15 +159,15 @@ export default function useCanvas({
         );
       }
     },
-    [pageNumber]
+    [canvasRefs]
   );
 
   const draw = throttle((e: canvasEventType) => {
-    if (!canvas.current) return;
+    if (!canvasRefs.current.length) return;
     if (!isDrawing.current || touchPoints.current === 2) return;
-    const context = canvas.current.getContext("2d")!;
+    const context = canvasRefs.current[currentPage.current].getContext("2d")!;
     const { x, y } = getDrawingPosition(
-      canvas,
+      canvasRefs.current[currentPage.current],
       e,
       devicePixelRatio,
       scale.current
@@ -176,8 +188,8 @@ export default function useCanvas({
     } else {
       paths.current = {
         ...paths.current,
-        [pageNumber]: [
-          ...(paths.current[pageNumber] || []),
+        [currentPage.current]: [
+          ...(paths.current[currentPage.current] || []),
           {
             x: x / pageSize.width,
             y: y / pageSize.height,
@@ -197,11 +209,11 @@ export default function useCanvas({
   }, 8);
 
   const stopDrawing = useCallback(async () => {
-    if (!canvas.current) return;
-    const context = canvas.current.getContext("2d")!;
+    if (!canvasRefs.current.length) return;
+    const context = canvasRefs.current[currentPage.current].getContext("2d")!;
 
     if (drawType === "eraser") {
-      const currentPaths = paths.current[pageNumber] || [];
+      const currentPaths = paths.current[currentPage.current] || [];
       const erasePaths = erasePathsRef.current;
 
       // 지우기 모드에서 겹치는 drawOrder를 찾기
@@ -255,11 +267,16 @@ export default function useCanvas({
       // paths 업데이트
       paths.current = {
         ...paths.current,
-        [pageNumber]: newPaths,
+        [currentPage.current]: newPaths,
       };
 
       // 점선도 지우기
-      context.clearRect(0, 0, canvas.current.width, canvas.current.height);
+      context.clearRect(
+        0,
+        0,
+        canvasRefs.current[currentPage.current].width,
+        canvasRefs.current[currentPage.current].height
+      );
       redrawPaths(pageSize.width, pageSize.height);
     } else {
       if (touchPoints.current === 1) {
@@ -271,8 +288,8 @@ export default function useCanvas({
     erasePathsRef.current = [];
     touchPoints.current = 0;
   }, [
+    canvasRefs,
     drawType,
-    pageNumber,
     pageSize.height,
     pageSize.width,
     redrawPaths,
@@ -280,7 +297,6 @@ export default function useCanvas({
   ]);
 
   return {
-    canvas,
     canDraw,
     paths,
     drawOrder,

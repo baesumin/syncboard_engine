@@ -1,6 +1,4 @@
-import clsx from "clsx";
 import { MutableRefObject, ReactNode, RefObject, useCallback } from "react";
-import { OnRefChangeType } from "react-resize-detector/build/types/types";
 import {
   ReactZoomPanPinchContentRef,
   ReactZoomPanPinchRef,
@@ -14,7 +12,6 @@ interface Props {
   disabled: boolean;
   scale: MutableRefObject<number>;
   scaleRef: RefObject<ReactZoomPanPinchContentRef>;
-  pinchZoomRef: OnRefChangeType<unknown>;
 }
 
 export default function PinchZoomLayout({
@@ -23,7 +20,6 @@ export default function PinchZoomLayout({
   disabled,
   scale,
   scaleRef,
-  pinchZoomRef,
 }: Props) {
   const onTransformed = useCallback(
     (ref: ReactZoomPanPinchRef) => {
@@ -46,17 +42,7 @@ export default function PinchZoomLayout({
         disabled: true,
       }}
     >
-      <TransformComponent>
-        <div
-          ref={pinchZoomRef}
-          className={clsx(
-            "w-dvw overflow-auto flex flex-col gap-y-[40px]",
-            isFullScreen ? "" : "px-[100px] py-[40px]"
-          )}
-        >
-          {children}
-        </div>
-      </TransformComponent>
+      <TransformComponent>{children}</TransformComponent>
     </TransformWrapper>
   );
 }
