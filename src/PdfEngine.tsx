@@ -224,7 +224,7 @@ export default function PdfEngine() {
                 return (
                   <div key={index + 1}>
                     <Page
-                      // className={isRenderLoading ? "hidden" : ""}
+                      className={isRenderLoading ? "hidden" : ""}
                       className="relative"
                       pageNumber={index + 1}
                       width={pdfWidth}
@@ -248,8 +248,8 @@ export default function PdfEngine() {
                         }
                         className={clsx(
                           "absolute touch-none z-[1000] top-0 w-full h-full",
-                          canDraw ? "" : "pointer-events-none"
-                          // isRenderLoading ? "hidden" : ""
+                          canDraw ? "" : "pointer-events-none",
+                          isRenderLoading ? "hidden" : ""
                         )}
                         onPointerDown={startDrawing}
                         onPointerMove={draw}
