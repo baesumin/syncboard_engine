@@ -49,7 +49,6 @@ export default function PdfEngine() {
     setDrawType,
     startDrawing,
     draw,
-    redrawPaths,
     stopDrawing,
     setTouchType,
   } = useCanvas({
