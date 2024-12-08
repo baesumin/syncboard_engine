@@ -548,7 +548,6 @@ export async function pdfToBase64(pdfDoc: PDFDocument) {
 //     for (let i = 0; i < pdfDoc.getPageCount(); i++) {
 //       const page = pdfDoc.getPage(i);
 //       const annotationsRef = page.node.get("Annots");
-//       console.log(annotationsRef);
 //       if (!annotationsRef) {
 //         annotationsData.push([]); // 주석이 없는 페이지는 빈 배열 추가
 //         continue;
