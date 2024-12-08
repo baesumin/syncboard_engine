@@ -76,7 +76,6 @@ export default function useCanvas({
       ) {
         return;
       }
-
       const { x, y } = getDrawingPosition(
         canvasRefs.current[currentPage.current],
         e,
@@ -92,19 +91,18 @@ export default function useCanvas({
   );
 
   const redrawPaths = useCallback(
-    (pageWidth: number, pageHeight: number) => {
+    (pageWidth: number, pageHeight: number, currentPage: number) => {
       if (!canvasRefs.current.length) return;
-      const points = paths.current[currentPage.current];
+      const points = paths.current[currentPage];
       if (!points || points.length === 0) return;
-      const context = canvasRefs.current[currentPage.current].getContext("2d")!;
+      const context = canvasRefs.current[currentPage].getContext("2d")!;
       context.clearRect(
         0,
         0,
-        canvasRefs.current[currentPage.current].width,
-        canvasRefs.current[currentPage.current].height
+        canvasRefs.current[currentPage].width,
+        canvasRefs.current[currentPage].height
       );
       let currentGroup: PathsType[] = [];
-
       if (points.length === 1) return;
 
       let currentStyle = {
@@ -112,7 +110,6 @@ export default function useCanvas({
         lineWidth: points[1].lineWidth,
         alpha: points[1].alpha,
       };
-
       for (let i = 1; i < points.length; i++) {
         // 선이 이어진 경우
         if (
@@ -202,7 +199,7 @@ export default function useCanvas({
           },
         ],
       };
-      redrawPaths(pageSize.width, pageSize.height);
+      redrawPaths(pageSize.width, pageSize.height, currentPage.current);
     }
 
     prevPosRef.current = { x, y };
@@ -211,7 +208,6 @@ export default function useCanvas({
   const stopDrawing = useCallback(async () => {
     if (!canvasRefs.current.length) return;
     const context = canvasRefs.current[currentPage.current].getContext("2d")!;
-
     if (drawType === "eraser") {
       const currentPaths = paths.current[currentPage.current] || [];
       const erasePaths = erasePathsRef.current;
@@ -277,7 +273,7 @@ export default function useCanvas({
         canvasRefs.current[currentPage.current].width,
         canvasRefs.current[currentPage.current].height
       );
-      redrawPaths(pageSize.width, pageSize.height);
+      redrawPaths(pageSize.width, pageSize.height, currentPage.current);
     } else {
       if (touchPoints.current === 1) {
         drawOrder.current += 1;

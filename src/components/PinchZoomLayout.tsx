@@ -8,35 +8,35 @@ import {
 
 interface Props {
   children: ReactNode;
-  isFullScreen: boolean;
-  disabled: boolean;
   scale: MutableRefObject<number>;
   scaleRef: RefObject<ReactZoomPanPinchContentRef>;
 }
 
-export default function PinchZoomLayout({
-  children,
-  isFullScreen,
-  disabled,
-  scale,
-  scaleRef,
-}: Props) {
+export default function PinchZoomLayout({ children, scale, scaleRef }: Props) {
   const onTransformed = useCallback(
     (ref: ReactZoomPanPinchRef) => {
       scale.current = ref.state.scale;
     },
     [scale]
   );
+  const onZoomStop = useCallback(
+    (ref: ReactZoomPanPinchRef) => {
+      if (ref.state.scale < 1) {
+        scaleRef.current?.resetTransform();
+      }
+    },
+    [scaleRef]
+  );
   return (
     <TransformWrapper
       ref={scaleRef}
-      disabled={disabled}
       initialScale={1}
       maxScale={3}
-      minScale={!isFullScreen ? 0.9 : 1}
+      minScale={0.9}
       disablePadding
       doubleClick={{ disabled: true }}
       onTransformed={onTransformed}
+      onZoomStop={onZoomStop}
       limitToBounds={true}
       panning={{
         disabled: true,

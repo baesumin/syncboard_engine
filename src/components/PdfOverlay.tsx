@@ -3,11 +3,9 @@ import {
   Close,
   Drawing,
   Eraser,
-  FullScreen,
   Hightlighter,
   Pen,
   PenMode,
-  SmallScreen,
   Stroke,
   Stroke1Step,
   Stroke2Step,
@@ -41,6 +39,7 @@ interface Props {
   setDrawType: Dispatch<SetStateAction<DrawType>>;
   setColor: Dispatch<SetStateAction<(typeof colorMap)[number]>>;
   onEraseAllClick: () => void;
+  currentViewingPage: number;
 }
 
 const PdfOverlay = ({
@@ -53,6 +52,7 @@ const PdfOverlay = ({
   setDrawType,
   setColor,
   onEraseAllClick,
+  currentViewingPage,
 }: Props) => {
   const [zoomEnabled, setZoomEnabled] = useState(false);
   const [file, setFile] = useAtom(fileAtom);
@@ -75,9 +75,9 @@ const PdfOverlay = ({
             <div className="size-[44px] bg-white rounded-lg flex-center">
               <ThumbnailList />
             </div>
-            <span className="text-white text-lg">{`${pdfState.pageNumber}/${pdfState.totalPage}`}</span>
+            <span className="text-white text-lg">{`${currentViewingPage}/${pdfState.totalPage}`}</span>
           </button>
-          <button
+          {/* <button
             onClick={() => {
               setPdfState((prev) => ({
                 ...prev,
@@ -90,7 +90,7 @@ const PdfOverlay = ({
             className="pointer-events-auto size-[44px] rounded-lg bg-white shadow-black shadow-sm flex-center"
           >
             {pdfState.isFullScreen ? <SmallScreen /> : <FullScreen />}
-          </button>
+          </button> */}
         </div>
 
         {/* {pdfState.totalPage > 1 && (
