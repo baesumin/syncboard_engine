@@ -59,16 +59,16 @@ export const getClientPosition = (
 };
 
 export const getDrawingPosition = (
-  canvas: React.RefObject<HTMLCanvasElement>,
+  canvas: HTMLCanvasElement,
   e: canvasEventType,
   devicePixelRatio: number,
   scale: number
 ) => {
-  if (!canvas.current) {
+  if (!canvas) {
     return { x: 0, y: 0 };
   }
 
-  const rect = canvas.current.getBoundingClientRect(); // 캔버스의 위치와 크기를 가져옴
+  const rect = canvas.getBoundingClientRect(); // 캔버스의 위치와 크기를 가져옴
   const clientX = getClientPosition(e, devicePixelRatio, "x");
   const clientY = getClientPosition(e, devicePixelRatio, "y");
   const x = (clientX - devicePixelRatio * rect.left) / scale;

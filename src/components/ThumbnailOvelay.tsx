@@ -4,28 +4,42 @@ import { Thumbnail } from "react-pdf";
 import { useAtom } from "jotai";
 import { pdfStateAtom } from "../store/pdf";
 import { PathsType } from "../types/common";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  MutableRefObject,
+  RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { reDrawPathGroup } from "../utils/common";
 import {
   OnItemClickArgs,
   OnPageLoadSuccess,
 } from "react-pdf/src/shared/types.js";
+import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 
 const ThumbnailOvelay = ({
   paths,
+  canvasRefs,
+  currentViewingPage,
+  scaleRef,
 }: {
   paths: {
     [pageNumber: number]: PathsType[];
   };
+  canvasRefs: MutableRefObject<HTMLCanvasElement[]>;
+  currentViewingPage: number;
+  scaleRef: RefObject<ReactZoomPanPinchContentRef>;
 }) => {
-  const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
+  const thumbnailCanvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
   const [thumbnailHeight, setThumbnailHeight] = useState(0);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
 
   const setRef = useCallback((node: HTMLCanvasElement) => {
     if (node) {
       const indexValue = Number(node.getAttribute("data-index"));
-      canvasRefs.current[indexValue] = node;
+      thumbnailCanvasRefs.current[indexValue] = node;
     }
   }, []);
 
@@ -42,26 +56,29 @@ const ThumbnailOvelay = ({
     (args: OnItemClickArgs) => {
       setPdfState((prev) => ({
         ...prev,
-        pageNumber: args.pageNumber,
+        // pageNumber: args.pageNumber,
         isListOpen: false,
       }));
+      scaleRef.current?.resetTransform(0);
+      canvasRefs.current[args.pageNumber].scrollIntoView();
     },
-    [setPdfState]
+    [canvasRefs, scaleRef, setPdfState]
   );
 
   const redrawPaths = useCallback(
     (pageNumber: number) => {
-      if (!canvasRefs.current[pageNumber] || !paths[pageNumber]) return;
-      canvasRefs.current[pageNumber].width = 180 * 2;
-      canvasRefs.current[pageNumber].height = thumbnailHeight * 2;
+      if (!thumbnailCanvasRefs.current[pageNumber] || !paths[pageNumber])
+        return;
+      thumbnailCanvasRefs.current[pageNumber].width = 180 * 2;
+      thumbnailCanvasRefs.current[pageNumber].height = thumbnailHeight * 2;
       const points = paths[pageNumber];
       if (!points || points.length === 0) return;
-      const context = canvasRefs.current[pageNumber].getContext("2d")!;
+      const context = thumbnailCanvasRefs.current[pageNumber].getContext("2d")!;
       context.clearRect(
         0,
         0,
-        canvasRefs.current[pageNumber].width,
-        canvasRefs.current[pageNumber].height
+        thumbnailCanvasRefs.current[pageNumber].width,
+        thumbnailCanvasRefs.current[pageNumber].height
       );
       let currentGroup: PathsType[] = [];
 
@@ -134,7 +151,7 @@ const ThumbnailOvelay = ({
   return (
     <div
       className={clsx(
-        "absolute top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px] z-[9999]",
+        "fixed top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px] z-[9999]",
         pdfState.isListOpen ? "" : "hidden"
       )}
     >
@@ -162,7 +179,7 @@ const ThumbnailOvelay = ({
             <div key={index} className="w-[186px]">
               <div
                 className={clsx(
-                  pdfState.pageNumber === index + 1
+                  currentViewingPage === index + 1
                     ? "border-[3px] border-[#FF9A51]"
                     : "",
                   "overflow-hidden relative"
@@ -191,7 +208,7 @@ const ThumbnailOvelay = ({
               <div className="h-[31px] flex justify-center items-center">
                 <span
                   className={
-                    pdfState.pageNumber === index + 1
+                    currentViewingPage === index + 1
                       ? "text-[#FF9A51] font-bold text-lg"
                       : "text-white"
                   }
