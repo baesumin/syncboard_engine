@@ -29,7 +29,7 @@ import { PageSizes } from "pdf-lib";
 
 export default function PdfEngine() {
   const { orientation } = useMobileOrientation();
-  const { width, ref } = useResizeDetector();
+  const { height, ref } = useResizeDetector();
   const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
   const searchText = useAtomValue(searchTextAtom);
@@ -62,10 +62,35 @@ export default function PdfEngine() {
   const [currentViewingPage, setCurrentViewingPage] = useState(1);
   const [intersectEnabled, setIntersectEnabled] = useState(false);
 
-  const pdfWidth = useMemo(
-    () => (orientation === "portrait" ? width : pdfConfig.size.width),
-    [orientation, pdfConfig.size.width, width]
-  );
+  const pdfWidth = useMemo(() => {
+    if (!height) return undefined;
+    if (orientation === "portrait") {
+      if (window.innerHeight < pdfConfig.size.height) {
+        return undefined;
+      } else {
+        return pdfConfig.size.width;
+      }
+    } else {
+      if (window.innerHeight < pdfConfig.size.height) {
+        return undefined;
+      } else {
+        return pdfConfig.size.width;
+      }
+    }
+  }, [height, orientation, pdfConfig.size.height, pdfConfig.size.width]);
+
+  const pdfHeight = useMemo(() => {
+    if (!height) return undefined;
+    if (orientation === "portrait") {
+      if (window.innerHeight < pdfConfig.size.height) {
+        return window.innerHeight;
+      } else {
+        return pdfConfig.size.width;
+      }
+    } else {
+      return window.innerHeight;
+    }
+  }, [height, orientation, pdfConfig.size.height, pdfConfig.size.width]);
 
   const pdfFile = useMemo(
     () => `data:application/pdf;base64,${file.base64}`,
@@ -237,7 +262,7 @@ export default function PdfEngine() {
                     <Page
                       pageNumber={index + 1}
                       width={pdfWidth}
-                      height={pdfConfig.size.height}
+                      height={pdfHeight}
                       devicePixelRatio={pdfConfig.devicePixelRatio}
                       onLoadSuccess={OnPageLoadSuccess}
                       onRenderSuccess={onRenderSuccess}
