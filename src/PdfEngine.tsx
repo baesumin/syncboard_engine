@@ -107,7 +107,7 @@ export default function PdfEngine() {
       //   }, 0);
       // }
     },
-    [file.isNew, setPdfConfig, redrawPaths]
+    [file.isNew, setPdfConfig]
   );
 
   const OnDocumentLoadSuccess: OnDocumentLoadSuccess = useCallback(
