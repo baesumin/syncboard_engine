@@ -151,7 +151,7 @@ export default function PdfEngine() {
     (page) => {
       if (canvasRefs.current) {
         redrawPaths(page.width, page.height, page.pageNumber);
-        // setCurrentViewingPage(1);
+        setCurrentViewingPage(1);
       }
     },
     [redrawPaths]
