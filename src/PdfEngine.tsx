@@ -151,7 +151,7 @@ export default function PdfEngine() {
     (page) => {
       if (canvasRefs.current) {
         redrawPaths(page.width, page.height, page.pageNumber);
-        setCurrentViewingPage(1);
+        // setCurrentViewingPage(1);
       }
     },
     [redrawPaths]
@@ -169,31 +169,31 @@ export default function PdfEngine() {
     // }
   }, []);
 
-  useEffect(() => {
-    if (intersectEnabled) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-              const pageNumber = Number(entry.target.getAttribute("data-page"));
-              setCurrentViewingPage(pageNumber);
-            }
-          });
-        },
-        {
-          threshold: 0.5, // 페이지가 50% 이상 보일 때 감지
-          root: null, // viewport 기준
-        }
-      );
+  // useEffect(() => {
+  //   if (intersectEnabled) {
+  //     const observer = new IntersectionObserver(
+  //       (entries) => {
+  //         entries.forEach((entry) => {
+  //           if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+  //             const pageNumber = Number(entry.target.getAttribute("data-page"));
+  //             setCurrentViewingPage(pageNumber);
+  //           }
+  //         });
+  //       },
+  //       {
+  //         threshold: 0.5, // 페이지가 50% 이상 보일 때 감지
+  //         root: null, // viewport 기준
+  //       }
+  //     );
 
-      // 각 페이지 요소에 observer 등록
-      pageRefs.current.forEach((ref) => {
-        if (ref) observer.observe(ref);
-      });
+  //     // 각 페이지 요소에 observer 등록
+  //     pageRefs.current.forEach((ref) => {
+  //       if (ref) observer.observe(ref);
+  //     });
 
-      return () => observer.disconnect();
-    }
-  }, [intersectEnabled]);
+  //     return () => observer.disconnect();
+  //   }
+  // }, [intersectEnabled]);
 
   useEffect(() => {
     if (file.isNew && pdfState.isDocumentLoading) {
