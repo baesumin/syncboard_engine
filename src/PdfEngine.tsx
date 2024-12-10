@@ -138,10 +138,10 @@ export default function PdfEngine() {
   );
 
   const onEraseAllClick = useCallback(() => {
-    if (confirm("해당 페이지의 변경사항을 모두 삭제할까요?")) {
-      // removePathByPageNumber(paths, pdfState.pageNumber);
-      // canvasRefs.current[pdfState.pageNumber]?.getContext("2d")!.reset();
-    }
+    // if (confirm("해당 페이지의 변경사항을 모두 삭제할까요?")) {
+    // removePathByPageNumber(paths, pdfState.pageNumber);
+    // canvasRefs.current[pdfState.pageNumber]?.getContext("2d")!.reset();
+    // }
   }, []);
 
   useEffect(() => {
