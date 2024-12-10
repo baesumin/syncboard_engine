@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document, Page } from "react-pdf";
 import { useResizeDetector } from "react-resize-detector";
-// import { useMobileOrientation } from "react-device-detect";
+import { useMobileOrientation } from "react-device-detect";
 import {
   CustomTextRenderer,
   OnDocumentLoadSuccess,
@@ -28,7 +28,7 @@ import {
 import { PageSizes } from "pdf-lib";
 
 export default function PdfEngine() {
-  // const { orientation } = useMobileOrientation();
+  const { orientation } = useMobileOrientation();
   const { width, ref } = useResizeDetector();
   const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
@@ -62,11 +62,10 @@ export default function PdfEngine() {
   const [currentViewingPage, setCurrentViewingPage] = useState(1);
   const [intersectEnabled, setIntersectEnabled] = useState(false);
 
-  // const pdfWidth = useMemo(
-  //   () =>
-  //     orientation === "portrait" || pdfState.isFullScreen ? width : undefined,
-  //   [orientation, pdfState.isFullScreen, width]
-  // );
+  const pdfWidth = useMemo(
+    () => (orientation === "portrait" ? width : pdfConfig.size.width),
+    [orientation, pdfConfig.size.width, width]
+  );
 
   const pdfFile = useMemo(
     () => `data:application/pdf;base64,${file.base64}`,
@@ -237,7 +236,7 @@ export default function PdfEngine() {
                   >
                     <Page
                       pageNumber={index + 1}
-                      width={width}
+                      width={pdfWidth}
                       height={pdfConfig.size.height}
                       devicePixelRatio={pdfConfig.devicePixelRatio}
                       onLoadSuccess={OnPageLoadSuccess}
