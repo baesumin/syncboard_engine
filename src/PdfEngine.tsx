@@ -125,8 +125,8 @@ export default function PdfEngine() {
         setPdfConfig((prev) => ({
           ...prev,
           size: {
-            width: Math.ceil(page.width),
-            height: Math.ceil(page.height),
+            width: page.width,
+            height: page.height,
           },
         }));
       }
