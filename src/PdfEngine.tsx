@@ -108,6 +108,8 @@ export default function PdfEngine() {
   useWebviewInterface({
     paths,
     getSearchResult,
+    scaleRef,
+    canvasRefs,
   });
 
   const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
