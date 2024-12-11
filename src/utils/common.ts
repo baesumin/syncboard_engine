@@ -204,6 +204,12 @@ export const removePathByPageNumber = (
   }
 };
 
+export const removeAllPath = (
+  paths: MutableRefObject<{ [pageNumber: number]: PathsType[] }>
+) => {
+  paths.current = {};
+};
+
 export const getModifiedPDFBase64 = async (
   paths: {
     [pageNumber: number]: PathsType[];

@@ -32,7 +32,7 @@ export default function PinchZoomLayout({ children, scale, scaleRef }: Props) {
       panning={{
         disabled: true,
       }}
-      // centerZoomedOut
+      centerZoomedOut
     >
       <TransformComponent>{children}</TransformComponent>
     </TransformWrapper>
