@@ -28,7 +28,6 @@ import {
   pdfStateAtom,
   searchTextAtom,
 } from "./store/pdf";
-import { PageSizes } from "pdf-lib";
 import { PDF_Y_GAP } from "./contstants/pdf";
 
 export default function PdfEngine() {
@@ -121,11 +120,13 @@ export default function PdfEngine() {
 
   const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
     (page) => {
-      console.log(page.width, page.height);
-      if (!file.isNew || page.width !== PageSizes.A4[0]) {
+      if (!file.isNew) {
         setPdfConfig((prev) => ({
           ...prev,
-          size: { width: page.width, height: page.height },
+          size: {
+            width: Math.ceil(page.width),
+            height: Math.ceil(page.height),
+          },
         }));
       }
       scaleRef.current?.resetTransform();
