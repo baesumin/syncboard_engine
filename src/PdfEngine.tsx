@@ -91,7 +91,6 @@ export default function PdfEngine() {
 
     return { pdfWidth: width, pdfHeight: height };
   }, [orientation, pdfConfig]);
-  console.log(window.outerHeight, pdfConfig.size.height);
 
   const pdfFile = useMemo(
     () => `data:application/pdf;base64,${file.base64}`,
@@ -122,6 +121,7 @@ export default function PdfEngine() {
 
   const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
     (page) => {
+      console.log(page.width, page.height);
       if (!file.isNew || page.width !== PageSizes.A4[0]) {
         setPdfConfig((prev) => ({
           ...prev,
