@@ -7,13 +7,17 @@ import {
   OnPageLoadSuccess,
   OnRenderSuccess,
 } from "react-pdf/src/shared/types.js";
-import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
+import {
+  ReactZoomPanPinchContentRef,
+  ReactZoomPanPinchRef,
+  TransformComponent,
+  TransformWrapper,
+} from "react-zoom-pan-pinch";
 import useCanvas from "./hooks/useCanvas";
 import PdfOverlay from "./components/PdfOverlay";
 import ThumbnailOvelay from "./components/ThumbnailOvelay";
 import { highlightPattern, removeAllPath } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch";
-import PinchZoomLayout from "./components/PinchZoomLayout";
 import { PathsType } from "./types/common";
 import clsx from "clsx";
 import { useWebviewInterface } from "./hooks/useWebviewInterface";
@@ -60,6 +64,9 @@ export default function PdfEngine() {
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [currentViewingPage, setCurrentViewingPage] = useState(1);
   const [intersectEnabled, setIntersectEnabled] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  // const originalHeight = useRef(0);
+  // const originalTop = useRef(0);
 
   const { pdfWidth, pdfHeight } = useMemo(() => {
     let width, height;
@@ -141,7 +148,7 @@ export default function PdfEngine() {
     (page) => {
       if (canvasRefs.current) {
         redrawPaths(page.width, page.height, page.pageNumber);
-        // setCurrentViewingPage(1);
+        setCurrentViewingPage(1);
       }
     },
     [redrawPaths]
@@ -166,6 +173,31 @@ export default function PdfEngine() {
       });
     }
   }, [paths]);
+
+  const onTransformed = useCallback(
+    (ref: ReactZoomPanPinchRef) => {
+      scale.current = ref.state.scale;
+    },
+    [scale]
+  );
+  // const onZoomStop = useCallback((ref: ReactZoomPanPinchRef) => {
+  //   if (containerRef.current) {
+  //     // 처음 마운트될 때 원본 값 저장
+  //     if (originalHeight.current === 0) {
+  //       originalHeight.current = containerRef.current.clientHeight;
+  //     }
+  //     if (originalTop.current === 0) {
+  //       originalTop.current = containerRef.current.getBoundingClientRect().top;
+  //     }
+
+  //     // 높이와 상단 여백 조정
+  //     // const newHeight = originalHeight.current * ref.state.scale;
+  //     // const newTop = originalTop.current * ref.state.scale;
+  //     // containerRef.current.style.height = `${newHeight}px`;
+  //     // containerRef.current.style.top = `translateY(-${newTop}px)`;
+  //     // containerRef.current.scrollTop = newTop;
+  //   }
+  // }, []);
 
   const PdfItem = useCallback(
     (_: any, index: number) => {
@@ -223,31 +255,31 @@ export default function PdfEngine() {
     ]
   );
 
-  useEffect(() => {
-    if (intersectEnabled) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-              const pageNumber = Number(entry.target.getAttribute("data-page"));
-              setCurrentViewingPage(pageNumber);
-            }
-          });
-        },
-        {
-          threshold: 0.5, // 페이지가 50% 이상 보일 때 감지
-          root: null, // viewport 기준
-        }
-      );
+  // useEffect(() => {
+  //   if (intersectEnabled) {
+  //     const observer = new IntersectionObserver(
+  //       (entries) => {
+  //         entries.forEach((entry) => {
+  //           if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+  //             const pageNumber = Number(entry.target.getAttribute("data-page"));
+  //             setCurrentViewingPage(pageNumber);
+  //           }
+  //         });
+  //       },
+  //       {
+  //         threshold: 0.5, // 페이지가 50% 이상 보일 때 감지
+  //         root: null, // viewport 기준
+  //       }
+  //     );
 
-      // 각 페이지 요소에 observer 등록
-      pageRefs.current.forEach((ref) => {
-        if (ref) observer.observe(ref);
-      });
+  //     // 각 페이지 요소에 observer 등록
+  //     pageRefs.current.forEach((ref) => {
+  //       if (ref) observer.observe(ref);
+  //     });
 
-      return () => observer.disconnect();
-    }
-  }, [intersectEnabled]);
+  //     return () => observer.disconnect();
+  //   }
+  // }, [intersectEnabled]);
 
   useEffect(() => {
     if (file.isNew && pdfState.isDocumentLoading) {
@@ -282,40 +314,45 @@ export default function PdfEngine() {
 
   return (
     <>
-      <div className="w-dvw min-h-dvh bg-gray-400">
-        {pdfState.isDocumentLoading && file.isNew && (
-          <div
-            className="absolute bg-white"
-            style={{
-              width: pdfConfig.size.width,
-              height: pdfConfig.size.height,
-            }}
-          />
-        )}
-        <Document
-          file={pdfFile}
-          onLoadSuccess={OnDocumentLoadSuccess}
-          loading={<></>}
+      <Document
+        file={pdfFile}
+        onLoadSuccess={OnDocumentLoadSuccess}
+        loading={<></>}
+      >
+        <TransformWrapper
+          ref={scaleRef}
+          initialScale={1}
+          maxScale={3}
+          disablePadding
+          doubleClick={{ disabled: true }}
+          onTransformed={onTransformed}
+          // onZoomStop={onZoomStop}
+          limitToBounds={true}
+          panning={{
+            disabled: true,
+          }}
+          centerZoomedOut
         >
-          <PinchZoomLayout scale={scale} scaleRef={scaleRef}>
+          <TransformComponent>
             <div
+              ref={containerRef}
               className={clsx(
-                "w-dvw flex-center flex-col",
+                "w-dvw flex items-center flex-col bg-gray-400",
                 pdfState.totalPage === 1 ? "h-dvh" : ""
               )}
               style={{ rowGap: PDF_Y_GAP }}
             >
               {[...new Array(pdfState.totalPage)].map(PdfItem)}
             </div>
-          </PinchZoomLayout>
-          <ThumbnailOvelay
-            paths={paths.current}
-            canvasRefs={canvasRefs}
-            currentViewingPage={currentViewingPage}
-            scaleRef={scaleRef}
-          />
-        </Document>
-      </div>
+          </TransformComponent>
+        </TransformWrapper>
+        <ThumbnailOvelay
+          paths={paths.current}
+          canvasRefs={canvasRefs}
+          currentViewingPage={currentViewingPage}
+          scaleRef={scaleRef}
+        />
+      </Document>
       {!pdfState.isListOpen && (
         <PdfOverlay
           paths={paths}

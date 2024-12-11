@@ -19,6 +19,9 @@ export default function PinchZoomLayout({ children, scale, scaleRef }: Props) {
     },
     [scale]
   );
+  const onZoomStop = useCallback((ref: ReactZoomPanPinchRef) => {
+    console.log(ref.state.scale);
+  }, []);
 
   return (
     <TransformWrapper
@@ -28,6 +31,7 @@ export default function PinchZoomLayout({ children, scale, scaleRef }: Props) {
       disablePadding
       doubleClick={{ disabled: true }}
       onTransformed={onTransformed}
+      onZoomStop={onZoomStop}
       limitToBounds={true}
       panning={{
         disabled: true,

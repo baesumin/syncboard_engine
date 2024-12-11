@@ -134,286 +134,295 @@ const PdfOverlay = ({
           </div>
         )} */}
 
-        <div className="flex h-[56px] justify-center">
-          {!pdfState.isToolBarOpen && (
-            <>
-              <button
-                onClick={() => {
-                  setCanDraw((prev) => !prev);
-                  setPdfState((prev) => ({
-                    ...prev,
-                    isToolBarOpen: true,
-                  }));
-                }}
-                className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
-              >
-                <Drawing />
-                그리기
-              </button>
+        {file.type === "pdf" && (
+          <div className="flex h-[56px] justify-center">
+            {!pdfState.isToolBarOpen && (
+              <>
+                <button
+                  onClick={() => {
+                    setCanDraw((prev) => !prev);
+                    setPdfState((prev) => ({
+                      ...prev,
+                      isToolBarOpen: true,
+                    }));
+                  }}
+                  className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                >
+                  <Drawing />
+                  그리기
+                </button>
 
-              {__DEV__ && (
-                <>
-                  <button
-                    onClick={async () => {
-                      if (pdfState.totalPage === 5) {
-                        alert("최대 5페이지까지 추가 가능합니다.");
-                        return;
-                      }
-                      const newBase64 = await createOrMergePdf(file.base64);
-                      setPdfState((prev) => ({
-                        ...prev,
-                        pageNumber: prev.totalPage + 1,
-                        totalPage: prev.totalPage + 1,
-                        isDocumentLoading: true,
-                      }));
-                      setFile((prev) => ({
-                        ...prev,
-                        base64: newBase64,
-                      }));
-                    }}
-                    className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
-                  >
-                    페이지 추가
-                  </button>
-                  <button
-                    onClick={async () => {
-                      await getModifiedPDFBase64(paths.current, file.base64);
-                    }}
-                    className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
-                  >
-                    저장
-                  </button>
-                </>
-              )}
-            </>
-          )}
+                {__DEV__ && (
+                  <>
+                    <button
+                      onClick={async () => {
+                        if (pdfState.totalPage === 5) {
+                          alert("최대 5페이지까지 추가 가능합니다.");
+                          return;
+                        }
+                        const newBase64 = await createOrMergePdf(file.base64);
+                        setPdfState((prev) => ({
+                          ...prev,
+                          pageNumber: prev.totalPage + 1,
+                          totalPage: prev.totalPage + 1,
+                          isDocumentLoading: true,
+                        }));
+                        setFile((prev) => ({
+                          ...prev,
+                          base64: newBase64,
+                        }));
+                      }}
+                      className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                    >
+                      페이지 추가
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await getModifiedPDFBase64(paths.current, file.base64);
+                      }}
+                      className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                    >
+                      저장
+                    </button>
+                  </>
+                )}
+              </>
+            )}
 
-          {pdfState.isToolBarOpen && (
-            <div className="h-[56px] bg-white rounded-xl flex items-center px-[8px] shadow-black shadow-sm">
-              <div className="w-[140px] flex justify-between">
-                <button
-                  onClick={() => {
-                    setCanDraw(true);
-                    setDrawType("pen");
-                    setZoomEnabled(false);
-                  }}
-                  className={clsx(
-                    "pointer-events-auto size-[44px] rounded-lg flex-center",
-                    drawType === "pen" && !zoomEnabled
-                      ? "bg-[#5865FA]"
-                      : "#ffffff"
-                  )}
-                >
-                  <Pen
-                    color={
-                      drawType === "pen" && !zoomEnabled ? "#ffffff" : "#353B45"
-                    }
-                  />
-                </button>
-                <button
-                  onClick={() => {
-                    setCanDraw(true);
-                    setDrawType("highlight");
-                    setZoomEnabled(false);
-                  }}
-                  className={clsx(
-                    "pointer-events-auto size-[44px] rounded-lg flex-center",
-                    drawType === "highlight" && !zoomEnabled
-                      ? "bg-[#5865FA]"
-                      : "#ffffff"
-                  )}
-                >
-                  <Hightlighter
-                    color={
-                      drawType === "highlight" && !zoomEnabled
-                        ? "#ffffff"
-                        : "#353B45"
-                    }
-                  />
-                </button>
-                <button
-                  onClick={() => {
-                    setCanDraw(true);
-                    setDrawType("eraser");
-                    setZoomEnabled(false);
-                  }}
-                  className={clsx(
-                    "pointer-events-auto size-[44px] rounded-lg flex-center",
-                    drawType === "eraser" && !zoomEnabled
-                      ? "bg-[#5865FA]"
-                      : "#ffffff"
-                  )}
-                >
-                  <Eraser
-                    color={
-                      drawType === "eraser" && !zoomEnabled
-                        ? "#ffffff"
-                        : "#353B45"
-                    }
-                  />
-                </button>
-              </div>
-              <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
-              {drawType !== "eraser" ? (
-                <>
-                  <ColorPicker onColorSelect={setColor} selectedColor={color} />
-                  <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+            {pdfState.isToolBarOpen && (
+              <div className="h-[56px] bg-white rounded-xl flex items-center px-[8px] shadow-black shadow-sm">
+                <div className="w-[140px] flex justify-between">
                   <button
                     onClick={() => {
-                      setPdfState((prev) => ({
-                        ...prev,
-                        isStrokeOpen: !prev.isStrokeOpen,
-                      }));
+                      setCanDraw(true);
+                      setDrawType("pen");
+                      setZoomEnabled(false);
                     }}
                     className={clsx(
                       "pointer-events-auto size-[44px] rounded-lg flex-center",
-                      pdfState.isStrokeOpen ? "bg-[#EEEFF3]" : "#ffffff"
+                      drawType === "pen" && !zoomEnabled
+                        ? "bg-[#5865FA]"
+                        : "#ffffff"
                     )}
                   >
-                    <Stroke />
-                    {pdfState.isStrokeOpen && (
-                      <div className="bg-white w-[60px] h-[236px] absolute bottom-[90px] rounded-lg shadow-black shadow-sm flex flex-col justify-center items-center">
-                        <button
-                          onClick={() => {
-                            setPdfConfig((prev) => ({
-                              ...prev,
-                              strokeStep: 28,
-                            }));
-                          }}
-                          className={
-                            "pointer-events-auto size-[44px] flex-center"
-                          }
-                        >
-                          <Stroke5Step
-                            color={
-                              pdfConfig.strokeStep === 28 ? color : "#BCC2CB"
-                            }
-                          />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setPdfConfig((prev) => ({
-                              ...prev,
-                              strokeStep: 22,
-                            }));
-                          }}
-                          className="pointer-events-auto size-[44px] flex-center"
-                        >
-                          <Stroke4Step
-                            color={
-                              pdfConfig.strokeStep === 22 ? color : "#BCC2CB"
-                            }
-                          />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setPdfConfig((prev) => ({
-                              ...prev,
-                              strokeStep: 16,
-                            }));
-                          }}
-                          className="pointer-events-auto size-[44px] flex-center"
-                        >
-                          <Stroke3Step
-                            color={
-                              pdfConfig.strokeStep === 16 ? color : "#BCC2CB"
-                            }
-                          />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setPdfConfig((prev) => ({
-                              ...prev,
-                              strokeStep: 10,
-                            }));
-                          }}
-                          className="pointer-events-auto size-[44px] flex-center"
-                        >
-                          <Stroke2Step
-                            color={
-                              pdfConfig.strokeStep === 10 ? color : "#BCC2CB"
-                            }
-                          />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setPdfConfig((prev) => ({
-                              ...prev,
-                              strokeStep: 4,
-                            }));
-                          }}
-                          className="pointer-events-auto size-[44px] flex-center"
-                        >
-                          <Stroke1Step
-                            color={
-                              pdfConfig.strokeStep === 4 ? color : "#BCC2CB"
-                            }
-                          />
-                        </button>
-                      </div>
-                    )}
+                    <Pen
+                      color={
+                        drawType === "pen" && !zoomEnabled
+                          ? "#ffffff"
+                          : "#353B45"
+                      }
+                    />
                   </button>
-                </>
-              ) : (
+                  <button
+                    onClick={() => {
+                      setCanDraw(true);
+                      setDrawType("highlight");
+                      setZoomEnabled(false);
+                    }}
+                    className={clsx(
+                      "pointer-events-auto size-[44px] rounded-lg flex-center",
+                      drawType === "highlight" && !zoomEnabled
+                        ? "bg-[#5865FA]"
+                        : "#ffffff"
+                    )}
+                  >
+                    <Hightlighter
+                      color={
+                        drawType === "highlight" && !zoomEnabled
+                          ? "#ffffff"
+                          : "#353B45"
+                      }
+                    />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCanDraw(true);
+                      setDrawType("eraser");
+                      setZoomEnabled(false);
+                    }}
+                    className={clsx(
+                      "pointer-events-auto size-[44px] rounded-lg flex-center",
+                      drawType === "eraser" && !zoomEnabled
+                        ? "bg-[#5865FA]"
+                        : "#ffffff"
+                    )}
+                  >
+                    <Eraser
+                      color={
+                        drawType === "eraser" && !zoomEnabled
+                          ? "#ffffff"
+                          : "#353B45"
+                      }
+                    />
+                  </button>
+                </div>
+                <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                {drawType !== "eraser" ? (
+                  <>
+                    <ColorPicker
+                      onColorSelect={setColor}
+                      selectedColor={color}
+                    />
+                    <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                    <button
+                      onClick={() => {
+                        setPdfState((prev) => ({
+                          ...prev,
+                          isStrokeOpen: !prev.isStrokeOpen,
+                        }));
+                      }}
+                      className={clsx(
+                        "pointer-events-auto size-[44px] rounded-lg flex-center",
+                        pdfState.isStrokeOpen ? "bg-[#EEEFF3]" : "#ffffff"
+                      )}
+                    >
+                      <Stroke />
+                      {pdfState.isStrokeOpen && (
+                        <div className="bg-white w-[60px] h-[236px] absolute bottom-[90px] rounded-lg shadow-black shadow-sm flex flex-col justify-center items-center">
+                          <button
+                            onClick={() => {
+                              setPdfConfig((prev) => ({
+                                ...prev,
+                                strokeStep: 28,
+                              }));
+                            }}
+                            className={
+                              "pointer-events-auto size-[44px] flex-center"
+                            }
+                          >
+                            <Stroke5Step
+                              color={
+                                pdfConfig.strokeStep === 28 ? color : "#BCC2CB"
+                              }
+                            />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPdfConfig((prev) => ({
+                                ...prev,
+                                strokeStep: 22,
+                              }));
+                            }}
+                            className="pointer-events-auto size-[44px] flex-center"
+                          >
+                            <Stroke4Step
+                              color={
+                                pdfConfig.strokeStep === 22 ? color : "#BCC2CB"
+                              }
+                            />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPdfConfig((prev) => ({
+                                ...prev,
+                                strokeStep: 16,
+                              }));
+                            }}
+                            className="pointer-events-auto size-[44px] flex-center"
+                          >
+                            <Stroke3Step
+                              color={
+                                pdfConfig.strokeStep === 16 ? color : "#BCC2CB"
+                              }
+                            />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPdfConfig((prev) => ({
+                                ...prev,
+                                strokeStep: 10,
+                              }));
+                            }}
+                            className="pointer-events-auto size-[44px] flex-center"
+                          >
+                            <Stroke2Step
+                              color={
+                                pdfConfig.strokeStep === 10 ? color : "#BCC2CB"
+                              }
+                            />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPdfConfig((prev) => ({
+                                ...prev,
+                                strokeStep: 4,
+                              }));
+                            }}
+                            className="pointer-events-auto size-[44px] flex-center"
+                          >
+                            <Stroke1Step
+                              color={
+                                pdfConfig.strokeStep === 4 ? color : "#BCC2CB"
+                              }
+                            />
+                          </button>
+                        </div>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={onEraseAllClick}
+                    className="pointer-events-auto flex gap-x-2 px-[10px]"
+                  >
+                    <Trash />
+                    <span className="text-[#353B45]">모두 지우기</span>
+                  </button>
+                )}
+                <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
                 <button
-                  onClick={onEraseAllClick}
-                  className="pointer-events-auto flex gap-x-2 px-[10px]"
+                  onClick={() => {
+                    setCanDraw(true);
+                    setZoomEnabled(false);
+                    setTouchType((prev) => {
+                      const newTouchType = prev === "pen" ? "touch" : "pen";
+                      localStorage.setItem("TOUCH_TYPE", newTouchType);
+                      return newTouchType;
+                    });
+                  }}
+                  className="pointer-events-auto w-[78px] h-[44px] rounded-lg bg-[#EEEFF3] flex items-center px-[4px]"
                 >
-                  <Trash />
-                  <span className="text-[#353B45]">모두 지우기</span>
+                  <div
+                    className={clsx(
+                      "size-[36px] bg-white rounded-md shadow flex-center transition-transform duration-300",
+                      touchType === "pen"
+                        ? "translate-x-0"
+                        : "translate-x-[34px]"
+                    )}
+                  >
+                    {touchType === "pen" ? <PenMode /> : <TouchMode />}
+                  </div>
                 </button>
-              )}
-              <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
-              <button
-                onClick={() => {
-                  setCanDraw(true);
-                  setZoomEnabled(false);
-                  setTouchType((prev) => {
-                    const newTouchType = prev === "pen" ? "touch" : "pen";
-                    localStorage.setItem("TOUCH_TYPE", newTouchType);
-                    return newTouchType;
-                  });
-                }}
-                className="pointer-events-auto w-[78px] h-[44px] rounded-lg bg-[#EEEFF3] flex items-center px-[4px]"
-              >
-                <div
+                <button
+                  onClick={() => {
+                    setCanDraw(zoomEnabled ? true : false);
+                    setZoomEnabled((prev) => !prev);
+                  }}
                   className={clsx(
-                    "size-[36px] bg-white rounded-md shadow flex-center transition-transform duration-300",
-                    touchType === "pen" ? "translate-x-0" : "translate-x-[34px]"
+                    "pointer-events-auto size-[44px] rounded-lg flex-center ml-[8px]",
+                    zoomEnabled ? "bg-[#5865FA]" : "#ffffff"
                   )}
                 >
-                  {touchType === "pen" ? <PenMode /> : <TouchMode />}
-                </div>
-              </button>
-              <button
-                onClick={() => {
-                  setCanDraw(zoomEnabled ? true : false);
-                  setZoomEnabled((prev) => !prev);
-                }}
-                className={clsx(
-                  "pointer-events-auto size-[44px] rounded-lg flex-center ml-[8px]",
-                  zoomEnabled ? "bg-[#5865FA]" : "#ffffff"
-                )}
-              >
-                <Zoom color={zoomEnabled ? "#ffffff" : "#353B45"} />
-              </button>
-              <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
-              <button
-                onClick={() => {
-                  setCanDraw(false);
-                  setPdfState((prev) => ({
-                    ...prev,
-                    isToolBarOpen: false,
-                  }));
-                  setDrawType("pen");
-                }}
-                className="pointer-events-auto size-[44px] flex-center"
-              >
-                <Close />
-              </button>
-            </div>
-          )}
-        </div>
+                  <Zoom color={zoomEnabled ? "#ffffff" : "#353B45"} />
+                </button>
+                <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />
+                <button
+                  onClick={() => {
+                    setCanDraw(false);
+                    setPdfState((prev) => ({
+                      ...prev,
+                      isToolBarOpen: false,
+                    }));
+                    setDrawType("pen");
+                  }}
+                  className="pointer-events-auto size-[44px] flex-center"
+                >
+                  <Close />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   );
