@@ -90,6 +90,7 @@ export default function PdfEngine() {
 
     return { pdfWidth: width, pdfHeight: height };
   }, [orientation, pdfConfig]);
+  console.log(pdfConfig.size);
 
   const pdfFile = useMemo(
     () => `data:application/pdf;base64,${file.base64}`,
