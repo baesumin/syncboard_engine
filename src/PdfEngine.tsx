@@ -337,7 +337,7 @@ export default function PdfEngine() {
             <div
               ref={containerRef}
               className={clsx(
-                "w-dvw flex items-center flex-col bg-gray-400",
+                "w-dvw flex-center flex-col bg-gray-400",
                 pdfState.totalPage === 1 ? "h-dvh" : ""
               )}
               style={{ rowGap: PDF_Y_GAP }}
