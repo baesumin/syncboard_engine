@@ -1,1 +1,1 @@
-export const PDF_Y_GAP = 20;
+export const PDF_Y_GAP = 10;

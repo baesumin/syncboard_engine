@@ -3,9 +3,11 @@ import {
   Close,
   Drawing,
   Eraser,
+  FullScreen,
   Hightlighter,
   Pen,
   PenMode,
+  SmallScreen,
   Stroke,
   Stroke1Step,
   Stroke2Step,
@@ -77,7 +79,7 @@ const PdfOverlay = ({
             </div>
             <span className="text-white text-lg">{`${currentViewingPage}/${pdfState.totalPage}`}</span>
           </button>
-          {/* <button
+          <button
             onClick={() => {
               setPdfState((prev) => ({
                 ...prev,
@@ -90,7 +92,7 @@ const PdfOverlay = ({
             className="pointer-events-auto size-[44px] rounded-lg bg-white shadow-black shadow-sm flex-center"
           >
             {pdfState.isFullScreen ? <SmallScreen /> : <FullScreen />}
-          </button> */}
+          </button>
         </div>
 
         {/* {pdfState.totalPage > 1 && (

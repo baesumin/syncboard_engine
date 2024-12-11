@@ -72,9 +72,9 @@ export default function PdfEngine() {
     let width, height;
 
     if (orientation === "portrait") {
-      if (window.innerHeight < pdfConfig.size.height) {
-        width = undefined;
-        height = window.innerHeight;
+      if (window.innerWidth < pdfConfig.size.width) {
+        width = window.innerWidth;
+        height = pdfConfig.size.height;
       } else {
         width = pdfConfig.size.width;
         height = pdfConfig.size.height;
