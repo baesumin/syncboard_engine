@@ -151,7 +151,7 @@ const ThumbnailOvelay = ({
   return (
     <div
       className={clsx(
-        "fixed top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px] z-[9999]",
+        "fixed top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px] z-[9999] touch-none",
         pdfState.isListOpen ? "" : "hidden"
       )}
     >

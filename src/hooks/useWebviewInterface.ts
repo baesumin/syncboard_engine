@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { RefObject, useEffect } from "react";
 import { PathsType } from "../types/common";
 import {
   getModifiedPDFBase64,
@@ -7,15 +7,20 @@ import {
 } from "../utils/common";
 import { useAtom, useSetAtom } from "jotai";
 import { fileAtom, pdfStateAtom, searchTextAtom } from "../store/pdf";
+import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 
 interface UseWebviewInterfaceProps {
   paths: React.MutableRefObject<{ [pageNumber: number]: PathsType[] }>;
   getSearchResult: (text: string) => any[];
+  scaleRef: RefObject<ReactZoomPanPinchContentRef>;
+  canvasRefs: RefObject<HTMLCanvasElement[]>;
 }
 
 export const useWebviewInterface = ({
   paths,
   getSearchResult,
+  scaleRef,
+  canvasRefs,
 }: UseWebviewInterfaceProps) => {
   const [file, setFile] = useAtom(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
@@ -61,10 +66,15 @@ export const useWebviewInterface = ({
 
       getPageNumber: (data: string) => {
         if (!isNaN(Number(data))) {
-          setPdfState((prev) => ({
-            ...prev,
-            pageNumber: Number(data),
-          }));
+          // setPdfState((prev) => ({
+          //   ...prev,
+          //   pageNumber: Number(data),
+          // }));
+          scaleRef.current?.resetTransform(0);
+
+          if (canvasRefs.current) {
+            canvasRefs.current[Number(data)].scrollIntoView();
+          }
         }
       },
 
@@ -83,5 +93,7 @@ export const useWebviewInterface = ({
     setFile,
     setSearchText,
     getSearchResult,
+    scaleRef,
+    canvasRefs,
   ]);
 };
