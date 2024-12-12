@@ -63,7 +63,6 @@ export default function PdfEngine() {
 
     return { pdfWidth: width, pdfHeight: height };
   }, [orientation, pdfConfig.size]);
-  console.log(pdfConfig.size);
 
   const {
     canDraw,
@@ -227,6 +226,8 @@ export default function PdfEngine() {
       const page = await pdfjs.getDocument(pdfFile).promise;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, __, w, h] = (await page.getPage(1))._pageInfo.view;
+      console.log(w, h);
+
       setPdfConfig((prev) => ({
         ...prev,
         size: { width: w, height: h },
@@ -262,7 +263,8 @@ export default function PdfEngine() {
   }, []);
 
   return (
-    !initialLoading && (
+    !initialLoading &&
+    !pdfWidth && (
       <>
         <Document file={pdfFile} loading={<></>}>
           <TransformWrapper
