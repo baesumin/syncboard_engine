@@ -35,7 +35,40 @@ export default function PdfEngine() {
   const searchText = useAtomValue(searchTextAtom);
   const file = useAtomValue(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
-  const pdfConfig = useAtomValue(pdfConfigAtom);
+  const [pdfConfig, setPdfConfig] = useAtom(pdfConfigAtom);
+
+  const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [currentViewingPage, setCurrentViewingPage] = useState(1);
+  const [intersectEnabled, setIntersectEnabled] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  // const originalHeight = useRef(0);
+  // const originalTop = useRef(0);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const { pdfWidth, pdfHeight } = useMemo(() => {
+    let width, height;
+
+    if (orientation === "portrait") {
+      if (window.outerWidth < pdfConfig.size.width) {
+        width = window.outerWidth;
+        height = pdfConfig.size.height;
+      } else {
+        width = pdfConfig.size.width;
+        height = pdfConfig.size.height;
+      }
+    } else {
+      if (window.outerHeight < pdfConfig.size.height) {
+        width = undefined;
+        height = window.outerHeight;
+      } else {
+        width = pdfConfig.size.width;
+        height = window.outerHeight;
+      }
+    }
+
+    return { pdfWidth: width, pdfHeight: height };
+  }, [orientation, pdfConfig.size]);
+
   const {
     canDraw,
     setCanDraw,
@@ -58,41 +91,6 @@ export default function PdfEngine() {
     pageSize: pdfConfig.size,
     strokeStep: pdfConfig.strokeStep,
   });
-  const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [currentViewingPage, setCurrentViewingPage] = useState(1);
-  const [intersectEnabled, setIntersectEnabled] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  // const originalHeight = useRef(0);
-  // const originalTop = useRef(0);
-  const [originPdfSize, setOriginPdfSize] = useState({
-    width: 0,
-    height: 0,
-  });
-  const [initialLoading, setInitialLoading] = useState(true);
-
-  const { pdfWidth, pdfHeight } = useMemo(() => {
-    let width, height;
-
-    if (orientation === "portrait") {
-      if (window.outerWidth < originPdfSize.width) {
-        width = window.outerWidth;
-        height = originPdfSize.height;
-      } else {
-        width = originPdfSize.width;
-        height = originPdfSize.height;
-      }
-    } else {
-      if (window.outerHeight < originPdfSize.height) {
-        width = undefined;
-        height = window.outerHeight;
-      } else {
-        width = originPdfSize.width;
-        height = window.outerHeight;
-      }
-    }
-
-    return { pdfWidth: width, pdfHeight: height };
-  }, [orientation, originPdfSize]);
 
   const pdfFile = useMemo(
     () => `data:application/pdf;base64,${file.base64}`,
@@ -140,7 +138,6 @@ export default function PdfEngine() {
 
   const onRenderSuccess: OnRenderSuccess = useCallback(
     (page) => {
-      console.log("hi");
       if (canvasRefs.current) {
         redrawPaths(page.width, page.height, page.pageNumber);
         setCurrentViewingPage(1);
@@ -290,7 +287,10 @@ export default function PdfEngine() {
         const page = await pdfjs.getDocument(pdfFile).promise;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const [_, __, w, h] = (await page.getPage(1))._pageInfo.view;
-        setOriginPdfSize({ width: w, height: h });
+        setPdfConfig((prev) => ({
+          ...prev,
+          size: { width: w, height: h },
+        }));
         setPdfState((prev) => ({
           ...prev,
           totalPage: page.numPages,
