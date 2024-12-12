@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { Document, Page } from "react-pdf";
 import { useMobileOrientation } from "react-device-detect";
 import {
   CustomTextRenderer,
@@ -28,6 +28,7 @@ import {
 } from "./store/pdf";
 import { PDF_Y_GAP } from "./contstants/pdf";
 import { InView } from "react-intersection-observer";
+import { PDFDocument } from "pdf-lib";
 
 export default function PdfEngine() {
   const { orientation } = useMobileOrientation();
@@ -223,20 +224,18 @@ export default function PdfEngine() {
 
   useEffect(() => {
     const init = async () => {
-      const page = await pdfjs.getDocument(pdfFile).promise;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [_, __, w, h] = (await page.getPage(1))._pageInfo.view;
-      console.log(file.base64);
-      console.log((await page.getPage(1))._pageInfo.view);
+      const pdfDoc = await PDFDocument.load(file.base64);
+      const page = pdfDoc.getPage(0);
+      const { width, height } = page.getSize();
 
       setPdfConfig((prev) => ({
         ...prev,
-        size: { width: w, height: h },
+        size: { width, height },
       }));
       if (!file.isNew) {
         setPdfState((prev) => ({
           ...prev,
-          totalPage: page.numPages,
+          totalPage: pdfDoc.getPageCount(),
         }));
       }
       if (file.paths) {
