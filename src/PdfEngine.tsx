@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Document, Page } from "react-pdf";
+import { Document, Page, pdfjs } from "react-pdf";
 import { useMobileOrientation } from "react-device-detect";
 import {
   CustomTextRenderer,
-  OnDocumentLoadSuccess,
-  OnPageLoadSuccess,
   OnRenderSuccess,
 } from "react-pdf/src/shared/types.js";
 import {
@@ -37,7 +35,7 @@ export default function PdfEngine() {
   const searchText = useAtomValue(searchTextAtom);
   const file = useAtomValue(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
-  const [pdfConfig, setPdfConfig] = useAtom(pdfConfigAtom);
+  const pdfConfig = useAtomValue(pdfConfigAtom);
   const {
     canDraw,
     setCanDraw,
@@ -66,31 +64,34 @@ export default function PdfEngine() {
   const containerRef = useRef<HTMLDivElement>(null);
   // const originalHeight = useRef(0);
   // const originalTop = useRef(0);
+  const [originPdfSize, setOriginPdfSize] = useState({
+    width: 0,
+    height: 0,
+  });
 
   const { pdfWidth, pdfHeight } = useMemo(() => {
     let width, height;
 
     if (orientation === "portrait") {
-      if (window.outerWidth < pdfConfig.size.width) {
+      if (window.outerWidth < originPdfSize.width) {
         width = window.outerWidth;
-        height = pdfConfig.size.height;
+        height = originPdfSize.height;
       } else {
-        width = pdfConfig.size.width;
-        height = pdfConfig.size.height;
+        width = originPdfSize.width;
+        height = originPdfSize.height;
       }
     } else {
-      if (window.outerHeight < pdfConfig.size.height) {
+      if (window.outerHeight < originPdfSize.height) {
         width = undefined;
         height = window.outerHeight;
       } else {
-        width = pdfConfig.size.width;
+        width = originPdfSize.width;
         height = window.outerHeight;
       }
     }
 
     return { pdfWidth: width, pdfHeight: height };
-  }, [orientation, pdfConfig]);
-  console.log(pdfConfig.size);
+  }, [orientation, originPdfSize]);
 
   const pdfFile = useMemo(
     () => `data:application/pdf;base64,${file.base64}`,
@@ -119,33 +120,22 @@ export default function PdfEngine() {
     canvasRefs,
   });
 
-  const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
-    (page) => {
-      if (!file.isNew) {
-        setPdfConfig((prev) => ({
-          ...prev,
-          size: {
-            width: Math.floor(page.width),
-            height: Math.floor(page.height),
-          },
-        }));
-      }
-      scaleRef.current?.resetTransform();
-    },
-    [file.isNew, setPdfConfig]
-  );
-
-  const OnDocumentLoadSuccess: OnDocumentLoadSuccess = useCallback(
-    (pdf) => {
-      if (!file.isNew) {
-        setPdfState((prev) => ({
-          ...prev,
-          totalPage: pdf.numPages,
-        }));
-      }
-    },
-    [file.isNew, setPdfState]
-  );
+  // const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
+  //   (page) => {
+  //     if (!file.isNew) {
+  //       // console.log(page.width / page.height);
+  //       setPdfConfig((prev) => ({
+  //         ...prev,
+  //         size: {
+  //           width: Math.floor(page.width),
+  //           height: Math.floor(page.height),
+  //         },
+  //       }));
+  //     }
+  //     scaleRef.current?.resetTransform();
+  //   },
+  //   [file.isNew, setPdfConfig]
+  // );
 
   const onRenderSuccess: OnRenderSuccess = useCallback(
     (page) => {
@@ -215,7 +205,7 @@ export default function PdfEngine() {
             width={pdfWidth}
             height={pdfHeight}
             devicePixelRatio={pdfConfig.devicePixelRatio}
-            onLoadSuccess={OnPageLoadSuccess}
+            // onLoadSuccess={OnPageLoadSuccess}
             onRenderSuccess={onRenderSuccess}
             customTextRenderer={textRenderer}
             renderAnnotationLayer={false}
@@ -241,7 +231,6 @@ export default function PdfEngine() {
       );
     },
     [
-      OnPageLoadSuccess,
       canDraw,
       draw,
       file.isNew,
@@ -257,7 +246,7 @@ export default function PdfEngine() {
       textRenderer,
     ]
   );
-
+  // console.log(pdfConfig.size);
   // useEffect(() => {
   //   if (intersectEnabled) {
   //     const observer = new IntersectionObserver(
@@ -294,34 +283,43 @@ export default function PdfEngine() {
   }, [file.isNew, pdfState.isDocumentLoading, setPdfState]);
 
   useEffect(() => {
-    if (file.paths) {
-      const savedPaths: { [pageNumber: number]: PathsType[] } = JSON.parse(
-        file.paths
-      );
-
-      const maxDrawOrderItem = Object.values(savedPaths)
-        .flat()
-        .reduce(
-          (maxItem, currentItem) => {
-            return currentItem.drawOrder > maxItem.drawOrder
-              ? currentItem
-              : maxItem;
-          },
-          { drawOrder: 0 }
+    const init = async () => {
+      if (!file.isNew) {
+        const page = await pdfjs.getDocument(pdfFile).promise;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const [_, __, w, h] = (await page.getPage(1))._pageInfo.view;
+        setOriginPdfSize({ width: w, height: h });
+        setPdfState((prev) => ({
+          ...prev,
+          totalPage: page.numPages,
+        }));
+      }
+      if (file.paths) {
+        const savedPaths: { [pageNumber: number]: PathsType[] } = JSON.parse(
+          file.paths
         );
-      paths.current = savedPaths;
-      drawOrder.current = maxDrawOrderItem.drawOrder;
-    }
+
+        const maxDrawOrderItem = Object.values(savedPaths)
+          .flat()
+          .reduce(
+            (maxItem, currentItem) => {
+              return currentItem.drawOrder > maxItem.drawOrder
+                ? currentItem
+                : maxItem;
+            },
+            { drawOrder: 0 }
+          );
+        paths.current = savedPaths;
+        drawOrder.current = maxDrawOrderItem.drawOrder;
+      }
+    };
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <>
-      <Document
-        file={pdfFile}
-        onLoadSuccess={OnDocumentLoadSuccess}
-        loading={<></>}
-      >
+      <Document file={pdfFile} loading={<></>}>
         <TransformWrapper
           ref={scaleRef}
           initialScale={1}
