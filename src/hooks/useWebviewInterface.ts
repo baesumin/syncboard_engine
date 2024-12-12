@@ -32,7 +32,6 @@ export const useWebviewInterface = ({
     const webviewInterface = {
       getBase64: async () => {
         const data = await getModifiedPDFBase64(paths.current, file.base64);
-        console.log(data);
         window.AndroidInterface.getBase64(data);
       },
 
@@ -56,6 +55,11 @@ export const useWebviewInterface = ({
           ...file,
           base64: newBase64,
         });
+        window.AndroidInterface.getPdfData(newBase64);
+      },
+
+      newPageSetting: async () => {
+        const newBase64 = await createOrMergePdf(file.base64);
         window.AndroidInterface.getPdfData(newBase64);
       },
 

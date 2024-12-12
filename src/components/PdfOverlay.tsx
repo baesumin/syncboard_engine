@@ -64,7 +64,7 @@ const PdfOverlay = ({
   return (
     <>
       <div className="fixed left-0 right-0 top-0 bottom-0 flex flex-col justify-between px-[20px] py-[20px] pointer-events-none">
-        <div className="flex h-[52px] justify-between items-center">
+        <div className="flex h-[40px] justify-between items-center">
           <button
             onClick={() => {
               setPdfState((prev) => ({
@@ -72,9 +72,9 @@ const PdfOverlay = ({
                 isListOpen: true,
               }));
             }}
-            className="pointer-events-auto h-[48px] rounded-[10px] bg-[#202325]/70 flex items-center pl-[2px] pr-4 gap-3"
+            className="pointer-events-auto h-[40px] rounded-[10px] bg-[#202325]/70 flex items-center pl-[2px] pr-4 gap-3"
           >
-            <div className="size-[44px] bg-white rounded-lg flex-center">
+            <div className="size-[36px] bg-white rounded-lg flex-center">
               <ThumbnailList />
             </div>
             <span className="text-white text-lg">{`${currentViewingPage}/${pdfState.totalPage}`}</span>

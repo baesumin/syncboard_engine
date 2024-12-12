@@ -223,7 +223,6 @@ export const getModifiedPDFBase64 = async (
     const points = paths[i + 1];
     const page = pdfDoc.getPage(i);
     const { width: pageWidth, height: pageHeight } = page.getSize();
-    console.log(pageWidth, pageHeight);
 
     if (!points || points.length <= 1) continue;
     let currentGroup: PathsType[] = [];
