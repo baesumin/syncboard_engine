@@ -63,6 +63,7 @@ export default function PdfEngine() {
 
     return { pdfWidth: width, pdfHeight: height };
   }, [orientation, pdfConfig.size]);
+  console.log(pdfConfig.size);
 
   const {
     canDraw,
