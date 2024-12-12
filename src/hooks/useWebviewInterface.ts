@@ -59,7 +59,7 @@ export const useWebviewInterface = ({
       },
 
       newPageSetting: async () => {
-        const newBase64 = await createOrMergePdf(file.base64);
+        const newBase64 = await createOrMergePdf();
         window.AndroidInterface.getPdfData(newBase64);
       },
 
