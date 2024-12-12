@@ -72,7 +72,7 @@ const PdfOverlay = ({
                 isListOpen: true,
               }));
             }}
-            className="pointer-events-auto h-[40px] rounded-[10px] bg-[#202325]/70 flex items-center pl-[2px] pr-4 gap-3"
+            className="pointer-events-auto h-[40px] rounded-[10px] bg-[#202325]/70 flex items-center pl-[2px] pr-3 gap-2"
           >
             <div className="size-[36px] bg-white rounded-lg flex-center">
               <ThumbnailList />
@@ -89,7 +89,7 @@ const PdfOverlay = ({
                 window.AndroidInterface.setFullMode(!pdfState.isFullScreen);
               }
             }}
-            className="pointer-events-auto size-[44px] rounded-lg bg-white shadow-black shadow-sm flex-center"
+            className="pointer-events-auto size-[40px] rounded-lg bg-white shadow-black shadow-sm flex-center"
           >
             {pdfState.isFullScreen ? <SmallScreen /> : <FullScreen />}
           </button>
@@ -148,7 +148,7 @@ const PdfOverlay = ({
                       isToolBarOpen: true,
                     }));
                   }}
-                  className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                  className="pointer-events-auto w-[106px] h-[52px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
                 >
                   <Drawing />
                   그리기
@@ -174,7 +174,7 @@ const PdfOverlay = ({
                           base64: newBase64,
                         }));
                       }}
-                      className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                      className="pointer-events-auto w-[106px] h-[52px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
                     >
                       페이지 추가
                     </button>
@@ -182,7 +182,7 @@ const PdfOverlay = ({
                       onClick={async () => {
                         await getModifiedPDFBase64(paths.current, file.base64);
                       }}
-                      className="pointer-events-auto w-[114px] h-[56px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
+                      className="pointer-events-auto w-[106px] h-[52px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
                     >
                       저장
                     </button>
