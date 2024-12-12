@@ -32,6 +32,7 @@ export const useWebviewInterface = ({
     const webviewInterface = {
       getBase64: async () => {
         const data = await getModifiedPDFBase64(paths.current, file.base64);
+        console.log(data);
         window.AndroidInterface.getBase64(data);
       },
 
