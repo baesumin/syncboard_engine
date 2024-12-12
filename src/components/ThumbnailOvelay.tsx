@@ -176,14 +176,13 @@ const ThumbnailOvelay = ({
       >
         {[...new Array(pdfState.totalPage)].map((_, index) => {
           return (
-            <div key={index} className="w-[186px]">
+            <div key={index} className="w-[180px]">
               <div
-                className={clsx(
+                className={
                   currentViewingPage === index + 1
-                    ? "border-[3px] border-[#FF9A51]"
-                    : "",
-                  "overflow-hidden relative"
-                )}
+                    ? "ring-[3px] ring-[#FF9A51]"
+                    : ""
+                }
                 style={{ height: thumbnailHeight }}
               >
                 <Thumbnail

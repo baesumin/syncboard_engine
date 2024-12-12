@@ -27,6 +27,7 @@ import {
   searchTextAtom,
 } from "./store/pdf";
 import { PDF_Y_GAP } from "./contstants/pdf";
+import { InView } from "react-intersection-observer";
 
 export default function PdfEngine() {
   const { orientation } = useMobileOrientation();
@@ -36,13 +37,7 @@ export default function PdfEngine() {
   const file = useAtomValue(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
   const [pdfConfig, setPdfConfig] = useAtom(pdfConfigAtom);
-
-  const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [currentViewingPage, setCurrentViewingPage] = useState(1);
-  // const [intersectEnabled, setIntersectEnabled] = useState(false);
-  // const containerRef = useRef<HTMLDivElement>(null);
-  // const originalHeight = useRef(0);
-  // const originalTop = useRef(0);
   const [initialLoading, setInitialLoading] = useState(true);
 
   const { pdfWidth, pdfHeight } = useMemo(() => {
@@ -101,9 +96,6 @@ export default function PdfEngine() {
     if (node) {
       const indexValue = Number(node.getAttribute("data-index"));
       canvasRefs.current[indexValue] = node;
-      // if (!intersectEnabled) {
-      //   setIntersectEnabled(true);
-      // }
     }
   }, []);
 
@@ -137,7 +129,7 @@ export default function PdfEngine() {
     (page) => {
       if (canvasRefs.current) {
         redrawPaths(page.width, page.height, page.pageNumber);
-        setCurrentViewingPage(1);
+        // setCurrentViewingPage(1);
       }
     },
     [redrawPaths]
@@ -169,105 +161,56 @@ export default function PdfEngine() {
     },
     [scale]
   );
-  // const onZoomStop = useCallback((ref: ReactZoomPanPinchRef) => {
-  //   if (containerRef.current) {
-  //     // 처음 마운트될 때 원본 값 저장
-  //     if (originalHeight.current === 0) {
-  //       originalHeight.current = containerRef.current.clientHeight;
-  //     }
-  //     if (originalTop.current === 0) {
-  //       originalTop.current = containerRef.current.getBoundingClientRect().top;
-  //     }
 
-  //     // 높이와 상단 여백 조정
-  //     // const newHeight = originalHeight.current * ref.state.scale;
-  //     // const newTop = originalTop.current * ref.state.scale;
-  //     // containerRef.current.style.height = `${newHeight}px`;
-  //     // containerRef.current.style.top = `translateY(-${newTop}px)`;
-  //     // containerRef.current.scrollTop = newTop;
-  //   }
-  // }, []);
-
-  const PdfItem = useCallback(
-    (_: any, index: number) => {
-      return (
-        <div
-          key={index + 1}
-          ref={(el) => (pageRefs.current[index] = el)}
-          data-page={index + 1}
-        >
-          <Page
-            pageNumber={index + 1}
-            width={pdfWidth}
-            height={pdfHeight}
-            devicePixelRatio={pdfConfig.devicePixelRatio}
-            // onLoadSuccess={OnPageLoadSuccess}
-            onRenderSuccess={onRenderSuccess}
-            customTextRenderer={textRenderer}
-            renderAnnotationLayer={false}
-            renderTextLayer={file.isNew ? false : true}
-            loading={<></>}
-            noData={<></>}
-          >
-            <canvas
-              ref={setRef}
-              width={pdfConfig.size.width * pdfConfig.devicePixelRatio}
-              height={pdfConfig.size.height * pdfConfig.devicePixelRatio}
-              className={clsx(
-                "absolute touch-none z-[1000] top-0 w-full h-full",
-                canDraw ? "" : "pointer-events-none"
-              )}
-              onPointerDown={startDrawing}
-              onPointerMove={draw}
-              onPointerUp={stopDrawing}
-              data-index={index + 1}
-            />
-          </Page>
-        </div>
-      );
-    },
-    [
-      canDraw,
-      draw,
-      file.isNew,
-      onRenderSuccess,
-      pdfConfig.devicePixelRatio,
-      pdfConfig.size.height,
-      pdfConfig.size.width,
-      pdfHeight,
-      pdfWidth,
-      setRef,
-      startDrawing,
-      stopDrawing,
-      textRenderer,
-    ]
-  );
-  // console.log(pdfConfig.size);
-  // useEffect(() => {
-  //   if (intersectEnabled) {
-  //     const observer = new IntersectionObserver(
-  //       (entries) => {
-  //         entries.forEach((entry) => {
-  //           if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-  //             const pageNumber = Number(entry.target.getAttribute("data-page"));
-  //             setCurrentViewingPage(pageNumber);
-  //           }
-  //         });
-  //       },
-  //       {
-  //         threshold: 0.5, // 페이지가 50% 이상 보일 때 감지
-  //         root: null, // viewport 기준
-  //       }
-  //     );
-
-  //     // 각 페이지 요소에 observer 등록
-  //     pageRefs.current.forEach((ref) => {
-  //       if (ref) observer.observe(ref);
-  //     });
-
-  //     return () => observer.disconnect();
-  //   }
-  // }, [intersectEnabled]);
+  const PdfItem = (_: any, index: number) => {
+    return (
+      <InView
+        key={index + 1}
+        data-page={index + 1}
+        threshold={0.8}
+        rootMargin="-50px 0px 0px 0px"
+        onChange={(inView) => {
+          if (inView) {
+            setCurrentViewingPage(index + 1);
+          }
+        }}
+      >
+        {({ ref }) => {
+          return (
+            <div ref={ref}>
+              <Page
+                pageNumber={index + 1}
+                width={pdfWidth}
+                height={pdfHeight}
+                devicePixelRatio={pdfConfig.devicePixelRatio}
+                // onLoadSuccess={OnPageLoadSuccess}
+                onRenderSuccess={onRenderSuccess}
+                customTextRenderer={textRenderer}
+                renderAnnotationLayer={false}
+                renderTextLayer={file.isNew ? false : true}
+                loading={<></>}
+                noData={<></>}
+              >
+                <canvas
+                  ref={setRef}
+                  width={pdfConfig.size.width * pdfConfig.devicePixelRatio}
+                  height={pdfConfig.size.height * pdfConfig.devicePixelRatio}
+                  className={clsx(
+                    "absolute touch-none z-[1000] top-0 w-full h-full",
+                    canDraw ? "" : "pointer-events-none"
+                  )}
+                  onPointerDown={startDrawing}
+                  onPointerMove={draw}
+                  onPointerUp={stopDrawing}
+                  data-index={index + 1}
+                />
+              </Page>
+            </div>
+          );
+        }}
+      </InView>
+    );
+  };
 
   useEffect(() => {
     if (file.isNew && pdfState.isDocumentLoading) {
@@ -280,14 +223,14 @@ export default function PdfEngine() {
 
   useEffect(() => {
     const init = async () => {
+      const page = await pdfjs.getDocument(pdfFile).promise;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [_, __, w, h] = (await page.getPage(1))._pageInfo.view;
+      setPdfConfig((prev) => ({
+        ...prev,
+        size: { width: w, height: h },
+      }));
       if (!file.isNew) {
-        const page = await pdfjs.getDocument(pdfFile).promise;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const [_, __, w, h] = (await page.getPage(1))._pageInfo.view;
-        setPdfConfig((prev) => ({
-          ...prev,
-          size: { width: w, height: h },
-        }));
         setPdfState((prev) => ({
           ...prev,
           totalPage: page.numPages,
@@ -337,7 +280,6 @@ export default function PdfEngine() {
           >
             <TransformComponent>
               <div
-                //  ref={containerRef}
                 className={clsx(
                   "w-dvw flex-center flex-col bg-gray-400",
                   pdfState.totalPage === 1 ? "h-dvh" : ""
