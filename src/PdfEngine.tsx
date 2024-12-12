@@ -263,8 +263,7 @@ export default function PdfEngine() {
   }, []);
 
   return (
-    !initialLoading &&
-    !pdfWidth && (
+    !initialLoading && (
       <>
         <Document file={pdfFile} loading={<></>}>
           <TransformWrapper
