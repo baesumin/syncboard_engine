@@ -39,8 +39,8 @@ export default function PdfEngine() {
 
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [currentViewingPage, setCurrentViewingPage] = useState(1);
-  const [intersectEnabled, setIntersectEnabled] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  // const [intersectEnabled, setIntersectEnabled] = useState(false);
+  // const containerRef = useRef<HTMLDivElement>(null);
   // const originalHeight = useRef(0);
   // const originalTop = useRef(0);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -97,18 +97,15 @@ export default function PdfEngine() {
     [file.base64]
   );
 
-  const setRef = useCallback(
-    (node: HTMLCanvasElement) => {
-      if (node) {
-        const indexValue = Number(node.getAttribute("data-index"));
-        canvasRefs.current[indexValue] = node;
-        if (!intersectEnabled) {
-          setIntersectEnabled(true);
-        }
-      }
-    },
-    [intersectEnabled]
-  );
+  const setRef = useCallback((node: HTMLCanvasElement) => {
+    if (node) {
+      const indexValue = Number(node.getAttribute("data-index"));
+      canvasRefs.current[indexValue] = node;
+      // if (!intersectEnabled) {
+      //   setIntersectEnabled(true);
+      // }
+    }
+  }, []);
 
   const { getSearchResult } = usePdfTextSearch(pdfFile);
 
@@ -154,7 +151,7 @@ export default function PdfEngine() {
   const onEraseAllClick = useCallback(() => {
     if (
       confirm(
-        "모두 지우기를 선택하면 문서 전체의 변경 내용이 삭제됩니다.\n진행하시겠습니까?"
+        "모두 지우기를 선택하면 문서 전체의 변경 내용이 삭제됩니다. 진행하시겠습니까?"
       )
     ) {
       removeAllPath(paths);
@@ -340,7 +337,7 @@ export default function PdfEngine() {
           >
             <TransformComponent>
               <div
-                ref={containerRef}
+                //  ref={containerRef}
                 className={clsx(
                   "w-dvw flex-center flex-col bg-gray-400",
                   pdfState.totalPage === 1 ? "h-dvh" : ""
