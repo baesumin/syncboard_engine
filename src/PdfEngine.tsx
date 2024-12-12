@@ -68,6 +68,7 @@ export default function PdfEngine() {
     width: 0,
     height: 0,
   });
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const { pdfWidth, pdfHeight } = useMemo(() => {
     let width, height;
@@ -139,6 +140,7 @@ export default function PdfEngine() {
 
   const onRenderSuccess: OnRenderSuccess = useCallback(
     (page) => {
+      console.log("hi");
       if (canvasRefs.current) {
         redrawPaths(page.width, page.height, page.pageNumber);
         setCurrentViewingPage(1);
@@ -312,62 +314,65 @@ export default function PdfEngine() {
         paths.current = savedPaths;
         drawOrder.current = maxDrawOrderItem.drawOrder;
       }
+      setInitialLoading(false);
     };
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <>
-      <Document file={pdfFile} loading={<></>}>
-        <TransformWrapper
-          ref={scaleRef}
-          initialScale={1}
-          maxScale={3}
-          disablePadding
-          doubleClick={{ disabled: true }}
-          onTransformed={onTransformed}
-          // onZoomStop={onZoomStop}
-          limitToBounds={true}
-          panning={{
-            disabled: true,
-          }}
-          centerZoomedOut
-        >
-          <TransformComponent>
-            <div
-              ref={containerRef}
-              className={clsx(
-                "w-dvw flex-center flex-col bg-gray-400",
-                pdfState.totalPage === 1 ? "h-dvh" : ""
-              )}
-              style={{ rowGap: PDF_Y_GAP }}
-            >
-              {[...new Array(pdfState.totalPage)].map(PdfItem)}
-            </div>
-          </TransformComponent>
-        </TransformWrapper>
-        <ThumbnailOvelay
-          paths={paths.current}
-          canvasRefs={canvasRefs}
-          currentViewingPage={currentViewingPage}
-          scaleRef={scaleRef}
-        />
-      </Document>
-      {!pdfState.isListOpen && (
-        <PdfOverlay
-          paths={paths}
-          color={color}
-          drawType={drawType}
-          touchType={touchType}
-          setTouchType={setTouchType}
-          setCanDraw={setCanDraw}
-          setColor={setColor}
-          setDrawType={setDrawType}
-          onEraseAllClick={onEraseAllClick}
-          currentViewingPage={currentViewingPage}
-        />
-      )}
-    </>
+    !initialLoading && (
+      <>
+        <Document file={pdfFile} loading={<></>}>
+          <TransformWrapper
+            ref={scaleRef}
+            initialScale={1}
+            maxScale={3}
+            disablePadding
+            doubleClick={{ disabled: true }}
+            onTransformed={onTransformed}
+            // onZoomStop={onZoomStop}
+            limitToBounds={true}
+            panning={{
+              disabled: true,
+            }}
+            centerZoomedOut
+          >
+            <TransformComponent>
+              <div
+                ref={containerRef}
+                className={clsx(
+                  "w-dvw flex-center flex-col bg-gray-400",
+                  pdfState.totalPage === 1 ? "h-dvh" : ""
+                )}
+                style={{ rowGap: PDF_Y_GAP }}
+              >
+                {[...new Array(pdfState.totalPage)].map(PdfItem)}
+              </div>
+            </TransformComponent>
+          </TransformWrapper>
+          <ThumbnailOvelay
+            paths={paths.current}
+            canvasRefs={canvasRefs}
+            currentViewingPage={currentViewingPage}
+            scaleRef={scaleRef}
+          />
+        </Document>
+        {!pdfState.isListOpen && (
+          <PdfOverlay
+            paths={paths}
+            color={color}
+            drawType={drawType}
+            touchType={touchType}
+            setTouchType={setTouchType}
+            setCanDraw={setCanDraw}
+            setColor={setColor}
+            setDrawType={setDrawType}
+            onEraseAllClick={onEraseAllClick}
+            currentViewingPage={currentViewingPage}
+          />
+        )}
+      </>
+    )
   );
 }
