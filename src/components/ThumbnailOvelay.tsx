@@ -4,14 +4,7 @@ import { Thumbnail } from "react-pdf";
 import { useAtom } from "jotai";
 import { pdfStateAtom } from "../store/pdf";
 import { PathsType } from "../types/common";
-import {
-  MutableRefObject,
-  RefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { reDrawPathGroup } from "../utils/common";
 import {
   OnItemClickArgs,
@@ -28,9 +21,9 @@ const ThumbnailOvelay = ({
   paths: {
     [pageNumber: number]: PathsType[];
   };
-  canvasRefs: MutableRefObject<HTMLCanvasElement[]>;
+  canvasRefs: RefObject<HTMLCanvasElement[]>;
   currentViewingPage: number;
-  scaleRef: RefObject<ReactZoomPanPinchContentRef>;
+  scaleRef: RefObject<ReactZoomPanPinchContentRef | null>;
 }) => {
   const thumbnailCanvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
   const [thumbnailHeight, setThumbnailHeight] = useState(0);

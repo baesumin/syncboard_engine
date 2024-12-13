@@ -11,7 +11,7 @@ import { canvasEventType, PageSize, PathsType } from "../types/common";
 import { isMobile } from "react-device-detect";
 import { pdfjs } from "react-pdf";
 import UTIF from "utif";
-import { MutableRefObject } from "react";
+import { RefObject } from "react";
 
 export const __DEV__ = import.meta.env.MODE === "development";
 
@@ -196,7 +196,7 @@ export const highlightPattern = (text: string, pattern: string) => {
 };
 
 export const removePathByPageNumber = (
-  paths: MutableRefObject<{ [pageNumber: number]: PathsType[] }>,
+  paths: RefObject<{ [pageNumber: number]: PathsType[] }>,
   pageNumber: number
 ) => {
   if (paths.current[pageNumber]) {
@@ -205,7 +205,7 @@ export const removePathByPageNumber = (
 };
 
 export const removeAllPath = (
-  paths: MutableRefObject<{ [pageNumber: number]: PathsType[] }>
+  paths: RefObject<{ [pageNumber: number]: PathsType[] }>
 ) => {
   paths.current = {};
 };

@@ -1,4 +1,4 @@
-import { MutableRefObject, ReactNode, RefObject, useCallback } from "react";
+import { ReactNode, RefObject, useCallback } from "react";
 import {
   ReactZoomPanPinchContentRef,
   ReactZoomPanPinchRef,
@@ -8,7 +8,7 @@ import {
 
 interface Props {
   children: ReactNode;
-  scale: MutableRefObject<number>;
+  scale: RefObject<number>;
   scaleRef: RefObject<ReactZoomPanPinchContentRef>;
 }
 

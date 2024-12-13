@@ -32,7 +32,7 @@ import { useAtom } from "jotai";
 import { fileAtom, pdfConfigAtom, pdfStateAtom } from "../store/pdf";
 
 interface Props {
-  paths: React.MutableRefObject<{ [pageNumber: number]: PathsType[] }>;
+  paths: React.RefObject<{ [pageNumber: number]: PathsType[] }>;
   drawType: DrawType;
   color: (typeof colorMap)[number];
   touchType: TouchType;

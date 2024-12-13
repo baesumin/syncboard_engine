@@ -27,7 +27,6 @@ import {
   searchTextAtom,
 } from "./store/pdf";
 import { PDF_Y_GAP } from "./contstants/pdf";
-import { InView } from "react-intersection-observer";
 import { PDFDocument } from "pdf-lib";
 
 export default function PdfEngine() {
@@ -145,60 +144,41 @@ export default function PdfEngine() {
     [scale]
   );
 
-  const handleViewChange = useCallback(
-    (index: number) => (inView: boolean) => {
-      if (inView) {
-        setCurrentViewingPage(index + 1);
-      }
-    },
-    []
-  );
-
   const PdfItem = useCallback(
     (_: any, index: number) => {
       return (
-        <InView
-          as="div"
-          key={index + 1}
-          onChange={handleViewChange(index)}
-          threshold={0.5}
+        <Page
+          pageNumber={index + 1}
           width={pdfWidth}
           height={pdfHeight}
+          devicePixelRatio={pdfConfig.devicePixelRatio}
+          onRenderSuccess={onRenderSuccess}
+          customTextRenderer={textRenderer}
+          renderAnnotationLayer={false}
+          renderTextLayer={file.isNew ? false : true}
+          loading={<div style={{ width: pdfWidth, height: pdfHeight }} />}
+          noData={<></>}
         >
-          <Page
-            pageNumber={index + 1}
-            width={pdfWidth}
-            height={pdfHeight}
-            devicePixelRatio={pdfConfig.devicePixelRatio}
-            onRenderSuccess={onRenderSuccess}
-            customTextRenderer={textRenderer}
-            renderAnnotationLayer={false}
-            renderTextLayer={file.isNew ? false : true}
-            loading={<div style={{ width: pdfWidth, height: pdfHeight }} />}
-            noData={<></>}
-          >
-            <canvas
-              ref={setRef}
-              width={pdfConfig.size.width * pdfConfig.devicePixelRatio}
-              height={pdfConfig.size.height * pdfConfig.devicePixelRatio}
-              className={clsx(
-                "absolute touch-none z-[1000] top-0 w-full h-full",
-                canDraw ? "" : "pointer-events-none"
-              )}
-              onPointerDown={startDrawing}
-              onPointerMove={draw}
-              onPointerUp={stopDrawing}
-              data-index={index + 1}
-            />
-          </Page>
-        </InView>
+          <canvas
+            ref={setRef}
+            width={pdfConfig.size.width * pdfConfig.devicePixelRatio}
+            height={pdfConfig.size.height * pdfConfig.devicePixelRatio}
+            className={clsx(
+              "absolute touch-none z-[1000] top-0 w-full h-full",
+              canDraw ? "" : "pointer-events-none"
+            )}
+            onPointerDown={startDrawing}
+            onPointerMove={draw}
+            onPointerUp={stopDrawing}
+            data-index={index + 1}
+          />
+        </Page>
       );
     },
     [
       canDraw,
       draw,
       file.isNew,
-      handleViewChange,
       onRenderSuccess,
       pdfConfig.devicePixelRatio,
       pdfConfig.size.height,
@@ -261,6 +241,20 @@ export default function PdfEngine() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      const pageHeight = pdfHeight + PDF_Y_GAP; // PDF 높이 + 페이지 간격
+      const currentPage = Math.floor(scrollPosition / pageHeight) + 1;
+      if (currentViewingPage !== currentPage) {
+        setCurrentViewingPage(currentPage);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [currentViewingPage, pdfHeight]);
+
   return (
     !initialLoading && (
       <>
@@ -272,7 +266,6 @@ export default function PdfEngine() {
             disablePadding
             doubleClick={{ disabled: true }}
             onTransformed={onTransformed}
-            // onZoomStop={onZoomStop}
             limitToBounds={true}
             panning={{
               disabled: true,

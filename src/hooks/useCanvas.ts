@@ -1,10 +1,4 @@
-import {
-  MutableRefObject,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { RefObject, useCallback, useMemo, useRef, useState } from "react";
 import {
   colorMap,
   drawDashedLine,
@@ -20,7 +14,7 @@ import {
 import throttle from "lodash.throttle";
 
 interface Props {
-  canvasRefs: MutableRefObject<HTMLCanvasElement[]>;
+  canvasRefs: RefObject<HTMLCanvasElement[]>;
   devicePixelRatio: number;
   pageSize: {
     width: number;

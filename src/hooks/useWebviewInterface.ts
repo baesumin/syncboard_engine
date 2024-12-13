@@ -10,9 +10,9 @@ import { fileAtom, pdfStateAtom, searchTextAtom } from "../store/pdf";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 
 interface UseWebviewInterfaceProps {
-  paths: React.MutableRefObject<{ [pageNumber: number]: PathsType[] }>;
+  paths: React.RefObject<{ [pageNumber: number]: PathsType[] }>;
   getSearchResult: (text: string) => any[];
-  scaleRef: RefObject<ReactZoomPanPinchContentRef>;
+  scaleRef: RefObject<ReactZoomPanPinchContentRef | null>;
   canvasRefs: RefObject<HTMLCanvasElement[]>;
 }
 
