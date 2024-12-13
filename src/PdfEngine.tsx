@@ -109,28 +109,10 @@ export default function PdfEngine() {
     canvasRefs,
   });
 
-  // const OnPageLoadSuccess: OnPageLoadSuccess = useCallback(
-  //   (page) => {
-  //     if (!file.isNew) {
-  //       // console.log(page.width / page.height);
-  //       setPdfConfig((prev) => ({
-  //         ...prev,
-  //         size: {
-  //           width: Math.floor(page.width),
-  //           height: Math.floor(page.height),
-  //         },
-  //       }));
-  //     }
-  //     scaleRef.current?.resetTransform();
-  //   },
-  //   [file.isNew, setPdfConfig]
-  // );
-
   const onRenderSuccess: OnRenderSuccess = useCallback(
     (page) => {
       if (canvasRefs.current) {
         redrawPaths(page.width, page.height, page.pageNumber);
-        // setCurrentViewingPage(1);
       }
     },
     [redrawPaths]
@@ -163,55 +145,72 @@ export default function PdfEngine() {
     [scale]
   );
 
-  const PdfItem = (_: any, index: number) => {
-    return (
-      <InView
-        key={index + 1}
-        data-page={index + 1}
-        threshold={0.8}
-        rootMargin="-50px 0px 0px 0px"
-        onChange={(inView) => {
-          if (inView) {
-            setCurrentViewingPage(index + 1);
-          }
-        }}
-      >
-        {({ ref }) => {
-          return (
-            <div ref={ref}>
-              <Page
-                pageNumber={index + 1}
-                width={pdfWidth}
-                height={pdfHeight}
-                devicePixelRatio={pdfConfig.devicePixelRatio}
-                // onLoadSuccess={OnPageLoadSuccess}
-                onRenderSuccess={onRenderSuccess}
-                customTextRenderer={textRenderer}
-                renderAnnotationLayer={false}
-                renderTextLayer={file.isNew ? false : true}
-                loading={<></>}
-                noData={<></>}
-              >
-                <canvas
-                  ref={setRef}
-                  width={pdfConfig.size.width * pdfConfig.devicePixelRatio}
-                  height={pdfConfig.size.height * pdfConfig.devicePixelRatio}
-                  className={clsx(
-                    "absolute touch-none z-[1000] top-0 w-full h-full",
-                    canDraw ? "" : "pointer-events-none"
-                  )}
-                  onPointerDown={startDrawing}
-                  onPointerMove={draw}
-                  onPointerUp={stopDrawing}
-                  data-index={index + 1}
-                />
-              </Page>
-            </div>
-          );
-        }}
-      </InView>
-    );
-  };
+  const handleViewChange = useCallback(
+    (index: number) => (inView: boolean) => {
+      if (inView) {
+        setCurrentViewingPage(index + 1);
+      }
+    },
+    []
+  );
+
+  const PdfItem = useCallback(
+    (_: any, index: number) => {
+      return (
+        <InView
+          as="div"
+          key={index + 1}
+          onChange={handleViewChange(index)}
+          threshold={0.5}
+          width={pdfWidth}
+          height={pdfHeight}
+        >
+          <Page
+            pageNumber={index + 1}
+            width={pdfWidth}
+            height={pdfHeight}
+            devicePixelRatio={pdfConfig.devicePixelRatio}
+            onRenderSuccess={onRenderSuccess}
+            customTextRenderer={textRenderer}
+            renderAnnotationLayer={false}
+            renderTextLayer={file.isNew ? false : true}
+            loading={<div style={{ width: pdfWidth, height: pdfHeight }} />}
+            noData={<></>}
+          >
+            <canvas
+              ref={setRef}
+              width={pdfConfig.size.width * pdfConfig.devicePixelRatio}
+              height={pdfConfig.size.height * pdfConfig.devicePixelRatio}
+              className={clsx(
+                "absolute touch-none z-[1000] top-0 w-full h-full",
+                canDraw ? "" : "pointer-events-none"
+              )}
+              onPointerDown={startDrawing}
+              onPointerMove={draw}
+              onPointerUp={stopDrawing}
+              data-index={index + 1}
+            />
+          </Page>
+        </InView>
+      );
+    },
+    [
+      canDraw,
+      draw,
+      file.isNew,
+      handleViewChange,
+      onRenderSuccess,
+      pdfConfig.devicePixelRatio,
+      pdfConfig.size.height,
+      pdfConfig.size.width,
+      pdfHeight,
+      pdfWidth,
+      setRef,
+      startDrawing,
+      stopDrawing,
+      textRenderer,
+    ]
+  );
 
   useEffect(() => {
     if (file.isNew && pdfState.isDocumentLoading) {
