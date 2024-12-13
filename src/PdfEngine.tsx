@@ -93,6 +93,12 @@ export default function PdfEngine() {
     () => `data:application/pdf;base64,${file.base64}`,
     [file.base64]
   );
+  const pdfOptions = useMemo(
+    () => ({
+      cMapUrl: "/cmaps/",
+    }),
+    []
+  );
 
   const setRef = useCallback((node: HTMLCanvasElement) => {
     if (node) {
@@ -261,7 +267,7 @@ export default function PdfEngine() {
   return (
     !initialLoading && (
       <>
-        <Document file={pdfFile} loading={<></>}>
+        <Document file={pdfFile} loading={<></>} options={pdfOptions}>
           <TransformWrapper
             ref={scaleRef}
             initialScale={1}
