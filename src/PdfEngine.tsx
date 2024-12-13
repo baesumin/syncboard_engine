@@ -28,6 +28,7 @@ import {
 } from "./store/pdf";
 import { PDF_Y_GAP } from "./contstants/pdf";
 import { PDFDocument } from "pdf-lib";
+import { useResizeDetector } from "react-resize-detector";
 
 export default function PdfEngine() {
   const { orientation } = useMobileOrientation();
@@ -39,6 +40,7 @@ export default function PdfEngine() {
   const [pdfConfig, setPdfConfig] = useAtom(pdfConfigAtom);
   const [currentViewingPage, setCurrentViewingPage] = useState(1);
   const [initialLoading, setInitialLoading] = useState(true);
+  const { ref: containerRef, height: containerHeight } = useResizeDetector();
 
   const { pdfWidth, pdfHeight } = useMemo(() => {
     let width, height;
@@ -241,19 +243,20 @@ export default function PdfEngine() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      const pageHeight = pdfHeight + PDF_Y_GAP; // PDF 높이 + 페이지 간격
-      const currentPage = Math.floor(scrollPosition / pageHeight) + 1;
-      if (currentViewingPage !== currentPage) {
-        setCurrentViewingPage(currentPage);
-      }
-    };
+  const handleScroll = useCallback(() => {
+    const scrollPosition = window.scrollY;
+    const pageHeight = pdfHeight + PDF_Y_GAP; // PDF 높이 + 페이지 간격
+    const currentPage = Math.floor(scrollPosition / pageHeight) + 1;
+    // console.log(scrollPosition, containerHeight);
+    if (currentViewingPage !== currentPage) {
+      setCurrentViewingPage(currentPage);
+    }
+  }, [currentViewingPage, pdfHeight]);
 
+  useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [currentViewingPage, pdfHeight]);
+  }, [containerHeight, currentViewingPage, handleScroll, pdfHeight]);
 
   return (
     !initialLoading && (
@@ -274,9 +277,12 @@ export default function PdfEngine() {
           >
             <TransformComponent>
               <div
+                ref={containerRef}
                 className={clsx(
-                  "w-dvw flex-center flex-col bg-gray-400",
-                  pdfState.totalPage === 1 ? "h-dvh" : ""
+                  "w-dvw flex items-center flex-col bg-gray-400",
+                  pdfState.totalPage === 1
+                    ? "h-dvh justify-center"
+                    : "min-h-dvh"
                 )}
                 style={{ rowGap: PDF_Y_GAP }}
               >

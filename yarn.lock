@@ -2600,6 +2600,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lodash@npm:^4.17.21":
+  version: 4.17.21
+  resolution: "lodash@npm:4.17.21"
+  checksum: 10c0/d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
+  languageName: node
+  linkType: hard
+
 "loose-envify@npm:^1.0.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
@@ -3387,6 +3394,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-resize-detector@npm:^11.0.1":
+  version: 11.0.1
+  resolution: "react-resize-detector@npm:11.0.1"
+  dependencies:
+    lodash: "npm:^4.17.21"
+  peerDependencies:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  checksum: 10c0/94f3c016355c1f5a07f2f66f07fc8a7fec3da0a48b2ffdf472c8d00633fbd3e38d0c8b597586626e4f2495a8cd2826fbd32e24b8a966062b9603afe0c2ce9e6f
+  languageName: node
+  linkType: hard
+
 "react-zoom-pan-pinch@npm:3.6.0":
   version: 3.6.0
   resolution: "react-zoom-pan-pinch@npm:3.6.0"
@@ -3856,6 +3875,7 @@ __metadata:
     react-device-detect: "npm:^2.2.3"
     react-dom: "npm:^19.0.0"
     react-pdf: "npm:^9.1.1"
+    react-resize-detector: "npm:^11.0.1"
     react-zoom-pan-pinch: "npm:3.6.0"
     tailwindcss: "npm:^3.4.14"
     typescript: "npm:^5.7.2"
