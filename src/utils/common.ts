@@ -207,7 +207,11 @@ export const removePathByPageNumber = (
 export const removeAllPath = (
   paths: RefObject<{ [pageNumber: number]: PathsType[] }>
 ) => {
-  paths.current = {};
+  for (const key in paths.current) {
+    if (paths.current[key]) {
+      paths.current[key] = [];
+    }
+  }
 };
 
 export const getModifiedPDFBase64 = async (

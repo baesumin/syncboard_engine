@@ -42,29 +42,6 @@ export default function PdfEngine() {
   const { ref: containerRef, height: containerHeight } = useResizeDetector();
 
   const { pdfWidth, pdfHeight } = useMemo(() => {
-    // if (orientation === "portrait") {
-    //   if (window.innerWidth <= pdfConfig.size.width) {
-    //     width = window.innerWidth;
-    //     height = pdfConfig.size.height;
-    //   } else {
-    //     width = pdfConfig.size.width;
-    //     height = pdfConfig.size.height;
-    //   }
-    // } else {
-    //   const reducedSize = getReducedPdfSize(
-    //     pdfConfig.size.width,
-    //     pdfConfig.size.height,
-    //     window.innerWidth,
-    //     window.innerHeight
-    //   );
-    //   if (window.innerHeight <= pdfConfig.size.height) {
-    //     width = reducedSize.width;
-    //     height = reducedSize.height;
-    //   } else {
-    //     width = pdfConfig.size.width;
-    //     height = pdfConfig.size.height;
-    //   }
-    // }
     const reducedSize = getReducedPdfSize(
       pdfConfig.size.width,
       pdfConfig.size.height,

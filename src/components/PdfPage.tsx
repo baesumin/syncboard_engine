@@ -60,6 +60,7 @@ const PdfPage = ({
         devicePixelRatio={2}
         onRenderSuccess={handleRenderSuccess}
         customTextRenderer={textRenderer}
+        renderAnnotationLayer={false}
         loading={<div style={{ width, height }} />}
         noData={<></>}
       >
