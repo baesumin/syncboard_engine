@@ -1,4 +1,5 @@
 import "react-pdf/dist/esm/Page/TextLayer.css";
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
 import { useEffect, useState } from "react";

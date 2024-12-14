@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Document, Page } from "react-pdf";
-import { useMobileOrientation } from "react-device-detect";
-import {
-  CustomTextRenderer,
-  OnRenderSuccess,
-} from "react-pdf/src/shared/types.js";
+import { Document } from "react-pdf";
+// import { useMobileOrientation } from "react-device-detect";
+import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
   ReactZoomPanPinchContentRef,
   ReactZoomPanPinchRef,
@@ -14,7 +11,7 @@ import {
 import useCanvas from "./hooks/useCanvas";
 import PdfOverlay from "./components/PdfOverlay";
 import ThumbnailOvelay from "./components/ThumbnailOvelay";
-import { highlightPattern, removeAllPath } from "./utils/common";
+import { getReducedPdfSize, removeAllPath } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch";
 import { PathsType } from "./types/common";
 import clsx from "clsx";
@@ -29,9 +26,11 @@ import {
 import { PDF_Y_GAP } from "./contstants/pdf";
 import { PDFDocument } from "pdf-lib";
 import { useResizeDetector } from "react-resize-detector";
+import throttle from "lodash.throttle";
+import PdfPage from "./components/PdfPage";
 
 export default function PdfEngine() {
-  const { orientation } = useMobileOrientation();
+  // const { orientation } = useMobileOrientation();
   const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
   const searchText = useAtomValue(searchTextAtom);
@@ -43,28 +42,37 @@ export default function PdfEngine() {
   const { ref: containerRef, height: containerHeight } = useResizeDetector();
 
   const { pdfWidth, pdfHeight } = useMemo(() => {
-    let width, height;
-
-    if (orientation === "portrait") {
-      if (window.outerWidth < pdfConfig.size.width) {
-        width = window.outerWidth;
-        height = pdfConfig.size.height;
-      } else {
-        width = pdfConfig.size.width;
-        height = pdfConfig.size.height;
-      }
-    } else {
-      if (window.outerHeight < pdfConfig.size.height) {
-        width = undefined;
-        height = window.outerHeight;
-      } else {
-        width = pdfConfig.size.width;
-        height = window.outerHeight;
-      }
-    }
-
-    return { pdfWidth: width, pdfHeight: height };
-  }, [orientation, pdfConfig.size]);
+    // if (orientation === "portrait") {
+    //   if (window.innerWidth <= pdfConfig.size.width) {
+    //     width = window.innerWidth;
+    //     height = pdfConfig.size.height;
+    //   } else {
+    //     width = pdfConfig.size.width;
+    //     height = pdfConfig.size.height;
+    //   }
+    // } else {
+    //   const reducedSize = getReducedPdfSize(
+    //     pdfConfig.size.width,
+    //     pdfConfig.size.height,
+    //     window.innerWidth,
+    //     window.innerHeight
+    //   );
+    //   if (window.innerHeight <= pdfConfig.size.height) {
+    //     width = reducedSize.width;
+    //     height = reducedSize.height;
+    //   } else {
+    //     width = pdfConfig.size.width;
+    //     height = pdfConfig.size.height;
+    //   }
+    // }
+    const reducedSize = getReducedPdfSize(
+      pdfConfig.size.width,
+      pdfConfig.size.height,
+      window.innerWidth,
+      window.innerHeight
+    );
+    return { pdfWidth: reducedSize.width, pdfHeight: reducedSize.height };
+  }, [pdfConfig.size]);
 
   const {
     canDraw,
@@ -125,11 +133,6 @@ export default function PdfEngine() {
     [redrawPaths]
   );
 
-  const textRenderer: CustomTextRenderer = useCallback(
-    (textItem) => highlightPattern(textItem.str, searchText.trim()),
-    [searchText]
-  );
-
   const onEraseAllClick = useCallback(() => {
     if (
       confirm(
@@ -155,59 +158,33 @@ export default function PdfEngine() {
   const PdfItem = useCallback(
     (_: any, index: number) => {
       return (
-        <Page
-          pageNumber={index + 1}
+        <PdfPage
+          key={index + 1}
           width={pdfWidth}
           height={pdfHeight}
-          devicePixelRatio={pdfConfig.devicePixelRatio}
+          onPointerDown={startDrawing}
+          onPointerMove={draw}
+          onPointerUp={stopDrawing}
           onRenderSuccess={onRenderSuccess}
-          customTextRenderer={textRenderer}
-          renderAnnotationLayer={false}
-          renderTextLayer={file.isNew ? false : true}
-          loading={<div style={{ width: pdfWidth, height: pdfHeight }} />}
-          noData={<></>}
-        >
-          <canvas
-            ref={setRef}
-            width={pdfConfig.size.width * pdfConfig.devicePixelRatio}
-            height={pdfConfig.size.height * pdfConfig.devicePixelRatio}
-            className={clsx(
-              "absolute touch-none z-[1000] top-0 w-full h-full",
-              canDraw ? "" : "pointer-events-none"
-            )}
-            onPointerDown={startDrawing}
-            onPointerMove={draw}
-            onPointerUp={stopDrawing}
-            data-index={index + 1}
-          />
-        </Page>
+          pageNumber={index + 1}
+          setRef={setRef}
+          canDraw={canDraw}
+          searchText={searchText}
+        />
       );
     },
     [
       canDraw,
       draw,
-      file.isNew,
       onRenderSuccess,
-      pdfConfig.devicePixelRatio,
-      pdfConfig.size.height,
-      pdfConfig.size.width,
       pdfHeight,
       pdfWidth,
+      searchText,
       setRef,
       startDrawing,
       stopDrawing,
-      textRenderer,
     ]
   );
-
-  useEffect(() => {
-    if (file.isNew && pdfState.isDocumentLoading) {
-      setPdfState((prev) => ({
-        ...prev,
-        isDocumentLoading: false,
-      }));
-    }
-  }, [file.isNew, pdfState.isDocumentLoading, setPdfState]);
 
   useEffect(() => {
     const init = async () => {
@@ -249,15 +226,26 @@ export default function PdfEngine() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleScroll = useCallback(() => {
+  const handleScroll = throttle(() => {
+    if (!containerHeight) return;
     const scrollPosition = window.scrollY;
-    const pageHeight = pdfHeight + PDF_Y_GAP; // PDF 높이 + 페이지 간격
-    const currentPage = Math.floor(scrollPosition / pageHeight) + 1;
-    // console.log(scrollPosition, containerHeight);
-    if (currentViewingPage !== currentPage) {
-      setCurrentViewingPage(currentPage);
+    const scrollRatio = scrollPosition / containerHeight;
+    const currentPage = Math.min(
+      Math.ceil(scrollRatio * pdfState.totalPage),
+      pdfState.totalPage
+    );
+
+    const isNearBottom =
+      scrollPosition + window.innerHeight + 50 >= containerHeight;
+
+    if (isNearBottom) {
+      setCurrentViewingPage(pdfState.totalPage);
+    } else {
+      if (currentViewingPage !== currentPage) {
+        setCurrentViewingPage(currentPage);
+      }
     }
-  }, [currentViewingPage, pdfHeight]);
+  }, 16);
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);

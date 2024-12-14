@@ -721,3 +721,31 @@ function arrayBufferToBase64(buffer: Uint8Array) {
 
   return window.btoa(binary);
 }
+
+export function getReducedPdfSize(
+  pdfWidth: number,
+  pdfHeight: number,
+  screenWidth: number,
+  screenHeight: number
+) {
+  // 비율 계산
+  const pdfAspectRatio = pdfWidth / pdfHeight;
+  const screenAspectRatio = screenWidth / screenHeight;
+
+  let reducedWidth, reducedHeight;
+
+  if (pdfAspectRatio > screenAspectRatio) {
+    // PDF가 더 넓은 비율일 때
+    reducedWidth = screenWidth;
+    reducedHeight = screenWidth / pdfAspectRatio;
+  } else {
+    // PDF가 더 높은 비율일 때
+    reducedHeight = screenHeight;
+    reducedWidth = screenHeight * pdfAspectRatio;
+  }
+
+  return {
+    width: Math.min(reducedWidth, screenWidth),
+    height: Math.min(reducedHeight, screenHeight),
+  };
+}
