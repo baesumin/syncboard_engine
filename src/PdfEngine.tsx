@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document } from "react-pdf";
-// import { useMobileOrientation } from "react-device-detect";
+import { useMobileOrientation } from "react-device-detect";
 import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
   ReactZoomPanPinchContentRef,
@@ -30,7 +30,7 @@ import throttle from "lodash.throttle";
 import PdfPage from "./components/PdfPage";
 
 export default function PdfEngine() {
-  // const { orientation } = useMobileOrientation();
+  const { orientation } = useMobileOrientation();
   const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
   const searchText = useAtomValue(searchTextAtom);
@@ -72,7 +72,8 @@ export default function PdfEngine() {
       window.innerHeight
     );
     return { pdfWidth: reducedSize.width, pdfHeight: reducedSize.height };
-  }, [pdfConfig.size]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orientation, pdfConfig.size]);
 
   const {
     canDraw,
@@ -231,7 +232,7 @@ export default function PdfEngine() {
     const scrollPosition = window.scrollY;
     const scrollRatio = scrollPosition / containerHeight;
     const currentPage = Math.min(
-      Math.ceil(scrollRatio * pdfState.totalPage),
+      Math.floor(scrollRatio * pdfState.totalPage) + 1,
       pdfState.totalPage
     );
 
@@ -250,7 +251,7 @@ export default function PdfEngine() {
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [containerHeight, currentViewingPage, handleScroll, pdfHeight]);
+  }, [handleScroll]);
 
   return (
     !initialLoading && (
