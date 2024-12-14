@@ -94,7 +94,7 @@ export default function PdfEngine() {
   } = useCanvas({
     canvasRefs,
     devicePixelRatio: pdfConfig.devicePixelRatio,
-    pageSize: pdfConfig.size,
+    pageSize: { width: pdfWidth, height: pdfHeight },
     strokeStep: pdfConfig.strokeStep,
   });
 

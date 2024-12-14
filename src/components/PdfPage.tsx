@@ -8,8 +8,6 @@ import {
 import { highlightPattern } from "../utils/common";
 import clsx from "clsx";
 import { canvasEventType } from "../types/common";
-import { useAtomValue } from "jotai";
-import { pdfConfigAtom } from "../store/pdf";
 import PlaceholderPage from "./PlaceholderPage";
 
 interface Props {
@@ -38,7 +36,6 @@ const PdfPage = ({
   onRenderSuccess,
 }: Props) => {
   const [isLoading, setIsLoading] = useState(true);
-  const pdfConfig = useAtomValue(pdfConfigAtom);
 
   const handleRenderSuccess = useCallback(
     (page: PageCallback) => {
@@ -68,8 +65,8 @@ const PdfPage = ({
       >
         <canvas
           ref={setRef}
-          width={pdfConfig.size.width * 2}
-          height={pdfConfig.size.height * 2}
+          width={width * 2}
+          height={height * 2}
           className={clsx(
             "absolute touch-none z-[1000] top-0 w-full h-full",
             canDraw ? "" : "pointer-events-none"
