@@ -231,9 +231,9 @@ export default function PdfEngine() {
   }, [handleScroll]);
 
   return (
-    !initialLoading && (
-      <>
-        <Document file={pdfFile} loading={<></>} options={pdfOptions}>
+    <>
+      <Document file={pdfFile} loading={<></>} options={pdfOptions}>
+        {!initialLoading && (
           <TransformWrapper
             ref={scaleRef}
             initialScale={1}
@@ -262,28 +262,28 @@ export default function PdfEngine() {
               </div>
             </TransformComponent>
           </TransformWrapper>
-          <ThumbnailOvelay
-            paths={paths.current}
-            canvasRefs={canvasRefs}
-            currentViewingPage={currentViewingPage}
-            scaleRef={scaleRef}
-          />
-        </Document>
-        {!pdfState.isListOpen && (
-          <PdfOverlay
-            paths={paths}
-            color={color}
-            drawType={drawType}
-            touchType={touchType}
-            setTouchType={setTouchType}
-            setCanDraw={setCanDraw}
-            setColor={setColor}
-            setDrawType={setDrawType}
-            onEraseAllClick={onEraseAllClick}
-            currentViewingPage={currentViewingPage}
-          />
         )}
-      </>
-    )
+        <ThumbnailOvelay
+          paths={paths.current}
+          canvasRefs={canvasRefs}
+          currentViewingPage={currentViewingPage}
+          scaleRef={scaleRef}
+        />
+      </Document>
+      {!pdfState.isListOpen && (
+        <PdfOverlay
+          paths={paths}
+          color={color}
+          drawType={drawType}
+          touchType={touchType}
+          setTouchType={setTouchType}
+          setCanDraw={setCanDraw}
+          setColor={setColor}
+          setDrawType={setDrawType}
+          onEraseAllClick={onEraseAllClick}
+          currentViewingPage={currentViewingPage}
+        />
+      )}
+    </>
   );
 }
