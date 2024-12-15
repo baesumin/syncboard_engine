@@ -45,8 +45,8 @@ export default function PdfEngine() {
     const reducedSize = getReducedPdfSize(
       pdfConfig.size.width,
       pdfConfig.size.height,
-      window.innerWidth,
-      window.innerHeight
+      window.innerWidth - 128,
+      window.innerHeight - 84
     );
     return { pdfWidth: reducedSize.width, pdfHeight: reducedSize.height };
     // eslint-disable-next-line react-hooks/exhaustive-deps

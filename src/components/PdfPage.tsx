@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback } from "react";
 import { Page } from "react-pdf";
 import {
   CustomTextRenderer,
@@ -35,11 +35,8 @@ const PdfPage = ({
   setRef,
   onRenderSuccess,
 }: Props) => {
-  const [isLoading, setIsLoading] = useState(true);
-
   const handleRenderSuccess = useCallback(
     (page: PageCallback) => {
-      setIsLoading(false);
       onRenderSuccess?.(page);
     },
     [onRenderSuccess]
@@ -52,7 +49,7 @@ const PdfPage = ({
 
   return (
     <div className="bg-slate-300 flex justify-center relative">
-      {isLoading && <PlaceholderPage width={width} height={height} />}
+      <PlaceholderPage width={width} height={height} />
       <Page
         pageNumber={pageNumber}
         width={width}

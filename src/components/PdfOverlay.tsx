@@ -95,47 +95,6 @@ const PdfOverlay = ({
           </button>
         </div>
 
-        {/* {pdfState.totalPage > 1 && (
-          <div className="flex justify-between mx-[-20px]">
-            <button
-              onClick={() => {
-                if (pdfState.pageNumber !== 1) {
-                  setPdfState((prev) => ({
-                    ...prev,
-                    pageNumber: prev.pageNumber - 1,
-                  }));
-                }
-              }}
-              className="pointer-events-auto w-[80px] h-[160px] rounded-tr-[100px] rounded-br-[100px] bg-[#56657E]/50 flex-center text-white"
-            >
-              <ArrowLeft
-                color={pdfState.pageNumber === 1 ? "#BCC2CB" : "white"}
-              />
-            </button>
-            <button
-              onClick={() => {
-                if (pdfState.pageNumber !== pdfState.totalPage) {
-                  setPdfState((prev) => ({
-                    ...prev,
-                    pageNumber: prev.pageNumber + 1,
-                  }));
-                }
-              }}
-              className="pointer-events-auto w-[80px] h-[160px] rounded-tl-[100px] rounded-bl-[100px] bg-[#56657E]/50 flex-center text-white"
-            >
-              <div className="rotate-180">
-                <ArrowLeft
-                  color={
-                    pdfState.pageNumber === pdfState.totalPage
-                      ? "#BCC2CB"
-                      : "white"
-                  }
-                />
-              </div>
-            </button>
-          </div>
-        )} */}
-
         {file.type === "pdf" && (
           <div className="flex h-[56px] justify-center">
             {!pdfState.isToolBarOpen && (
