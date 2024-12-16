@@ -48,34 +48,35 @@ const PdfPage = ({
   );
 
   return (
-    <div className="bg-slate-300 flex justify-center relative">
-      <PlaceholderPage width={width} height={height} />
-      <Page
-        pageNumber={pageNumber}
-        width={width}
-        height={height}
-        devicePixelRatio={2}
-        onRenderSuccess={handleRenderSuccess}
-        customTextRenderer={textRenderer}
-        renderAnnotationLayer={false}
-        loading={<div style={{ width, height }} />}
-        noData={<></>}
-      >
-        <canvas
-          ref={setRef}
-          width={width * 2}
-          height={height * 2}
-          className={clsx(
-            "absolute touch-none z-[1000] top-0 w-full h-full",
-            canDraw ? "" : "pointer-events-none"
-          )}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          data-index={pageNumber}
-        />
-      </Page>
-    </div>
+    <Page
+      pageNumber={pageNumber}
+      width={width}
+      height={height}
+      devicePixelRatio={2}
+      onRenderSuccess={handleRenderSuccess}
+      customTextRenderer={textRenderer}
+      renderAnnotationLayer={false}
+      loading={
+        <div style={{ width, height }}>
+          <PlaceholderPage />
+        </div>
+      }
+      noData={<></>}
+    >
+      <canvas
+        ref={setRef}
+        width={width * 2}
+        height={height * 2}
+        className={clsx(
+          "absolute touch-none z-[1000] top-0 w-full h-full",
+          canDraw ? "" : "pointer-events-none"
+        )}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        data-index={pageNumber}
+      />
+    </Page>
   );
 };
 

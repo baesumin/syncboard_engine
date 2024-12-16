@@ -41,14 +41,14 @@ export default function PdfEngine() {
   const [initialLoading, setInitialLoading] = useState(true);
   const { ref: containerRef, height: containerHeight } = useResizeDetector();
 
-  const { pdfWidth, pdfHeight } = useMemo(() => {
+  const pdfSize = useMemo(() => {
     const reducedSize = getReducedPdfSize(
       pdfConfig.size.width,
       pdfConfig.size.height,
       window.innerWidth - 128,
       window.innerHeight - 84
     );
-    return { pdfWidth: reducedSize.width, pdfHeight: reducedSize.height };
+    return { width: reducedSize.width, height: reducedSize.height };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orientation, pdfConfig.size]);
 
@@ -71,7 +71,7 @@ export default function PdfEngine() {
   } = useCanvas({
     canvasRefs,
     devicePixelRatio: pdfConfig.devicePixelRatio,
-    pageSize: { width: pdfWidth, height: pdfHeight },
+    pageSize: { width: pdfSize.width, height: pdfSize.height },
     strokeStep: pdfConfig.strokeStep,
   });
 
@@ -138,8 +138,8 @@ export default function PdfEngine() {
       return (
         <PdfPage
           key={index + 1}
-          width={pdfWidth}
-          height={pdfHeight}
+          width={pdfSize.width}
+          height={pdfSize.height}
           onPointerDown={startDrawing}
           onPointerMove={draw}
           onPointerUp={stopDrawing}
@@ -155,8 +155,7 @@ export default function PdfEngine() {
       canDraw,
       draw,
       onRenderSuccess,
-      pdfHeight,
-      pdfWidth,
+      pdfSize,
       searchText,
       setRef,
       startDrawing,
@@ -172,7 +171,7 @@ export default function PdfEngine() {
 
       setPdfConfig((prev) => ({
         ...prev,
-        size: { width, height },
+        size: { width: Math.floor(width), height: Math.floor(height) },
       }));
       if (!file.isNew) {
         setPdfState((prev) => ({
@@ -268,6 +267,7 @@ export default function PdfEngine() {
           canvasRefs={canvasRefs}
           currentViewingPage={currentViewingPage}
           scaleRef={scaleRef}
+          pdfSize={pdfSize}
         />
         {!pdfState.isListOpen && (
           <PdfOverlay
