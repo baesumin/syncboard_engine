@@ -1,10 +1,10 @@
 import "react-pdf/dist/esm/Page/TextLayer.css";
-import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
 import { useEffect, useState } from "react";
 import {
   __DEV__,
+  blobToBase64,
   createOrMergePdf,
   createPDFFromImgBase64,
 } from "./utils/common";
@@ -24,19 +24,18 @@ function App() {
   useEffect(() => {
     const initializeFile = async () => {
       if (__DEV__ || !isTablet) {
-        import("./mock/base64").then(async ({ base64 }) => {
-          // const base64 = await createPDFFromImgBase64(
-          //   pngbase64.base64,
-          //   pngbase64.type
-          // );
-          setFile({
-            base64: base64.base64,
-            paths: "",
-            isNew: false,
-            type: base64.type,
-          });
-          setIsLoading(false);
+        const response = await fetch(
+          "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
+        );
+        const blob = await response.blob();
+        const base64 = (await blobToBase64(blob)) as string;
+        setFile({
+          base64: base64.replace("data:application/pdf;base64,", ""),
+          paths: "",
+          isNew: false,
+          type: "pdf",
         });
+        setIsLoading(false);
         return;
       }
 
