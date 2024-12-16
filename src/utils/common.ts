@@ -8,6 +8,7 @@ import {
   rgb,
 } from "pdf-lib";
 import { canvasEventType, PageSize, PathsType } from "../types/common";
+import { isTablet } from "react-device-detect";
 import { pdfjs } from "react-pdf";
 import UTIF from "utif";
 import { RefObject } from "react";
@@ -272,7 +273,7 @@ export const getModifiedPDFBase64 = async (
     }
   }
 
-  if (__DEV__) {
+  if (!isTablet || __DEV__) {
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
