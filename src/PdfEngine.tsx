@@ -24,22 +24,22 @@ import {
   searchTextAtom,
 } from "./store/pdf";
 import { PDF_Y_GAP } from "./contstants/pdf";
+import { PDFDocument } from "pdf-lib";
 import { useResizeDetector } from "react-resize-detector";
 import throttle from "lodash.throttle";
 import PdfPage from "./components/PdfPage";
 
 export default function PdfEngine() {
   const { orientation } = useMobileOrientation();
-  const { ref: containerRef, height: containerHeight } = useResizeDetector();
   const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
-  const workerRef = useRef<Worker | null>(null);
   const searchText = useAtomValue(searchTextAtom);
   const file = useAtomValue(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
   const [pdfConfig, setPdfConfig] = useAtom(pdfConfigAtom);
   const [currentViewingPage, setCurrentViewingPage] = useState(1);
   const [initialLoading, setInitialLoading] = useState(true);
+  const { ref: containerRef, height: containerHeight } = useResizeDetector();
 
   const { pdfWidth, pdfHeight } = useMemo(() => {
     const reducedSize = getReducedPdfSize(
@@ -166,50 +166,39 @@ export default function PdfEngine() {
 
   useEffect(() => {
     const init = async () => {
-      workerRef.current = new Worker(
-        new URL("./utils/pdfWorker.ts", import.meta.url),
-        { type: "module" }
-      );
-      workerRef.current?.postMessage({
-        type: "LOAD_PDF",
-        data: { base64: file.base64 },
-      });
-      workerRef.current.onmessage = (e) => {
-        const { type, data } = e.data;
-        switch (type) {
-          case "PDF_LOADED":
-            setPdfConfig((prev) => ({
-              ...prev,
-              size: data.size,
-            }));
-            setPdfState((prev) => ({
-              ...prev,
-              totalPage: data.pageCount,
-            }));
-            if (file.paths) {
-              const savedPaths: { [pageNumber: number]: PathsType[] } =
-                JSON.parse(file.paths);
+      const pdfDoc = await PDFDocument.load(file.base64);
+      const page = pdfDoc.getPage(0);
+      const { width, height } = page.getSize();
 
-              const maxDrawOrderItem = Object.values(savedPaths)
-                .flat()
-                .reduce(
-                  (maxItem, currentItem) => {
-                    return currentItem.drawOrder > maxItem.drawOrder
-                      ? currentItem
-                      : maxItem;
-                  },
-                  { drawOrder: 0 }
-                );
-              paths.current = savedPaths;
-              drawOrder.current = maxDrawOrderItem.drawOrder;
-            }
-            setInitialLoading(false);
-            break;
-        }
-      };
-      return () => {
-        workerRef.current?.terminate();
-      };
+      setPdfConfig((prev) => ({
+        ...prev,
+        size: { width, height },
+      }));
+      if (!file.isNew) {
+        setPdfState((prev) => ({
+          ...prev,
+          totalPage: pdfDoc.getPageCount(),
+        }));
+      }
+      if (file.paths) {
+        const savedPaths: { [pageNumber: number]: PathsType[] } = JSON.parse(
+          file.paths
+        );
+
+        const maxDrawOrderItem = Object.values(savedPaths)
+          .flat()
+          .reduce(
+            (maxItem, currentItem) => {
+              return currentItem.drawOrder > maxItem.drawOrder
+                ? currentItem
+                : maxItem;
+            },
+            { drawOrder: 0 }
+          );
+        paths.current = savedPaths;
+        drawOrder.current = maxDrawOrderItem.drawOrder;
+      }
+      setInitialLoading(false);
     };
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps

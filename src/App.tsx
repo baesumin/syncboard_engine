@@ -10,7 +10,6 @@ import {
 } from "./utils/common";
 import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
-import { isTablet } from "react-device-detect";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -23,7 +22,7 @@ function App() {
 
   useEffect(() => {
     const initializeFile = async () => {
-      if (__DEV__ || !isTablet) {
+      if (__DEV__ || !window.webviewApi) {
         const response = await fetch(
           "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
         );
