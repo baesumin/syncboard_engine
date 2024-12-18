@@ -753,14 +753,3 @@ export function getReducedPdfSize(
     height: Math.min(reducedHeight, screenHeight),
   };
 }
-
-export async function blobToBase64(blob: Blob) {
-  const reader = new FileReader();
-  reader.readAsDataURL(blob);
-
-  const base64 = await new Promise((resolve) => {
-    reader.onloadend = () => resolve(reader.result);
-  });
-
-  return base64;
-}

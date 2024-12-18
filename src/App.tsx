@@ -4,13 +4,13 @@ import PdfEngine from "./PdfEngine";
 import { useEffect, useState } from "react";
 import {
   __DEV__,
-  blobToBase64,
   createOrMergePdf,
   createPDFFromImgBase64,
 } from "./utils/common";
 import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
 import { isTablet } from "react-device-detect";
+import { base64 } from "./mock/base64";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -24,13 +24,8 @@ function App() {
   useEffect(() => {
     const initializeFile = async () => {
       if (__DEV__ || !isTablet) {
-        const response = await fetch(
-          "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
-        );
-        const blob = await response.blob();
-        const base64 = (await blobToBase64(blob)) as string;
         setFile({
-          base64: base64.replace("data:application/pdf;base64,", ""),
+          base64: base64,
           paths: "",
           isNew: false,
           type: "pdf",

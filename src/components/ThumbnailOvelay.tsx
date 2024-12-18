@@ -152,7 +152,13 @@ const ThumbnailOvelay = ({
           redrawPaths(pageNumber);
         });
     }
-  }, [isOpenFirst, paths, pdfState.isListOpen, redrawPaths]);
+  }, [
+    currentViewingPage,
+    isOpenFirst,
+    paths,
+    pdfState.isListOpen,
+    redrawPaths,
+  ]);
 
   return (
     !isOpenFirst && (

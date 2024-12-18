@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document } from "react-pdf";
-import { useMobileOrientation } from "react-device-detect";
 import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
 import {
   ReactZoomPanPinchContentRef,
@@ -14,7 +13,6 @@ import ThumbnailOvelay from "./components/ThumbnailOvelay";
 import { getReducedPdfSize, removeAllPath } from "./utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch";
 import { PathsType } from "./types/common";
-import clsx from "clsx";
 import { useWebviewInterface } from "./hooks/useWebviewInterface";
 import { useAtom, useAtomValue } from "jotai";
 import {
@@ -23,34 +21,32 @@ import {
   pdfStateAtom,
   searchTextAtom,
 } from "./store/pdf";
-import { PDF_Y_GAP } from "./contstants/pdf";
 import { PDFDocument } from "pdf-lib";
-import { useResizeDetector } from "react-resize-detector";
-import throttle from "lodash.throttle";
-import PdfPage from "./components/PdfPage";
+import { FixedSizeList as List } from "react-window";
+import Row from "./components/Row";
+import { useWindowSize } from "./hooks/useWIndowSIze";
 
 export default function PdfEngine() {
-  const { orientation } = useMobileOrientation();
+  const { width: windowWidth, height: windowHeight } = useWindowSize();
   const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
+  const currentViewingPage = useRef(1);
   const searchText = useAtomValue(searchTextAtom);
   const file = useAtomValue(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
   const [pdfConfig, setPdfConfig] = useAtom(pdfConfigAtom);
-  const [currentViewingPage, setCurrentViewingPage] = useState(1);
   const [initialLoading, setInitialLoading] = useState(true);
-  const { ref: containerRef, height: containerHeight } = useResizeDetector();
 
   const pdfSize = useMemo(() => {
     const reducedSize = getReducedPdfSize(
       pdfConfig.size.width,
       pdfConfig.size.height,
-      window.innerWidth - 128,
-      window.innerHeight - 84
+      windowWidth - 128,
+      windowHeight - 84
     );
     return { width: reducedSize.width, height: reducedSize.height };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orientation, pdfConfig.size]);
+  }, [pdfConfig.size]);
 
   const {
     canDraw,
@@ -85,6 +81,18 @@ export default function PdfEngine() {
     }),
     []
   );
+  const containerHeight = useMemo(
+    () => (pdfSize.height + 10) * pdfState.totalPage,
+    [pdfSize.height, pdfState.totalPage]
+  );
+
+  const { getSearchResult } = usePdfTextSearch(pdfFile);
+  useWebviewInterface({
+    paths,
+    getSearchResult,
+    scaleRef,
+    canvasRefs,
+  });
 
   const setRef = useCallback((node: HTMLCanvasElement) => {
     if (node) {
@@ -93,15 +101,6 @@ export default function PdfEngine() {
     }
   }, []);
 
-  const { getSearchResult } = usePdfTextSearch(pdfFile);
-
-  useWebviewInterface({
-    paths,
-    getSearchResult,
-    scaleRef,
-    canvasRefs,
-  });
-
   const onRenderSuccess: OnRenderSuccess = useCallback(
     (page) => {
       if (canvasRefs.current) {
@@ -109,6 +108,29 @@ export default function PdfEngine() {
       }
     },
     [redrawPaths]
+  );
+
+  const itemData = useMemo(
+    () => ({
+      pdfSize,
+      searchText,
+      setRef,
+      onPointerDown: startDrawing,
+      onPointerMove: draw,
+      onPointerUp: stopDrawing,
+      canDraw,
+      onRenderSuccess,
+    }),
+    [
+      canDraw,
+      draw,
+      onRenderSuccess,
+      pdfSize,
+      searchText,
+      setRef,
+      startDrawing,
+      stopDrawing,
+    ]
   );
 
   const onEraseAllClick = useCallback(() => {
@@ -126,41 +148,11 @@ export default function PdfEngine() {
     }
   }, [paths]);
 
-  const onTransformed = useCallback(
+  const onZoomStop = useCallback(
     (ref: ReactZoomPanPinchRef) => {
       scale.current = ref.state.scale;
     },
     [scale]
-  );
-
-  const PdfItem = useCallback(
-    (_: any, index: number) => {
-      return (
-        <PdfPage
-          key={index + 1}
-          width={pdfSize.width}
-          height={pdfSize.height}
-          onPointerDown={startDrawing}
-          onPointerMove={draw}
-          onPointerUp={stopDrawing}
-          onRenderSuccess={onRenderSuccess}
-          pageNumber={index + 1}
-          setRef={setRef}
-          canDraw={canDraw}
-          searchText={searchText}
-        />
-      );
-    },
-    [
-      canDraw,
-      draw,
-      onRenderSuccess,
-      pdfSize,
-      searchText,
-      setRef,
-      startDrawing,
-      stopDrawing,
-    ]
   );
 
   useEffect(() => {
@@ -203,8 +195,7 @@ export default function PdfEngine() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleScroll = throttle(() => {
-    if (!containerHeight) return;
+  const handleScroll = useCallback(() => {
     const scrollPosition = window.scrollY;
     const scrollRatio = scrollPosition / containerHeight;
     const currentPage = Math.min(
@@ -212,17 +203,16 @@ export default function PdfEngine() {
       pdfState.totalPage
     );
 
-    const isNearBottom =
-      scrollPosition + window.innerHeight + 50 >= containerHeight;
+    const isNearBottom = scrollPosition + windowHeight + 50 >= containerHeight;
 
     if (isNearBottom) {
-      setCurrentViewingPage(pdfState.totalPage);
+      currentViewingPage.current = pdfState.totalPage;
     } else {
-      if (currentViewingPage !== currentPage) {
-        setCurrentViewingPage(currentPage);
+      if (currentViewingPage.current !== currentPage) {
+        currentViewingPage.current = currentPage;
       }
     }
-  }, 16);
+  }, [containerHeight, pdfState.totalPage, windowHeight]);
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
@@ -230,16 +220,16 @@ export default function PdfEngine() {
   }, [handleScroll]);
 
   return (
-    <>
-      <Document file={pdfFile} loading={<></>} options={pdfOptions}>
-        {!initialLoading && (
+    <Document file={pdfFile} loading={<></>} options={pdfOptions}>
+      {!initialLoading && (
+        <div className="bg-[#94A3B8] min-h-dvh flex-center">
           <TransformWrapper
             ref={scaleRef}
             initialScale={1}
             maxScale={3}
             disablePadding
             doubleClick={{ disabled: true }}
-            onTransformed={onTransformed}
+            onZoomStop={onZoomStop}
             limitToBounds={true}
             panning={{
               disabled: true,
@@ -247,43 +237,43 @@ export default function PdfEngine() {
             centerZoomedOut
           >
             <TransformComponent>
-              <div
-                ref={containerRef}
-                className={clsx(
-                  "w-dvw flex items-center flex-col bg-gray-400",
-                  pdfState.totalPage === 1
-                    ? "h-dvh justify-center"
-                    : "min-h-dvh"
-                )}
-                style={{ rowGap: PDF_Y_GAP }}
+              <List
+                itemCount={pdfState.totalPage}
+                itemSize={pdfSize.height + 10}
+                width={windowWidth}
+                height={windowHeight}
+                itemData={itemData}
+                style={{
+                  height: pdfState.totalPage === 1 ? "100%" : undefined,
+                }}
               >
-                {[...new Array(pdfState.totalPage)].map(PdfItem)}
-              </div>
+                {Row}
+              </List>
             </TransformComponent>
           </TransformWrapper>
-        )}
-        <ThumbnailOvelay
-          paths={paths.current}
-          canvasRefs={canvasRefs}
-          currentViewingPage={currentViewingPage}
-          scaleRef={scaleRef}
-          pdfSize={pdfSize}
+        </div>
+      )}
+      <ThumbnailOvelay
+        paths={paths.current}
+        canvasRefs={canvasRefs}
+        currentViewingPage={currentViewingPage.current}
+        scaleRef={scaleRef}
+        pdfSize={pdfSize}
+      />
+      {!pdfState.isListOpen && (
+        <PdfOverlay
+          paths={paths}
+          color={color}
+          drawType={drawType}
+          touchType={touchType}
+          setTouchType={setTouchType}
+          setCanDraw={setCanDraw}
+          setColor={setColor}
+          setDrawType={setDrawType}
+          onEraseAllClick={onEraseAllClick}
+          currentViewingPage={currentViewingPage.current}
         />
-        {!pdfState.isListOpen && (
-          <PdfOverlay
-            paths={paths}
-            color={color}
-            drawType={drawType}
-            touchType={touchType}
-            setTouchType={setTouchType}
-            setCanDraw={setCanDraw}
-            setColor={setColor}
-            setDrawType={setDrawType}
-            onEraseAllClick={onEraseAllClick}
-            currentViewingPage={currentViewingPage}
-          />
-        )}
-      </Document>
-    </>
+      )}
+    </Document>
   );
 }

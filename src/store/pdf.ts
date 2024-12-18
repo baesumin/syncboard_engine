@@ -14,7 +14,6 @@ export const pdfStateAtom = atom({
   isStrokeOpen: false,
   totalPage: 1,
   renderedPageNumber: 0,
-  canRenderThumbnail: false,
 });
 export const pdfConfigAtom = atom({
   size: { width: 0, height: 0 },
