@@ -243,9 +243,6 @@ export default function PdfEngine() {
                 width={windowWidth}
                 height={windowHeight}
                 itemData={itemData}
-                style={{
-                  height: pdfState.totalPage === 1 ? "100%" : undefined,
-                }}
               >
                 {Row}
               </List>
