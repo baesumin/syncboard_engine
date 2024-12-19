@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document } from "react-pdf";
-import { OnRenderSuccess } from "react-pdf/src/shared/types.js";
+import {
+  OnItemClickArgs,
+  OnRenderSuccess,
+} from "react-pdf/src/shared/types.js";
 import {
   ReactZoomPanPinchContentRef,
   ReactZoomPanPinchRef,
@@ -22,7 +25,7 @@ import {
   searchTextAtom,
 } from "./store/pdf";
 import { PDFDocument } from "pdf-lib";
-import { FixedSizeList as List } from "react-window";
+import { FixedSizeList as List, ListOnScrollProps } from "react-window";
 import Row from "./components/Row";
 import { useWindowSize } from "./hooks/useWIndowSIze";
 
@@ -31,6 +34,7 @@ export default function PdfEngine() {
   const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
   const currentViewingPage = useRef(1);
+  const listRef = useRef<List>(null);
   const searchText = useAtomValue(searchTextAtom);
   const file = useAtomValue(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
@@ -155,6 +159,41 @@ export default function PdfEngine() {
     [scale]
   );
 
+  const onThumbnailClick = useCallback(
+    (args: OnItemClickArgs) => {
+      setPdfState((prev) => ({
+        ...prev,
+        isListOpen: false,
+      }));
+      scaleRef.current?.resetTransform(0);
+      listRef.current?.scrollToItem(args.pageIndex, "start");
+    },
+    [setPdfState]
+  );
+
+  const onScroll = useCallback(
+    (props: ListOnScrollProps) => {
+      const scrollPosition = props.scrollOffset;
+      const scrollRatio = scrollPosition / containerHeight;
+      const currentPage = Math.min(
+        Math.floor(scrollRatio * pdfState.totalPage) + 1,
+        pdfState.totalPage
+      );
+
+      const isNearBottom =
+        scrollPosition + windowHeight + 50 >= containerHeight;
+
+      if (isNearBottom) {
+        currentViewingPage.current = pdfState.totalPage;
+      } else {
+        if (currentViewingPage.current !== currentPage) {
+          currentViewingPage.current = currentPage;
+        }
+      }
+    },
+    [containerHeight, pdfState.totalPage, windowHeight]
+  );
+
   useEffect(() => {
     const init = async () => {
       const pdfDoc = await PDFDocument.load(file.base64);
@@ -195,30 +234,6 @@ export default function PdfEngine() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleScroll = useCallback(() => {
-    const scrollPosition = window.scrollY;
-    const scrollRatio = scrollPosition / containerHeight;
-    const currentPage = Math.min(
-      Math.floor(scrollRatio * pdfState.totalPage) + 1,
-      pdfState.totalPage
-    );
-
-    const isNearBottom = scrollPosition + windowHeight + 50 >= containerHeight;
-
-    if (isNearBottom) {
-      currentViewingPage.current = pdfState.totalPage;
-    } else {
-      if (currentViewingPage.current !== currentPage) {
-        currentViewingPage.current = currentPage;
-      }
-    }
-  }, [containerHeight, pdfState.totalPage, windowHeight]);
-
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
-
   return (
     <Document file={pdfFile} loading={<></>} options={pdfOptions}>
       {!initialLoading && (
@@ -238,6 +253,8 @@ export default function PdfEngine() {
           >
             <TransformComponent>
               <List
+                ref={listRef}
+                onScroll={onScroll}
                 itemCount={pdfState.totalPage}
                 itemSize={pdfSize.height + 10}
                 width={windowWidth}
@@ -252,10 +269,9 @@ export default function PdfEngine() {
       )}
       <ThumbnailOvelay
         paths={paths.current}
-        canvasRefs={canvasRefs}
         currentViewingPage={currentViewingPage.current}
-        scaleRef={scaleRef}
         pdfSize={pdfSize}
+        onThumbnailClick={onThumbnailClick}
       />
       {!pdfState.isListOpen && (
         <PdfOverlay

@@ -4,36 +4,26 @@ import { Thumbnail } from "react-pdf";
 import { useAtom } from "jotai";
 import { pdfStateAtom } from "../store/pdf";
 import { PathsType } from "../types/common";
-import {
-  RefObject,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { reDrawPathGroup } from "../utils/common";
 import { OnItemClickArgs } from "react-pdf/src/shared/types.js";
-import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import PlaceholderPage from "./PlaceholderPage";
 
 const ThumbnailOvelay = ({
   paths,
-  canvasRefs,
   currentViewingPage,
-  scaleRef,
   pdfSize,
+  onThumbnailClick,
 }: {
   paths: {
     [pageNumber: number]: PathsType[];
   };
-  canvasRefs: RefObject<HTMLCanvasElement[]>;
   currentViewingPage: number;
-  scaleRef: RefObject<ReactZoomPanPinchContentRef | null>;
   pdfSize: {
     width: number;
     height: number;
   };
+  onThumbnailClick: (args: OnItemClickArgs) => void;
 }) => {
   const thumbnailCanvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
   const [isOpenFirst, setIsOpenFirst] = useState(true);
@@ -49,19 +39,6 @@ const ThumbnailOvelay = ({
       thumbnailCanvasRefs.current[indexValue] = node;
     }
   }, []);
-
-  const onItemClick = useCallback(
-    (args: OnItemClickArgs) => {
-      setPdfState((prev) => ({
-        ...prev,
-        // pageNumber: args.pageNumber,
-        isListOpen: false,
-      }));
-      scaleRef.current?.resetTransform(0);
-      canvasRefs.current[args.pageNumber].scrollIntoView();
-    },
-    [canvasRefs, scaleRef, setPdfState]
-  );
 
   const redrawPaths = useCallback(
     (pageNumber: number) => {
@@ -207,7 +184,7 @@ const ThumbnailOvelay = ({
                       pageNumber={index + 1}
                       width={180}
                       devicePixelRatio={2}
-                      onItemClick={onItemClick}
+                      onItemClick={onThumbnailClick}
                       loading={
                         <div style={{ width: 180, height: thumbnailHeight }}>
                           <PlaceholderPage />
