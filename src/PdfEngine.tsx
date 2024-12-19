@@ -95,10 +95,11 @@ export default function PdfEngine() {
     () =>
       pdfState.totalPage === 1
         ? {
-            height: "100%",
+            height: windowHeight,
+            top: Math.max((windowHeight - pdfSize.height) / 2, 0),
           }
         : {},
-    [pdfState.totalPage]
+    [pdfSize.height, pdfState.totalPage, windowHeight]
   );
 
   const { getSearchResult } = usePdfTextSearch(pdfFile);
@@ -273,7 +274,7 @@ export default function PdfEngine() {
                 width={windowWidth}
                 height={windowHeight}
                 itemData={itemData}
-                className="overflow-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-300 hover:scrollbar-thumb-gray-500 "
+                className="overflow-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-300 hover:scrollbar-thumb-gray-500"
                 style={listStyle}
               >
                 {Row}
