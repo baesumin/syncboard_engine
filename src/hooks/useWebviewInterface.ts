@@ -8,19 +8,20 @@ import {
 import { useAtom, useSetAtom } from "jotai";
 import { fileAtom, pdfStateAtom, searchTextAtom } from "../store/pdf";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
+import { FixedSizeList } from "react-window";
 
 interface UseWebviewInterfaceProps {
   paths: React.RefObject<{ [pageNumber: number]: PathsType[] }>;
   getSearchResult: (text: string) => any[];
   scaleRef: RefObject<ReactZoomPanPinchContentRef | null>;
-  canvasRefs: RefObject<HTMLCanvasElement[]>;
+  listRef: RefObject<FixedSizeList | null>;
 }
 
 export const useWebviewInterface = ({
   paths,
   getSearchResult,
   scaleRef,
-  canvasRefs,
+  listRef,
 }: UseWebviewInterfaceProps) => {
   const [file, setFile] = useAtom(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
@@ -70,14 +71,9 @@ export const useWebviewInterface = ({
 
       getPageNumber: (data: string) => {
         if (!isNaN(Number(data))) {
-          // setPdfState((prev) => ({
-          //   ...prev,
-          //   pageNumber: Number(data),
-          // }));
           scaleRef.current?.resetTransform(0);
-
-          if (canvasRefs.current) {
-            canvasRefs.current[Number(data)].scrollIntoView();
+          if (listRef.current) {
+            listRef.current.scrollToItem(Number(data) - 1, "start");
           }
         }
       },
@@ -98,6 +94,6 @@ export const useWebviewInterface = ({
     setSearchText,
     getSearchResult,
     scaleRef,
-    canvasRefs,
+    listRef,
   ]);
 };

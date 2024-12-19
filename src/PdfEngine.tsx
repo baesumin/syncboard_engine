@@ -95,7 +95,7 @@ export default function PdfEngine() {
     paths,
     getSearchResult,
     scaleRef,
-    canvasRefs,
+    listRef,
   });
 
   const setRef = useCallback((node: HTMLCanvasElement) => {
