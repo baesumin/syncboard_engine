@@ -164,77 +164,82 @@ const ThumbnailOvelay = ({
     !isOpenFirst && (
       <div
         className={clsx(
-          "fixed top-0 left-0 bottom-0 right-0 overflow-auto bg-black/70 px-[20px] pt-[24px] z-[9999]",
+          "fixed top-0 left-0 bottom-0 right-0 bg-black/70 z-[9999]",
           pdfState.isListOpen ? "" : "hidden"
         )}
       >
-        <div className="flex justify-end items-center">
-          <button
-            onClick={() => {
-              setPdfState((prev) => ({
-                ...prev,
-                isListOpen: false,
-              }));
-            }}
-            className="bg-white size-[44px] flex-center rounded-xl"
-          >
-            <Close />
-          </button>
+        <div className="fixed top-0 left-0 right-0 px-[20px] pt-[24px] z-10">
+          <div className="flex justify-end items-center">
+            <button
+              onClick={() => {
+                setPdfState((prev) => ({
+                  ...prev,
+                  isListOpen: false,
+                }));
+              }}
+              className="bg-white size-[44px] flex-center rounded-xl"
+            >
+              <Close />
+            </button>
+          </div>
         </div>
-        <div
-          className="grid mt-[20px] gap-y-5"
-          style={{
-            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-          }}
-        >
-          {[...new Array(pdfState.totalPage)].map((_, index) => {
-            return (
-              <div key={index} className="w-[180px]">
-                <div
-                  className={clsx(
-                    "bg-white",
-                    currentViewingPage === index + 1
-                      ? "ring-[3px] ring-[#FF9A51]"
-                      : ""
-                  )}
-                  style={{ height: thumbnailHeight }}
-                >
-                  <Thumbnail
-                    pageNumber={index + 1}
-                    width={180}
-                    devicePixelRatio={2}
-                    onItemClick={onItemClick}
-                    loading={
-                      <div style={{ width: 180, height: thumbnailHeight }}>
-                        <PlaceholderPage />
-                      </div>
-                    }
-                    className="absolute"
-                  />
-                  <canvas
-                    ref={setRef}
-                    style={{
-                      width: 180,
-                      height: thumbnailHeight,
-                    }}
-                    className="absolute pointer-events-none"
-                    data-index={index + 1}
-                  />
-                </div>
-                <div className="h-[31px] flex justify-center items-center">
-                  <span
-                    className={
+
+        <div className="h-full pl-[20px] pt-[64px] overflow-y-auto">
+          <div
+            className="grid mt-[20px] gap-y-5 relative"
+            style={{
+              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+            }}
+          >
+            {[...new Array(pdfState.totalPage)].map((_, index) => {
+              return (
+                <div key={index} className="w-[180px]">
+                  <div
+                    className={clsx(
+                      "bg-white",
                       currentViewingPage === index + 1
-                        ? "text-[#FF9A51] font-bold text-lg"
-                        : "text-white"
-                    }
+                        ? "ring-[3px] ring-[#FF9A51]"
+                        : ""
+                    )}
+                    style={{ height: thumbnailHeight }}
                   >
-                    {index + 1}/{pdfState.totalPage}
-                  </span>
+                    <Thumbnail
+                      pageNumber={index + 1}
+                      width={180}
+                      devicePixelRatio={2}
+                      onItemClick={onItemClick}
+                      loading={
+                        <div style={{ width: 180, height: thumbnailHeight }}>
+                          <PlaceholderPage />
+                        </div>
+                      }
+                      className="absolute"
+                    />
+                    <canvas
+                      ref={setRef}
+                      style={{
+                        width: 180,
+                        height: thumbnailHeight,
+                      }}
+                      className="absolute pointer-events-none"
+                      data-index={index + 1}
+                    />
+                  </div>
+                  <div className="h-[31px] flex justify-center items-center">
+                    <span
+                      className={
+                        currentViewingPage === index + 1
+                          ? "text-[#FF9A51] font-bold text-lg"
+                          : "text-white"
+                      }
+                    >
+                      {index + 1}/{pdfState.totalPage}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     )
