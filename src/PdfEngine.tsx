@@ -54,13 +54,15 @@ export default function PdfEngine() {
 
   const {
     canDraw,
-    setCanDraw,
     paths,
     drawOrder,
     scale,
     drawType,
     color,
     touchType,
+    isWrongTouch,
+    setIsWrongTouch,
+    setCanDraw,
     setColor,
     setDrawType,
     startDrawing,
@@ -88,6 +90,15 @@ export default function PdfEngine() {
   const containerHeight = useMemo(
     () => (pdfSize.height + 10) * pdfState.totalPage,
     [pdfSize.height, pdfState.totalPage]
+  );
+  const listStyle = useMemo(
+    () =>
+      pdfState.totalPage === 1
+        ? {
+            height: "100%",
+          }
+        : {},
+    [pdfState.totalPage]
   );
 
   const { getSearchResult } = usePdfTextSearch(pdfFile);
@@ -262,7 +273,8 @@ export default function PdfEngine() {
                 width={windowWidth}
                 height={windowHeight}
                 itemData={itemData}
-                className="overflow-auto scrollbar-thin scrollbar-thumb-[#FC9504] scrollbar-track-[#D9D9D9] hover:scrollbar-thumb-gray-500"
+                className="overflow-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-300 hover:scrollbar-thumb-gray-500 "
+                style={listStyle}
               >
                 {Row}
               </List>
@@ -288,6 +300,8 @@ export default function PdfEngine() {
           setDrawType={setDrawType}
           onEraseAllClick={onEraseAllClick}
           currentViewingPage={currentViewingPage}
+          isWrongTouch={isWrongTouch}
+          setIsWrongTouch={setIsWrongTouch}
         />
       )}
     </Document>

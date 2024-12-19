@@ -43,7 +43,7 @@ export default function useCanvas({
     (localStorage.getItem("TOUCH_TYPE") as TouchType) ?? "pen"
   );
   const [drawType, setDrawType] = useState<DrawType>("pen");
-  const [zoomEnabled, setZoomEnabled] = useState(false);
+  const [isWrongTouch, setIsWrongTouch] = useState(false);
 
   const defaultDrawStyle = useMemo(
     () => ({
@@ -63,6 +63,9 @@ export default function useCanvas({
     (e: canvasEventType) => {
       currentPage.current = Number((e.target as HTMLElement).dataset.index);
       if (!canvasRefs.current.length) return;
+      if (e.pointerType !== touchType) {
+        setIsWrongTouch(true);
+      }
       if (
         !canDraw ||
         e.pointerType !== touchType ||
@@ -294,8 +297,8 @@ export default function useCanvas({
     drawType,
     color,
     touchType,
-    zoomEnabled,
-    setZoomEnabled,
+    isWrongTouch,
+    setIsWrongTouch,
     setCanDraw,
     setColor,
     setDrawType,

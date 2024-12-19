@@ -42,6 +42,8 @@ interface Props {
   setColor: Dispatch<SetStateAction<(typeof colorMap)[number]>>;
   onEraseAllClick: () => void;
   currentViewingPage: number;
+  isWrongTouch: boolean;
+  setIsWrongTouch: Dispatch<SetStateAction<boolean>>;
 }
 
 const PdfOverlay = ({
@@ -55,6 +57,8 @@ const PdfOverlay = ({
   setColor,
   onEraseAllClick,
   currentViewingPage,
+  isWrongTouch,
+  setIsWrongTouch,
 }: Props) => {
   const [zoomEnabled, setZoomEnabled] = useState(false);
   const [file, setFile] = useAtom(fileAtom);
@@ -334,7 +338,11 @@ const PdfOverlay = ({
                     return newTouchType;
                   });
                 }}
-                className="pointer-events-auto w-[78px] h-[44px] rounded-lg bg-[#EEEFF3] flex items-center px-[4px]"
+                className={clsx(
+                  "pointer-events-auto w-[78px] h-[44px] rounded-lg bg-[#EEEFF3] flex items-center px-[4px]",
+                  isWrongTouch ? "animate-blink-twice" : "bg-[#EEEFF3]"
+                )}
+                onAnimationEnd={() => setIsWrongTouch(false)}
               >
                 <div
                   className={clsx(
