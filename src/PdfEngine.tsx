@@ -49,8 +49,7 @@ export default function PdfEngine() {
       windowHeight - 84
     );
     return { width: reducedSize.width, height: reducedSize.height };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pdfConfig.size]);
+  }, [pdfConfig.size, windowWidth, windowHeight]);
 
   const {
     canDraw,
