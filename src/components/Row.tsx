@@ -44,7 +44,7 @@ const Row = ({
     [searchText]
   );
 
-  const loading = useCallback(
+  const Loading = useCallback(
     () => (
       <div style={{ width: pdfSize.width, height: pdfSize.height }}>
         <PlaceholderPage />
@@ -64,6 +64,16 @@ const Row = ({
       className="w-full flex justify-center bg-[#94A3B8]"
       style={_style}
     >
+      <div
+        style={{
+          position: "absolute",
+          width: pdfSize.width,
+          height: pdfSize.height,
+          backgroundColor: "white",
+        }}
+      >
+        <PlaceholderPage />
+      </div>
       <Page
         pageNumber={index + 1}
         width={pdfSize.width}
@@ -72,7 +82,7 @@ const Row = ({
         renderAnnotationLayer={false}
         onRenderSuccess={onRenderSuccess}
         customTextRenderer={textRenderer}
-        loading={loading}
+        loading={Loading}
         noData={<></>}
       >
         <canvas

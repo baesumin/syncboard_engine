@@ -33,7 +33,7 @@ export default function PdfEngine() {
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
-  const currentViewingPage = useRef(1);
+  const [currentViewingPage, setCurrentViewingPage] = useState(1);
   const listRef = useRef<List>(null);
   const searchText = useAtomValue(searchTextAtom);
   const file = useAtomValue(fileAtom);
@@ -173,25 +173,27 @@ export default function PdfEngine() {
 
   const onScroll = useCallback(
     (props: ListOnScrollProps) => {
-      const scrollPosition = props.scrollOffset;
-      const scrollRatio = scrollPosition / containerHeight;
-      const currentPage = Math.min(
-        Math.floor(scrollRatio * pdfState.totalPage) + 1,
-        pdfState.totalPage
-      );
+      requestAnimationFrame(() => {
+        const scrollPosition = props.scrollOffset;
+        const scrollRatio = scrollPosition / containerHeight;
+        const currentPage = Math.min(
+          Math.floor(scrollRatio * pdfState.totalPage) + 1,
+          pdfState.totalPage
+        );
 
-      const isNearBottom =
-        scrollPosition + windowHeight + 50 >= containerHeight;
+        const isNearBottom =
+          scrollPosition + windowHeight + 50 >= containerHeight;
 
-      if (isNearBottom) {
-        currentViewingPage.current = pdfState.totalPage;
-      } else {
-        if (currentViewingPage.current !== currentPage) {
-          currentViewingPage.current = currentPage;
+        if (isNearBottom) {
+          setCurrentViewingPage(pdfState.totalPage);
+        } else {
+          if (currentViewingPage !== currentPage) {
+            setCurrentViewingPage(currentPage);
+          }
         }
-      }
+      });
     },
-    [containerHeight, pdfState.totalPage, windowHeight]
+    [containerHeight, currentViewingPage, pdfState.totalPage, windowHeight]
   );
 
   useEffect(() => {
@@ -260,6 +262,7 @@ export default function PdfEngine() {
                 width={windowWidth}
                 height={windowHeight}
                 itemData={itemData}
+                className="overflow-auto scrollbar-thin scrollbar-thumb-[#FC9504] scrollbar-track-[#D9D9D9] hover:scrollbar-thumb-gray-500"
               >
                 {Row}
               </List>
@@ -269,7 +272,7 @@ export default function PdfEngine() {
       )}
       <ThumbnailOvelay
         paths={paths.current}
-        currentViewingPage={currentViewingPage.current}
+        currentViewingPage={currentViewingPage}
         pdfSize={pdfSize}
         onThumbnailClick={onThumbnailClick}
       />
@@ -284,7 +287,7 @@ export default function PdfEngine() {
           setColor={setColor}
           setDrawType={setDrawType}
           onEraseAllClick={onEraseAllClick}
-          currentViewingPage={currentViewingPage.current}
+          currentViewingPage={currentViewingPage}
         />
       )}
     </Document>
