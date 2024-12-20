@@ -12,6 +12,7 @@ import {
   TouchType,
 } from "../types/common";
 import throttle from "lodash.throttle";
+import { v4 as uuidv4 } from "uuid";
 
 interface Props {
   canvasRefs: RefObject<HTMLCanvasElement[]>;
@@ -36,7 +37,7 @@ export default function useCanvas({
   const touchPoints = useRef(0);
   const erasePathsRef = useRef<PathsType[]>([]);
   const paths = useRef<{ [pageNumber: number]: PathsType[] }>({});
-  const drawOrder = useRef(0);
+  const drawOrder = useRef(uuidv4());
   const [canDraw, setCanDraw] = useState(false);
   const [color, setColor] = useState<(typeof colorMap)[number]>("#F34A47");
   const [touchType, setTouchType] = useState<TouchType>(
@@ -273,7 +274,7 @@ export default function useCanvas({
       redrawPaths(pageSize.width, pageSize.height, currentPage.current);
     } else {
       if (touchPoints.current === 1) {
-        drawOrder.current += 1;
+        drawOrder.current = uuidv4();
       }
     }
 
@@ -292,7 +293,6 @@ export default function useCanvas({
   return {
     canDraw,
     paths,
-    drawOrder,
     scale,
     drawType,
     color,

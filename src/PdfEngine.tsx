@@ -54,7 +54,6 @@ export default function PdfEngine() {
   const {
     canDraw,
     paths,
-    drawOrder,
     scale,
     drawType,
     color,
@@ -227,19 +226,7 @@ export default function PdfEngine() {
         const savedPaths: { [pageNumber: number]: PathsType[] } = JSON.parse(
           file.paths
         );
-
-        const maxDrawOrderItem = Object.values(savedPaths)
-          .flat()
-          .reduce(
-            (maxItem, currentItem) => {
-              return currentItem.drawOrder > maxItem.drawOrder
-                ? currentItem
-                : maxItem;
-            },
-            { drawOrder: 0 }
-          );
         paths.current = savedPaths;
-        drawOrder.current = maxDrawOrderItem.drawOrder;
       }
       setInitialLoading(false);
     };

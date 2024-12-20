@@ -11,7 +11,7 @@ export type PathsType = {
   lastY: number;
   lineWidth: number;
   color: (typeof colorMap)[number];
-  drawOrder: number;
+  drawOrder: string;
   alpha: number;
 };
 export type PageSize = { width: number; height: number };
