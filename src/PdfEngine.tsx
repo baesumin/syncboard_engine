@@ -185,7 +185,7 @@ export default function PdfEngine() {
   const onScroll = useCallback(
     (props: ListOnScrollProps) => {
       requestAnimationFrame(() => {
-        const scrollPosition = props.scrollOffset;
+        const scrollPosition = props.scrollOffset + 5;
         const scrollRatio = scrollPosition / containerHeight;
         const currentPage = Math.min(
           Math.floor(scrollRatio * pdfState.totalPage) + 1,
