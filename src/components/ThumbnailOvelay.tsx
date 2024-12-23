@@ -141,7 +141,7 @@ const ThumbnailOvelay = ({
     !isOpenFirst && (
       <div
         className={clsx(
-          "fixed top-0 left-0 bottom-0 right-0 bg-black/70 z-[9999]",
+          "fixed top-0 left-0 bottom-0 right-0 pb-[100px] bg-black/70 z-[9999]",
           pdfState.isListOpen ? "" : "hidden"
         )}
       >
@@ -154,14 +154,14 @@ const ThumbnailOvelay = ({
                   isListOpen: false,
                 }));
               }}
-              className="bg-white size-[44px] flex-center rounded-xl"
+              className="bg-white size-[44px] flex-center rounded-lg"
             >
               <Close />
             </button>
           </div>
         </div>
 
-        <div className="h-full pl-[20px] pt-[64px] overflow-y-auto">
+        <div className="h-full pl-[20px] mt-[88px] overflow-y-auto">
           <div
             className="grid mt-[20px] gap-y-5 relative"
             style={{
