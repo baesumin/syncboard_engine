@@ -1,12 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import {
-  BlendMode,
-  LineCapStyle,
-  PageSizes,
-  PDFDocument,
-  PDFPage,
-  rgb,
-} from "pdf-lib";
+import { LineCapStyle, PageSizes, PDFDocument, PDFPage, rgb } from "pdf-lib";
 import { canvasEventType, PageSize, PathsType } from "../types/common";
 import { isTablet } from "react-device-detect";
 import { pdfjs } from "react-pdf";
