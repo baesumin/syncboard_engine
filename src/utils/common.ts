@@ -288,25 +288,44 @@ const drawPDFPathGroup = (
   pageWidth: number,
   pageHeight: number
 ) => {
-  // 첫 점의 좌표로 시작 (y좌표는 pageHeight에서 빼서 뒤집기)
-  let pathData = `M ${(group[0].x * pageWidth) / devicePixelRatio},${
-    (group[0].y * pageHeight) / devicePixelRatio
-  }`;
-
-  // 나머지 점들을 L 명령어로 연결
-  for (let i = 1; i < group.length; i++) {
-    pathData += ` L ${(group[i].x * pageWidth) / devicePixelRatio},${
-      (group[i].y * pageHeight) / devicePixelRatio
+  if (style.alpha !== 1) {
+    // 첫 점의 좌표로 시작 (y좌표는 pageHeight에서 빼서 뒤집기)
+    let pathData = `M ${(group[0].x * pageWidth) / devicePixelRatio},${
+      (group[0].y * pageHeight) / devicePixelRatio
     }`;
+
+    // 나머지 점들을 L 명령어로 연결
+    for (let i = 1; i < group.length; i++) {
+      pathData += ` L ${(group[i].x * pageWidth) / devicePixelRatio},${
+        (group[i].y * pageHeight) / devicePixelRatio
+      }`;
+    }
+    page.drawSvgPath(pathData, {
+      borderColor: colorToRGB(style.color as (typeof colorMap)[number]),
+      borderWidth: (style.lineWidth * pageWidth) / devicePixelRatio,
+      borderOpacity: style.alpha,
+      borderLineCap: LineCapStyle.Round,
+      x: 0,
+      y: pageHeight,
+    });
+  } else {
+    for (let i = 1; i < group.length; i++) {
+      page.drawLine({
+        start: {
+          x: (group[i - 1].x * pageWidth) / devicePixelRatio,
+          y: pageHeight - (group[i - 1].y * pageHeight) / devicePixelRatio,
+        },
+        end: {
+          x: (group[i].x * pageWidth) / devicePixelRatio,
+          y: pageHeight - (group[i].y * pageHeight) / devicePixelRatio,
+        },
+        color: colorToRGB(style.color as (typeof colorMap)[number]),
+        thickness: (style.lineWidth * pageWidth) / devicePixelRatio,
+        lineCap: style.alpha === 1 ? LineCapStyle.Round : LineCapStyle.Butt,
+        opacity: style.alpha,
+      });
+    }
   }
-  page.drawSvgPath(pathData, {
-    borderColor: colorToRGB(style.color as (typeof colorMap)[number]),
-    borderWidth: (style.lineWidth * pageWidth) / devicePixelRatio,
-    borderOpacity: style.alpha,
-    borderLineCap: LineCapStyle.Round,
-    x: 0,
-    y: pageHeight,
-  });
 };
 
 // export const getModifiedPDFBase64 = async (
