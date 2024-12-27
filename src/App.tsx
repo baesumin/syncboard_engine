@@ -2,9 +2,15 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
 import { useEffect, useState } from "react";
-import { createOrMergePdf, createPDFFromImgBase64 } from "./utils/common";
+import {
+  __DEV__,
+  createOrMergePdf,
+  createPDFFromImgBase64,
+} from "./utils/common";
 import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
+import { isTablet } from "react-device-detect";
+import { base64 } from "./mock/base64";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -17,6 +23,17 @@ function App() {
 
   useEffect(() => {
     const initializeFile = async () => {
+      if (__DEV__ || !isTablet) {
+        setFile({
+          base64: base64,
+          paths: "",
+          isNew: false,
+          type: "pdf",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       window.webviewApi = async (appData: string) => {
         const param = JSON.parse(appData);
         setFile({
