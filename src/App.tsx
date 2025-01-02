@@ -11,11 +11,9 @@ import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
 import { isTablet } from "react-device-detect";
 import { base64 } from "./mock/base64";
+import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?worker&url";
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 function App() {
   const setFile = useSetAtom(fileAtom);
