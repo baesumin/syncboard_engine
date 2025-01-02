@@ -145,7 +145,7 @@ const ThumbnailOvelay = ({
           pdfState.isListOpen ? "" : "hidden"
         )}
       >
-        <div className="fixed top-0 left-0 right-0 px-[20px] pt-[24px] z-10">
+        <div className="fixed top-0 left-0 right-0 px-[20px] pt-[20px] z-10">
           <div className="flex justify-end items-center">
             <button
               onClick={() => {
@@ -154,7 +154,7 @@ const ThumbnailOvelay = ({
                   isListOpen: false,
                 }));
               }}
-              className="bg-white size-[44px] flex-center rounded-lg"
+              className="bg-white size-[40px] flex-center rounded-lg"
             >
               <Close />
             </button>
