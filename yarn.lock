@@ -3887,7 +3887,6 @@ __metadata:
     jotai: "npm:^2.11.0"
     lodash.throttle: "npm:^4.1.1"
     pdf-lib: "npm:^1.17.1"
-    pdfjs-dist: "npm:4.8.69"
     postcss: "npm:^8.4.47"
     prop-types: "npm:^15.8.1"
     react: "npm:^19.0.0"
