@@ -10,7 +10,7 @@ export default {
         },
       },
       animation: {
-        "blink-once": "blink 0.5s 1",
+        "blink-once": "blink 0.4s 1",
       },
     },
   },
