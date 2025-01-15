@@ -1,14 +1,15 @@
 import { RefObject, useEffect } from "react";
-import { PathsType } from "../types/common";
+import { PathsType } from "../libs/types/common";
 import {
   getModifiedPDFBase64,
   createOrMergePdf,
   __DEV__,
-} from "../utils/common";
+} from "../libs/utils/common";
 import { useAtom, useSetAtom } from "jotai";
 import { fileAtom, pdfStateAtom, searchTextAtom } from "../store/pdf";
 import { ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { FixedSizeList } from "react-window";
+import { useTranslation } from "./useTranslation";
 
 interface UseWebviewInterfaceProps {
   paths: React.RefObject<{ [pageNumber: number]: PathsType[] }>;
@@ -23,6 +24,7 @@ export const useWebviewInterface = ({
   scaleRef,
   listRef,
 }: UseWebviewInterfaceProps) => {
+  const { t } = useTranslation();
   const [file, setFile] = useAtom(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
   const setSearchText = useSetAtom(searchTextAtom);
@@ -42,7 +44,7 @@ export const useWebviewInterface = ({
 
       newPage: async () => {
         if (pdfState.totalPage === 5) {
-          alert("최대 5페이지까지 추가 가능합니다.");
+          alert(t("alert_max_5_page"));
           return;
         }
         const newBase64 = await createOrMergePdf(file.base64);
@@ -95,5 +97,6 @@ export const useWebviewInterface = ({
     getSearchResult,
     scaleRef,
     listRef,
+    t,
   ]);
 };

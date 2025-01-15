@@ -4,13 +4,13 @@ import {
   drawDashedLine,
   getDrawingPosition,
   reDrawPathGroup,
-} from "../utils/common";
+} from "../libs/utils/common";
 import {
   canvasEventType,
   DrawType,
   PathsType,
   TouchType,
-} from "../types/common";
+} from "../libs/types/common";
 import throttle from "lodash.throttle";
 import { v4 as uuidv4 } from "uuid";
 

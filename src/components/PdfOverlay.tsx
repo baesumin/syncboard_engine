@@ -25,11 +25,12 @@ import {
   colorMap,
   createOrMergePdf,
   getModifiedPDFBase64,
-} from "../utils/common";
-import { DrawType, PathsType, TouchType } from "../types/common";
+} from "../libs/utils/common";
+import { DrawType, PathsType, TouchType } from "../libs/types/common";
 import ColorPicker from "./ColorPicker";
 import { useAtom } from "jotai";
 import { fileAtom, pdfConfigAtom, pdfStateAtom } from "../store/pdf";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface Props {
   paths: React.RefObject<{ [pageNumber: number]: PathsType[] }>;
@@ -60,6 +61,7 @@ const PdfOverlay = ({
   isWrongTouch,
   setIsWrongTouch,
 }: Props) => {
+  const { t } = useTranslation();
   const [zoomEnabled, setZoomEnabled] = useState(false);
   const [file, setFile] = useAtom(fileAtom);
   const [pdfState, setPdfState] = useAtom(pdfStateAtom);
@@ -113,7 +115,7 @@ const PdfOverlay = ({
                 className="pointer-events-auto w-[106px] h-[52px] rounded-xl bg-white shadow-black shadow-sm flex-center gap-[9px]"
               >
                 <Drawing />
-                그리기
+                {t("draw")}
               </button>
 
               {__DEV__ && (
@@ -324,7 +326,7 @@ const PdfOverlay = ({
                   className="pointer-events-auto flex gap-x-2 px-[10px]"
                 >
                   <Trash />
-                  <span className="text-[#353B45]">모두 지우기</span>
+                  <span className="text-[#353B45]">{t("delete_all")}</span>
                 </button>
               )}
               <div className="w-[1px] h-[40px] bg-[#EEEFF3] mx-[8px]" />

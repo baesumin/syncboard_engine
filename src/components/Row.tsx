@@ -6,10 +6,10 @@ import {
   CustomTextRenderer,
   OnRenderSuccess,
 } from "react-pdf/src/shared/types.js";
-import { highlightPattern } from "../utils/common";
+import { highlightPattern } from "../libs/utils/common";
 import clsx from "clsx";
-import { canvasEventType } from "../types/common";
-import { typedMemo } from "../utils/typedMemo";
+import { canvasEventType } from "../libs/types/common";
+import { typedMemo } from "../libs/utils/typedMemo";
 
 const Row = typedMemo(
   ({

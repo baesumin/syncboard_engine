@@ -6,16 +6,18 @@ import {
   __DEV__,
   createOrMergePdf,
   createPDFFromImgBase64,
-} from "./utils/common";
+} from "./libs/utils/common";
 import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
 import { isTablet } from "react-device-detect";
-import { base64 } from "./mock/base64";
+import { base64 } from "./libs/mock/base64";
 import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?worker&url";
+import { useTranslation } from "./hooks/useTranslation";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 function App() {
+  const { changeLanguage } = useTranslation();
   const setFile = useSetAtom(fileAtom);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,13 +49,13 @@ function App() {
           isNew: param?.data?.isNew,
           type: param?.data?.type,
         });
+        changeLanguage(param?.data?.lang ?? "ko");
         setIsLoading(false);
       };
     };
 
     initializeFile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [changeLanguage, setFile]);
 
   return <>{!isLoading && <PdfEngine />}</>;
 }

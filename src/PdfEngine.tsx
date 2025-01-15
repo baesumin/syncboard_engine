@@ -13,9 +13,9 @@ import {
 import useCanvas from "./hooks/useCanvas";
 import PdfOverlay from "./components/PdfOverlay";
 import ThumbnailOvelay from "./components/ThumbnailOvelay";
-import { getReducedPdfSize, removeAllPath } from "./utils/common";
+import { getReducedPdfSize, removeAllPath } from "./libs/utils/common";
 import { usePdfTextSearch } from "./hooks/usePdfTextSearch";
-import { PathsType } from "./types/common";
+import { PathsType } from "./libs/types/common";
 import { useWebviewInterface } from "./hooks/useWebviewInterface";
 import { useAtom, useAtomValue } from "jotai";
 import {
@@ -28,8 +28,10 @@ import { PDFDocument } from "pdf-lib";
 import { FixedSizeList as List, ListOnScrollProps } from "react-window";
 import Row from "./components/Row";
 import { useWindowSize } from "./hooks/useWIndowSIze";
+import { useTranslation } from "./hooks/useTranslation";
 
 export default function PdfEngine() {
+  const { t } = useTranslation();
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const canvasRefs = useRef<HTMLCanvasElement[]>([]);
   const scaleRef = useRef<ReactZoomPanPinchContentRef>(null);
@@ -148,11 +150,7 @@ export default function PdfEngine() {
   );
 
   const onEraseAllClick = useCallback(() => {
-    if (
-      confirm(
-        "모두 지우기를 선택하면 문서 전체의 변경 내용이 삭제됩니다. 진행하시겠습니까?"
-      )
-    ) {
+    if (confirm(t("confirm_delete"))) {
       removeAllPath(paths);
       canvasRefs.current.forEach((canvasRef) => {
         canvasRef
@@ -160,7 +158,7 @@ export default function PdfEngine() {
           .clearRect(0, 0, canvasRef.width, canvasRef.height);
       });
     }
-  }, [paths]);
+  }, [paths, t]);
 
   const onZoomStop = useCallback(
     (ref: ReactZoomPanPinchRef) => {

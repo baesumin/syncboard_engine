@@ -1,4 +1,4 @@
-import { colorMap } from "../utils/common";
+import { colorMap } from "../libs/utils/common";
 import ColorButton from "./ColorButton";
 
 interface Props {
