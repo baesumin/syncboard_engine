@@ -1,12 +1,9 @@
-import { useState, useCallback } from "react";
+import { useCallback, useContext } from "react";
 import en from "../libs/lang/lang.en.json";
 import ko from "../libs/lang/lang.ko.json";
 import zh from "../libs/lang/lang.zh.json";
+import { TranslationContext } from "../components/TranslationContext";
 
-// 언어 데이터 타입 정의
-type Languages = "ko" | "en" | "zh";
-
-// 번역 데이터
 const translations = {
   ko,
   en,
@@ -16,7 +13,12 @@ const translations = {
 type TranslationKey = keyof typeof translations.ko;
 
 export const useTranslation = () => {
-  const [language, setLanguage] = useState<Languages>("ko");
+  const context = useContext(TranslationContext);
+  if (!context) {
+    throw new Error("useTranslation must be used within a TranslationProvider");
+  }
+
+  const { language, changeLanguage } = context;
 
   const t = useCallback(
     (key: TranslationKey) => {
@@ -24,10 +26,6 @@ export const useTranslation = () => {
     },
     [language]
   );
-
-  const changeLanguage = useCallback((lang: Languages) => {
-    setLanguage(lang);
-  }, []);
 
   return { t, changeLanguage, language };
 };

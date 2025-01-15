@@ -30,6 +30,7 @@ function App() {
           isNew: false,
           type: "pdf",
         });
+        changeLanguage("ko");
         setIsLoading(false);
         return;
       }
