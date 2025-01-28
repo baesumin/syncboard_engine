@@ -25,4 +25,13 @@ export default defineConfig({
       ],
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "pdf-lib": ["react-pdf", "pdfjs-dist"],
+        },
+      },
+    },
+  },
 });
