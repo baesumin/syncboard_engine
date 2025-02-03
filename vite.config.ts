@@ -5,6 +5,7 @@ import { defineConfig, normalizePath } from "vite";
 import react from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import tailwindcss from "@tailwindcss/vite";
 
 const require = createRequire(import.meta.url);
 
@@ -24,5 +25,6 @@ export default defineConfig({
         },
       ],
     }),
+    tailwindcss(),
   ],
 });
