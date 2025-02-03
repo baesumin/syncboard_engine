@@ -2445,9 +2445,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jotai@npm:^2.11.0":
-  version: 2.11.0
-  resolution: "jotai@npm:2.11.0"
+"jotai@npm:^2.11.3":
+  version: 2.11.3
+  resolution: "jotai@npm:2.11.3"
   peerDependencies:
     "@types/react": ">=17.0.0"
     react: ">=17.0.0"
@@ -2456,7 +2456,7 @@ __metadata:
       optional: true
     react:
       optional: true
-  checksum: 10c0/4c08ae1c5576788454c1dd00ce5c0c6d10f37041828e6fee4ac5041ec22d9d9a819b836cabcb8155b9778a7459614f72937a01ce2b9d7ddb6c0813451efb1b25
+  checksum: 10c0/0d5f585fdbedaabf7b46c7622a3627fc9011ced28f722a606b324271ad688586f0c8d7c3ba694150bbd90398c4b394b1d75f9ab2c7326cd0d4830027b31bd3fe
   languageName: node
   linkType: hard
 
@@ -3418,13 +3418,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-zoom-pan-pinch@npm:3.6.0":
-  version: 3.6.0
-  resolution: "react-zoom-pan-pinch@npm:3.6.0"
+"react-zoom-pan-pinch@npm:^3.7.0":
+  version: 3.7.0
+  resolution: "react-zoom-pan-pinch@npm:3.7.0"
   peerDependencies:
     react: "*"
     react-dom: "*"
-  checksum: 10c0/e7fdec64aeeba25069cf5aa65e6414ac6cb71baa288aee19ce89d45109120ab4c0f9531553606c26b911f9685be59c417dd0ca5f8b95873c05ae1d7eecea857a
+  checksum: 10c0/96889849800a953128fe7f9e42bed0d5cbc48d03024995b136f5e972146236688efb24d7381d8e6f09598f5512b4897d2420f62d828a665fdf24b745b7d55911
   languageName: node
   linkType: hard
 
@@ -3884,7 +3884,7 @@ __metadata:
     eslint-plugin-react-hooks: "npm:^5.1.0"
     eslint-plugin-react-refresh: "npm:^0.4.16"
     globals: "npm:^15.14.0"
-    jotai: "npm:^2.11.0"
+    jotai: "npm:^2.11.3"
     lodash.throttle: "npm:^4.1.1"
     pdf-lib: "npm:^1.17.1"
     postcss: "npm:^8.4.47"
@@ -3894,7 +3894,7 @@ __metadata:
     react-dom: "npm:^19.0.0"
     react-pdf: "npm:^9.2.1"
     react-window: "npm:^1.8.11"
-    react-zoom-pan-pinch: "npm:3.6.0"
+    react-zoom-pan-pinch: "npm:^3.7.0"
     tailwind-scrollbar: "npm:^3.1.0"
     tailwindcss: "npm:^3.4.17"
     typescript: "npm:^5.7.2"
