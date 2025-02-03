@@ -1,7 +1,6 @@
 export { default as FullScreen } from "./ico-fullscreen.svg?react";
 export { default as SmallScreen } from "./ico-maximize.svg?react";
 export { default as ThumbnailList } from "./ico-thumb-documnet.svg?react";
-export { default as ArrowLeft } from "./ico-arrow-left.svg?react";
 export { default as Close } from "./ico-close.svg?react";
 export { default as Drawing } from "./ico-drawing.svg?react";
 export { default as Pen } from "./ico-pen.svg?react";
