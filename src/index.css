@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+@theme {
+  --animate-blink-bg-start: #eeeff3;
+  --animate-blink-bg-end: #ffbb00;
+  --animate-blink: blink 0.4s 1;
+
+  @keyframes blink {
+    0%,
+    100% {
+      background-color: var(--animate-blink-bg-start);
+    }
+    50% {
+      background-color: var(--animate-blink-bg-end);
+    }
+  }
+}
 .flex-center {
   display: flex;
   justify-content: center;

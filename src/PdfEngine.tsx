@@ -207,8 +207,8 @@ export default function PdfEngine() {
   useEffect(() => {
     const init = async () => {
       const pdfDoc = await PDFDocument.load(file.base64);
-      const page = pdfDoc.getPage(0);
-      const { width, height } = page.getSize();
+      const { width, height } = pdfDoc.getPage(0).getSize();
+      const totalPage = pdfDoc.getPageCount();
 
       setPdfConfig((prev) => ({
         ...prev,
@@ -217,7 +217,7 @@ export default function PdfEngine() {
       if (!file.isNew) {
         setPdfState((prev) => ({
           ...prev,
-          totalPage: pdfDoc.getPageCount(),
+          totalPage,
         }));
       }
       if (file.paths) {

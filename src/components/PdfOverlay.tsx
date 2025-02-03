@@ -342,7 +342,7 @@ const PdfOverlay = ({
                 }}
                 className={clsx(
                   "pointer-events-auto w-[78px] h-[44px] rounded-lg bg-[#EEEFF3] flex items-center px-[4px]",
-                  isWrongTouch ? "animate-blink-once" : "bg-[#EEEFF3]"
+                  isWrongTouch ? "animate-[blink_0.4s_1]" : "bg-[#EEEFF3]"
                 )}
                 onAnimationEnd={() => setIsWrongTouch(false)}
               >
