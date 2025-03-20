@@ -13,6 +13,7 @@ import { isTablet } from "react-device-detect";
 import { base64 } from "./libs/mock/base64";
 import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?worker&url";
 import { useTranslation } from "./hooks/useTranslation";
+import Loading from "./components/Loading";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
@@ -36,6 +37,7 @@ function App() {
       }
 
       window.webviewApi = async (appData: string) => {
+        window.AndroidInterface.getDataOk(true);
         const param = JSON.parse(appData);
         setFile({
           base64: param?.data?.isNew
@@ -58,7 +60,7 @@ function App() {
     initializeFile();
   }, [changeLanguage, setFile]);
 
-  return <>{!isLoading && <PdfEngine />}</>;
+  return <>{isLoading ? <Loading /> : <PdfEngine />}</>;
 }
 
 export default App;
