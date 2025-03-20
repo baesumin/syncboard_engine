@@ -37,9 +37,6 @@ function App() {
       }
 
       window.webviewApi = async (appData: string) => {
-        // if (window.AndroidInterface) {
-        //   window.AndroidInterface.getDataOk(true);
-        // }
         const param = JSON.parse(appData);
         setFile({
           base64: param?.data?.isNew
@@ -56,6 +53,9 @@ function App() {
         });
         changeLanguage(param?.data?.lang ?? "ko");
         setIsLoading(false);
+        if (window.AndroidInterface && window.AndroidInterface.getDataOk) {
+          window.AndroidInterface.getDataOk(true);
+        }
       };
     };
 
