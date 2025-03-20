@@ -37,7 +37,9 @@ function App() {
       }
 
       window.webviewApi = async (appData: string) => {
-        window.AndroidInterface.getDataOk(true);
+        if (window.AndroidInterface) {
+          window.AndroidInterface.getDataOk(true);
+        }
         const param = JSON.parse(appData);
         setFile({
           base64: param?.data?.isNew
