@@ -11,6 +11,6 @@ interface Window {
     getPdfData: (data: string) => void;
     getSearchTextPageList: (data: string) => void;
     setFullMode: (data: boolean) => void;
-    getDataOk: (data: boolean) => void;
+    setData: (data: boolean) => void;
   };
 }

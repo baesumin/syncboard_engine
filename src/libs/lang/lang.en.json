@@ -2,5 +2,6 @@
   "draw": "Draw",
   "delete_all": "Clear All",
   "alert_max_5_page": "Up to 5 pages can be added.",
-  "confirm_delete": "All changes in the document will be deleted if you choose Clear All. Do you want to continue?"
+  "confirm_delete": "All changes in the document will be deleted if you choose Clear All. Do you want to continue?",
+  "alert_max_set_data": "There was a problem loading the file. Please delete the file and try again."
 }
