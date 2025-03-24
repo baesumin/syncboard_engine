@@ -1,7 +1,7 @@
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   __DEV__,
   createOrMergePdf,
@@ -18,8 +18,8 @@ import Loading from "./components/Loading";
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 function App() {
-  const attemptsRef = useRef(0);
-  const { changeLanguage, t } = useTranslation();
+  // const attemptsRef = useRef(0);
+  const { changeLanguage } = useTranslation();
   const setFile = useSetAtom(fileAtom);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -60,26 +60,26 @@ function App() {
     initializeFile();
   }, [changeLanguage, setFile]);
 
-  useEffect(() => {
-    const interval = 3000;
+  // useEffect(() => {
+  //   const interval = 3000;
 
-    const checkLoading = setInterval(() => {
-      if (isLoading) {
-        if (attemptsRef.current === 3) {
-          clearInterval(checkLoading);
-          alert(t("alert_max_set_data"));
-        }
-        if (window.AndroidInterface && window.AndroidInterface.setPdfData) {
-          window.AndroidInterface.setPdfData(true);
-          attemptsRef.current += 1;
-        }
-      } else {
-        clearInterval(checkLoading);
-      }
-    }, interval);
+  //   const checkLoading = setInterval(() => {
+  //     if (isLoading) {
+  //       if (attemptsRef.current === 3) {
+  //         clearInterval(checkLoading);
+  //         alert(t("alert_max_set_data"));
+  //       }
+  //       if (window.AndroidInterface && window.AndroidInterface.setPdfData) {
+  //         window.AndroidInterface.setPdfData(true);
+  //         attemptsRef.current += 1;
+  //       }
+  //     } else {
+  //       clearInterval(checkLoading);
+  //     }
+  //   }, interval);
 
-    return () => clearInterval(checkLoading);
-  }, [isLoading, t]);
+  //   return () => clearInterval(checkLoading);
+  // }, [isLoading, t]);
 
   return <>{isLoading ? <Loading /> : <PdfEngine />}</>;
 }
