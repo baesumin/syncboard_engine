@@ -69,8 +69,8 @@ function App() {
           clearInterval(checkLoading);
           alert(t("alert_max_set_data"));
         }
-        if (window.AndroidInterface && window.AndroidInterface.setData) {
-          window.AndroidInterface.setData(true);
+        if (window.AndroidInterface && window.AndroidInterface.setPdfData) {
+          window.AndroidInterface.setPdfData(true);
           attemptsRef.current += 1;
         }
       } else {
