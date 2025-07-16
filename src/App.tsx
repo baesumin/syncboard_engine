@@ -25,18 +25,6 @@ function App() {
 
   useEffect(() => {
     const initializeFile = async () => {
-      if (__DEV__ || !isTablet) {
-        setFile({
-          base64: base64,
-          paths: "",
-          isNew: false,
-          type: "pdf",
-        });
-        changeLanguage("ko");
-        setIsLoading(false);
-        return;
-      }
-
       window.webviewApi = async (appData: string) => {
         const param = JSON.parse(appData);
         setFile({
