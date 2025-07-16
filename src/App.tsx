@@ -24,7 +24,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    alert("hi");
     const initializeFile = async () => {
       if (__DEV__ || !isTablet) {
         setFile({
@@ -40,7 +39,6 @@ function App() {
 
       window.webviewApi = async (appData: string) => {
         const param = JSON.parse(appData);
-        console.log(JSON.stringify(appData));
         setFile({
           base64: param?.data?.isNew
             ? await createOrMergePdf()

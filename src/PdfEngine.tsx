@@ -210,11 +210,6 @@ export default function PdfEngine() {
       const { width, height } = pdfDoc.getPage(0).getSize();
       const totalPage = pdfDoc.getPageCount();
 
-      if (file) {
-        console.log("-----");
-        console.log(file.paths);
-      }
-
       setPdfConfig((prev) => ({
         ...prev,
         size: { width: Math.floor(width), height: Math.floor(height) },
