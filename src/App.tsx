@@ -2,9 +2,15 @@ import "react-pdf/dist/Page/TextLayer.css";
 import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
 import { useEffect, useState, useRef } from "react";
-import { createOrMergePdf, createPDFFromImgBase64 } from "./libs/utils/common";
+import {
+  __DEV__,
+  createOrMergePdf,
+  createPDFFromImgBase64,
+} from "./libs/utils/common";
 import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
+import { isTablet } from "react-device-detect";
+import { base64 } from "./libs/mock/base64";
 import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?worker&url";
 import { useTranslation } from "./hooks/useTranslation";
 import Loading from "./components/Loading";
@@ -19,8 +25,21 @@ function App() {
 
   useEffect(() => {
     const initializeFile = async () => {
+      if (__DEV__ || !isTablet) {
+        setFile({
+          base64: base64,
+          paths: "",
+          isNew: false,
+          type: "pdf",
+        });
+        changeLanguage("ko");
+        setIsLoading(false);
+        return;
+      }
+
       window.webviewApi = async (appData: string) => {
         const param = JSON.parse(appData);
+        console.log(JSON.stringify(appData));
         setFile({
           base64: param?.data?.isNew
             ? await createOrMergePdf()
