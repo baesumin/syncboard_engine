@@ -209,7 +209,7 @@ export default function PdfEngine() {
       const pdfDoc = await PDFDocument.load(file.base64);
       const { width, height } = pdfDoc.getPage(0).getSize();
       const totalPage = pdfDoc.getPageCount();
-
+      console.log(JSON.stringify(pdfDoc));
       setPdfConfig((prev) => ({
         ...prev,
         size: { width: Math.floor(width), height: Math.floor(height) },
@@ -224,6 +224,7 @@ export default function PdfEngine() {
         const savedPaths: { [pageNumber: number]: PathsType[] } = JSON.parse(
           file.paths
         );
+        console.log(JSON.stringify(file.paths));
         paths.current = savedPaths;
       }
       setInitialLoading(false);
