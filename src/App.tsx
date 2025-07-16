@@ -2,15 +2,9 @@ import "react-pdf/dist/Page/TextLayer.css";
 import { pdfjs } from "react-pdf";
 import PdfEngine from "./PdfEngine";
 import { useEffect, useState, useRef } from "react";
-import {
-  __DEV__,
-  createOrMergePdf,
-  createPDFFromImgBase64,
-} from "./libs/utils/common";
+import { createOrMergePdf, createPDFFromImgBase64 } from "./libs/utils/common";
 import { useSetAtom } from "jotai";
 import { fileAtom } from "./store/pdf";
-import { isTablet } from "react-device-detect";
-import { base64 } from "./libs/mock/base64";
 import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?worker&url";
 import { useTranslation } from "./hooks/useTranslation";
 import Loading from "./components/Loading";
