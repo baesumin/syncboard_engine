@@ -39,6 +39,7 @@ function App() {
 
       window.webviewApi = async (appData: string) => {
         const param = JSON.parse(appData);
+        console.log(param);
         setFile({
           base64: param?.data?.isNew
             ? await createOrMergePdf()
